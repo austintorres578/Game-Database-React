@@ -434,7 +434,8 @@ function searchForImages(link){
         "backgroundPosition": "center center",
         "backgroundRepeat":"no-repeat",
         "backgroundSize":"cover",
-        "color":"white"  
+        "color":"white",
+        "min-height":"100vh"  
     }
 
     //checks to see if screenshots are present and if not will display no images h3

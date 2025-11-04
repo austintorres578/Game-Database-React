@@ -42,7 +42,10 @@ body{
     transform: rotate(180deg);
 }
 .home-page-section{
-
+    min-height:100vh;
+    display:flex;
+    flex-direction: column;
+    justify-content: center;
     background-color: white;
     background-size: cover;
     background-repeat: no-repeat;
@@ -112,10 +115,12 @@ body{
     height: 100%;
     width: 100%;
     background-color: gray;
+    
 }
 .loading-gif img{
     height: 50px;
     width: 50px;
+    margin:20px;
 }
 .search-button-container{
     display: flex;
@@ -157,7 +162,8 @@ body{
     }
 }
 .app-container{
-    display: flex;
+    /* display: flex; */
+    display:none;
     flex-direction: column;
     justify-content: center;
     margin-left: auto;
@@ -265,7 +271,8 @@ body{
     width: auto;
 }
 .game-page-buttons{
-    display: flex;
+    display: none;;
+    /* display: flex; */
     height: 33px;
     width: 100%;
     margin-top: 10px;
@@ -327,8 +334,7 @@ body{
 }
 .game-page{
     background-color: rgba(116, 116, 116, 0.904);
-    
-    padding: 15px;
+    padding: 30px;
     height: 95%;
     width: 95%;
 }
@@ -359,9 +365,12 @@ body{
 .game-description{
     display: flex;
     flex-direction: column;
-    width: 90%;
+    max-width: 1000px;
     margin-left: auto;
     margin-right: auto;
+    padding-left: 15px;
+    padding-right:15px;
+    text-align: center;
 }
 
 .game-description p{
