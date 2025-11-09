@@ -276,6 +276,89 @@ body{
     position: relative;
     width: 100%;
 }
+
+.sign-in-container{
+    border-top:solid 1px black;
+    width:100%;
+    margin-top: 16px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.sign-in-container p{
+    color: white;
+    text-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
+    font-weight: bold;
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.sign-in-container button{
+    background-color: rgb(96, 96, 255);
+    border: none;
+    padding: 7px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: white;
+    display: block;
+    margin: 5px
+}
+
+.sign-in-container button a{
+    color: white;
+    text-decoration: none;
+}
+
+.sign-in-container .sign-in-button{
+    font-size: 14px;
+    margin: 5px 0px;
+}
+
+.sign-in-inputs-con{
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+    flex-direction: column;
+}
+
+.sign-in-inputs-con input{
+    margin:5px 0px;
+    box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
+    border-radius: 3px;
+    border: none;
+    padding: 10px 5px;
+    color: black;
+}
+
+.sign-in-inputs-con input::placeholder{
+    font-size: 15px;
+}
+
+.sign-in-buttons-con{
+    display: flex;
+    justify-content: center;
+}
+
+ .completed-search-con .sign-in-container {
+    /* display: flex; */
+    display: none;
+    align-items: center;
+    margin-top: 0px;
+    border-top: none;
+    width: fit-content;
+}
+
+ .completed-search-con .sign-in-container p{
+    margin:0px;
+    display:none;
+ }
+
+  .completed-search-con .sign-in-container button{
+    width: 80px;
+    padding:15px;
+  }
+
 /* .search-button-container input{
     margin-right: 10px;
 } */

@@ -243,6 +243,7 @@ export default function HomePage(){
                 {/*<h1>The Best {currentGenre}</h1>
                 <h1>Games Of The {currentConsole}</h1>*/} 
 
+
             <div className='app-container'>
                 <div className="results-container">
                     <div className='games-list'>

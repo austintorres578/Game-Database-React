@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Select from 'react-select';
 
 export default function SearchContainer(props){
@@ -215,6 +216,23 @@ export default function SearchContainer(props){
                     }}></input>
                     {loadChecker ? <></> : <button class="search-button" onClick={getLinks}>Search</button>}
                 </div>
+
+                <div className='sign-in-container'>
+                    <p>Sign in to save your favorite games!</p>
+                    <div className='sign-in-buttons-con'>
+                        <button className='sign-in-toggle' onClick={props.handleSignIn}>Sign In</button>
+                        <button><Link to="/signup">Sign Up</Link></button>
+                    </div>
+
+                    <div className='sign-in-inputs-con'>
+                        <input type="text" placeholder="Username"></input>
+                        <input type="password" placeholder="Password"></input>
+                        <button className='sign-in-button'>Sign In</button>
+                    </div>
+
+                </div>
+
+
             </div>
         </div>
     )

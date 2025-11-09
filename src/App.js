@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import GamePage from "./components/GamePage";
 import HomePage from "./components/HomePage" ;
+import SignInPage from "./components/SignInPage";
 
 function App() {
 
@@ -12,6 +13,7 @@ function App() {
   <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/game" element={<GamePage />} />
+      <Route path="/signup" element={<SignInPage/>}/>
   </Routes>
 </BrowserRouter>
 );
