@@ -106,6 +106,31 @@ export default function HomePage(){
 
             })
             .catch(err => console.error(err));
+            
+            document.querySelector('.app-container').style.display="flex"
+            document.querySelector('.game-page-buttons').style.display="flex"
+
+            document.querySelector('.home-page-section').classList.add('completed-search-con')
+
+        
+            document.querySelector('.search-parameters-con').style.justifyContent="space-between"
+            document.querySelector('.search-parameters-con').style.maxWidth="1250px"
+            document.querySelector('.search-parameters-con').style.marginLeft='auto'
+            document.querySelector('.search-parameters-con').style.marginRight='auto'
+            
+            
+            let searchButtonCon = document.querySelector('.search-button-container')
+            
+            
+            document.querySelector('.game-search-input').style.width="100%"
+
+            // searchButtonCon.style.flexDirection="row"
+            
+            searchButtonCon.querySelector('.search-button').style.margintop="0px"
+            searchButtonCon.querySelector('.search-button').style.marginleft="10px"
+            // searchButtonCon.style.width="49.5%"
+            document.querySelector('.search-parameters-con h1').style.display="none"
+
 
     }
     

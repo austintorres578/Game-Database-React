@@ -150,8 +150,6 @@ export default function SearchContainer(props){
         
         freshSearch(fetchLink+genreLink+consoleLink+pageLink+searchLink)
 
-
-
         consoleLink=""
 
         genreLink="" 
@@ -183,6 +181,9 @@ export default function SearchContainer(props){
     return(
         <div className="search-container"> 
             <div className="search-parameters-con">
+
+                <h1>Search by console and genre</h1>
+
                 <div className='search-parameters'>
                     <div className='console-input'>
                         <Select
@@ -212,7 +213,7 @@ export default function SearchContainer(props){
                         localStorage.setItem("searchedValue",JSON.stringify(searchInput.value))
                         setSearch(searchInput.value)
                     }}></input>
-                    {loadChecker ? <></> : <button onClick={getLinks}>Search</button>}
+                    {loadChecker ? <></> : <button class="search-button" onClick={getLinks}>Search</button>}
                 </div>
             </div>
         </div>

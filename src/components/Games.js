@@ -28,7 +28,7 @@ export default function Games(props){
         linear-gradient(to right,
             rgba(0, 0, 0, .5), 
             rgba(0, 0, 0, 0.0)),
-        url(${gameBackgroundObj[gameBackgroundObj.length-1].image})`
+        url(${gameBackgroundObj[0].image})`
         }
 
     let style={
