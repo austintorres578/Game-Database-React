@@ -132,8 +132,8 @@ body{
 }
 
 .completed-search-con .search-parameters-con{
-    padding-left: 60px;
-    padding-right: 60px;
+    padding-left: 30px;
+    padding-right: 30px;
     flex-direction: row;
 }
 
@@ -202,7 +202,13 @@ body{
 }
 
 .completed-search-con .search-parameters{
-    width:49.5%;
+    width:35%;
+}
+
+.completed-search-con .completed-sign-in-button-con{
+    width: 10%;
+    display: flex;
+    justify-content: center;
 }
 
 .search-parameters{
@@ -262,7 +268,7 @@ body{
 
 .completed-search-con .search-button-container{
     flex-direction: row;
-    width: 49.5%;
+    width: 54%;
 }
 
 .search-button-container{
@@ -322,6 +328,19 @@ body{
     flex-direction: column;
 }
 
+.sign-in-inputs-con p{
+    font-size: 15px;
+}
+
+.sign-in-inputs-con p a{
+    color: white;
+    transition: .15s;
+}
+
+.sign-in-inputs-con p a:hover{
+    color:#6060ff
+}
+
 .sign-in-inputs-con input{
     margin:5px 0px;
     box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
@@ -363,8 +382,26 @@ body{
     margin-right: 10px;
 } */
 
+.completed-search-con .completed-sign-in{
+    display: block;
+    height: 44px;
+    font-size: 14px;
+}
 
-.search-button-container button{
+.completed-sign-in{
+    background-color: rgb(96, 96, 255);
+    border: none;
+    padding: 7px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    color: white;
+    /* display: block; */
+    display: none;
+    margin:5px;
+    font-size: 20px;
+}
+
+.search-button{
     position: absolute;
     cursor: pointer;
     background-color: rgb(96, 96, 255);

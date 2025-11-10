@@ -64,6 +64,8 @@ export default function SearchContainer(props){
     
     const [search,setSearch] = useState("");
 
+    const [signingIn, setSigningIn] = useState(false);
+
     
     //connected to freshSearch()
 
@@ -100,6 +102,12 @@ export default function SearchContainer(props){
     //sets the default console on the console select depending on what console is saved on localStorage
     // this insures that when homepage is reloaded the console select will display the last searched 
     //console. if no localstorage console is present then the default will be all consoles
+
+
+    function toggleSignin(){
+        setSigningIn(prev => !prev);
+        // document.querySelector('.sign-in-container').style.display="flex"; 
+    }
 
     let consoleDefault = () =>{
         if(JSON.parse(localStorage.getItem("selectedConsole"))!=null){
@@ -214,21 +222,27 @@ export default function SearchContainer(props){
                         localStorage.setItem("searchedValue",JSON.stringify(searchInput.value))
                         setSearch(searchInput.value)
                     }}></input>
+                    
                     {loadChecker ? <></> : <button class="search-button" onClick={getLinks}>Search</button>}
                 </div>
-
+                <div className='completed-sign-in-button-con'>
+                    <button className='completed-sign-in' onClick={toggleSignin}>Sign In</button>
+                </div>
                 <div className='sign-in-container'>
                     <p>Sign in to save your favorite games!</p>
                     <div className='sign-in-buttons-con'>
-                        <button className='sign-in-toggle' onClick={props.handleSignIn}>Sign In</button>
-                        <button><Link to="/signup">Sign Up</Link></button>
+                        {/* <button className='sign-in-toggle' onClick={toggleSignin} >Sign In</button> */}
+                        {/* <button><Link to="/signup">Sign Up</Link></button> */}
                     </div>
 
-                    <div className='sign-in-inputs-con'>
-                        <input type="text" placeholder="Username"></input>
-                        <input type="password" placeholder="Password"></input>
-                        <button className='sign-in-button'>Sign In</button>
+                    
+                    <div className="sign-in-inputs-con">
+                        <input type="text" placeholder="Username" />
+                        <input type="password" placeholder="Password" />
+                        <button className="sign-in-button">Sign In</button>
+                        <p>No account? <Link to="/signup">Sign Up Today!</Link></p>
                     </div>
+                   
 
                 </div>
 

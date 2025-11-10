@@ -1,7 +1,8 @@
 import {React,useEffect} from "react";
 import { Link } from 'react-router-dom';
 
-import metacriticIcon from "./images/metacriticIcon.png"
+import metacriticIcon from "../assets/images/metacriticIcon.png"
+import noGameBackground from '../assets/images/noGameBackground.jpg'
 
 export default function Games(props){
 
@@ -18,10 +19,10 @@ export default function Games(props){
     let backgroundImg
 
         if(gameBackgroundObj===null){
-            backgroundImg="url(https://techmedicvt.com/images/about-us/tech%20background%20copy-10.jpg)"
+            backgroundImg=`url(${noGameBackground})`
         }
         else if(gameBackgroundObj.length===0){
-            backgroundImg="url(https://techmedicvt.com/images/about-us/tech%20background%20copy-10.jpg)"
+            backgroundImg=`url(${noGameBackground})`
         }
         else{
             backgroundImg = `
