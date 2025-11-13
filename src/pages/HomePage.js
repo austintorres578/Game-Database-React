@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import arrow from '../assets/images/arrow.png'
 import loadingCircle from '../assets/images//loading.gif'
 import whiteArrow from '../assets/images//white-arrow-up.png'
+import noGameBackground from '../assets/images/noGameBackground.jpg'
 
 import SearchContainer from "../components/SearchContainer"
 import Games from '../components/Games';
-import ps3Background from "../assets/images/ps3Background.jpg"
+import dataBaseBackground from "../assets/images/dataBaseBackground.webp"
 
-export default function HomePage(){
+export default function HomePage({user}){
 
     // origin varible is used to combine with the next and previous page data that comes from the api,
     // since the next and previous links have a different link we have to take from the api link and 
@@ -45,7 +46,7 @@ export default function HomePage(){
     const [currentGenre, setCurrentGenre] = useState("")
 
     const [homePageBackground, setHomePageBackground] = useState({
-        backgroundImage: `url(${ps3Background})`
+        backgroundImage: `url(${dataBaseBackground})`
     })
 
     //default fetch link that gathers 40 games sorted by metacritic rating from greatest to least
@@ -72,6 +73,9 @@ export default function HomePage(){
             .then(response => {
                 setLoading(false)
                 console.log(response.results)
+                if(response.results.length===0){
+                    alert("No Results Found, Please Try Different Search Parameters")
+                }
 
     // Sets the link used with fetch to be able to recall the link when the home page is refreshed.
 
@@ -84,9 +88,16 @@ export default function HomePage(){
                 }
                 if(localStorage.getItem("currentPage")==="1"){
                     localStorage.setItem("topGameBackground",JSON.stringify(response.results[0].background_image))
-                    setHomePageBackground({
-                        backgroundImage: `url(${response.results[0].background_image})`
-                    })
+                    // console.log(response.results[0].background_image)
+                    if(response.results[0].background_image!=null){
+                        setHomePageBackground({
+                            backgroundImage: `url(${response.results[0].background_image})`
+                        })
+                    }else{
+                        setHomePageBackground({
+                            backgroundImage: `url(${noGameBackground})`
+                        })
+                    }
                 }else{
                     setHomePageBackground({
                         backgroundImage: `url(${localStorage.getItem("topGameBackground")})`
@@ -109,6 +120,8 @@ export default function HomePage(){
             
             document.querySelector('.app-container').style.display="flex"
             document.querySelector('.game-page-buttons').style.display="flex"
+            document.querySelector('.game-page-buttons').style.justifyContent="center"
+            document.querySelector('.game-page-buttons').children[0].style.display="flex"
 
             document.querySelector('.home-page-section').classList.add('completed-search-con')
 
@@ -238,6 +251,7 @@ export default function HomePage(){
                     prevPageHandler={prevPage}
                     changeConsole={setCurrentConsole}
                     changeGenre={setCurrentGenre}
+                    user={user}     
                     
                 />
                 {/*<h1>The Best {currentGenre}</h1>
@@ -251,7 +265,7 @@ export default function HomePage(){
                         {/* checks if search is loading and if it is, the loading screen will show but if it
                         isnt the games will show */}
                         {loading ? <div className='loading-gif'><img src={loadingCircle}></img></div> : games}
-                        {gatheredData[0].loaded ? <></> : 
+                        {/* {gatheredData[0].loaded ? <></> : 
                     <div className='home-page-header'>
                         <div className='search-page-header'>
                             <img src={whiteArrow}></img>
@@ -261,27 +275,30 @@ export default function HomePage(){
                             <img src={whiteArrow}></img>
                             <h1>Change Page Below</h1> 
                         </div>
-                    </div>}
+                    </div>} */}
+                        
                     </div>
                 </div>
             </div>
             <div className='game-page-buttons'>
                     <div>
+                        <div>
 
-                        {/* checks if search is loading and if it is, the loading screen will show but if it
-                        isnt arrows will show, this is used to prevent button presses during loading */}
+                            {/* checks if search is loading and if it is, the loading screen will show but if it
+                            isnt arrows will show, this is used to prevent button presses during loading */}
 
-                        {loading ? <></> : <button onClick={prevPage}><img className="left-arrow" src={arrow}></img></button>}
-                    </div>
-                    <div className='page-number'>
-                        <p>{ gatheredData[0].loaded ? "Page " + pageNumber : <></>}</p>
-                    </div>
-                    <div>
+                            {loading ? <></> : <button onClick={prevPage}><img className="left-arrow" src={arrow}></img></button>}
+                        </div>
+                        <div className='page-number'>
+                            <p>{ gatheredData[0].loaded ? "Page " + pageNumber : <></>}</p>
+                        </div>
+                        <div>
 
-                        {/* checks if search is loading and if it is, the loading screen will show but if it
-                        isnt arrows will show, this is used to prevent button presses during loading */}
+                            {/* checks if search is loading and if it is, the loading screen will show but if it
+                            isnt arrows will show, this is used to prevent button presses during loading */}
 
-                        {loading ? <></> : <button onClick={nextPage}><img className="right-arrow" src={arrow}></img></button>}
+                            {loading ? <></> : <button onClick={nextPage}><img className="right-arrow" src={arrow}></img></button>}
+                        </div>
                     </div>
             </div>
         </div>

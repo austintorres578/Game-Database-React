@@ -39,15 +39,17 @@ export default function Games(props){
         backgroundRepeat:"no-repeat"
     }
 
-     const platforms = props.consoleList.map(console =>{
-        
 
-         return(
-             <div>
-                 <p>{console.platform.name}</p>
-             </div>
-         )
-    })
+    const platforms = (props.consoleList || []).map((platformObj, index) => {
+        if (!platformObj || !platformObj.platform) return null;
+
+        return (
+            <div key={platformObj.platform.id || index}>
+                <p>{platformObj.platform.name}</p>
+            </div>
+        );
+    });
+
 
     function createGame(){
         
