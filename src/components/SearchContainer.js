@@ -176,9 +176,11 @@ export default function SearchContainer(props){
                 {!props.user && (
                     <div className='sign-in-container'>
                         <div className="sign-in-inputs-con">
-                            <button className="sign-in-button">
-                                <Link to="/signin">Sign In</Link>
-                            </button>
+                            <Link to="/signin">
+                                <button className="sign-in-button">
+                                    Sign In
+                                </button>
+                            </Link>
                             <p>
                                 No account? <Link to="/signup">Sign Up Today!</Link>
                             </p>
@@ -195,6 +197,8 @@ export default function SearchContainer(props){
                         </div>
                     </div>
                 )}
+
+                
 
             </div>
         </div>

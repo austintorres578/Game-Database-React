@@ -447,9 +447,29 @@ function searchForImages(link){
         }
     } 
 
+    function favoriteGame(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const button = event.currentTarget;                  
+        const sibling = button.nextElementSibling;           
+
+        console.log(button);                                                            
+        if(button.classList.contains('successfully-favorited')){
+            button.classList.remove('successfully-favorited')
+            // sibling.innerText="Favorite"  
+        }else{
+            button.classList.add('successfully-favorited');
+            // sibling.innerText="Favorited"  
+        }
+    
+    }
+
     return(
         <div style={gamePageSectionStyle}>
             {loading ? <div className='loading-gif'><img src={loadingCircle}></img></div> : <div className="game-page">
+                {/* <button className="favorite-button successfully-favorited">Favorite Game</button> */}
+                <button className="favorite-button" onClick={favoriteGame}>Favorite Game</button>
                 <div className="game-title header">
                     <h1>{gameData.name_original}</h1>
                 </div>

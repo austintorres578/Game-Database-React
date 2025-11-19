@@ -78,6 +78,9 @@ export default function SignInPage(props) {
             <button className="sign-in-submit-button" type="submit">
               Sign In
             </button>
+
+            <p>No account? <Link to="/signup">Sign Up Today!</Link></p>
+
           </form>
         )}
 

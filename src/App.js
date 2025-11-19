@@ -5,6 +5,8 @@ import GamePage from "./pages/GamePage";
 import HomePage from "./pages/HomePage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
+import UserProfile from './pages/UserProfile';
+import SearchPage from './pages/SearchPage';
 
 import { auth } from "./firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -36,9 +38,10 @@ function App() {
         <Route path="/" element={<HomePage user={user} />} />
 
         <Route path="/game" element={<GamePage />}/>
-
+        <Route path="profile" element={<UserProfile />}/>
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/signin" element={<SignInPage />} />
+        <Route path="/search" element={<SearchPage/>} />
       </Routes>
     </BrowserRouter>
   );
