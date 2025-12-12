@@ -1,306 +1,608 @@
-import React, { useState, useEffect } from 'react';
-import arrow from '../assets/images/arrow.png'
-import loadingCircle from '../assets/images//loading.gif'
-import whiteArrow from '../assets/images//white-arrow-up.png'
-import noGameBackground from '../assets/images/noGameBackground.jpg'
+import React, { useState, useEffect, useRef } from "react";
+import loadingCircle from "../assets/images/loading.gif";
 
-import SearchContainer from "../components/SearchContainer"
-import Games from '../components/Games';
-import dataBaseBackground from "../assets/images/dataBaseBackground.webp"
+import Games from "../components/Games";
 
-export default function SearchPage({user}){
+import "../styles/gameSearch.css";
 
-    // origin varible is used to combine with the next and previous page data that comes from the api,
-    // since the next and previous links have a different link we have to take from the api link and 
-    //combine it with the origin variable for the fetch to work
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
-    let origin = "https://rawg-video-games-database.p.rapidapi.com/"
+export default function SearchPage({ user }) {
+  const origin = "https://rawg-video-games-database.p.rapidapi.com/";
+  const apiKey = "99cd09f6c33b42b5a24a9b447ee04a81";
+  const pageSize = 12;
 
-    // New Search is used to determine if the page number and localstorage information have to be
-    //restarted
+  const [loading, setLoading] = useState(false);
 
-    let newSearch = localStorage.getItem("currentLink") ? false : true
+  const [gatheredData, setGatheredData] = useState([
+    { results: [], next: "", previous: "", loaded: false },
+  ]);
 
-    //state that toggles a loading... when fetching data
+  const [pageNumber, setPageNumber] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
 
-    const [loading, setLoading] = useState(false)
-    
-    //state that takes the data fetched from api, the state is preset to an array so it doesnt
-    //cause errors
+  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]); // 🔹 NEW
 
-    const [gatheredData,setGatheredData] = useState([
-        {
-        results:[],
-        next:"",
-        previous:"",
-        loaded:false
-        }
-    ])
+  const [searchTerm, setSearchTerm] = useState("");
 
-    //state thst controls the page number displayed on the app
+  const [platformFilters, setPlatformFilters] = useState([
+    { id: "all", label: "All Platforms", platformId: null },
+  ]);
 
-    const [pageNumber, setPageNumber] = useState(1)
+  const [genreFilters, setGenreFilters] = useState([
+    { id: "all", label: "All Genres", slug: "", kind: "all" },
+  ]);
 
-    const [currentConsole, setCurrentConsole] = useState("")
+  const [tagFilters, setTagFilters] = useState([
+    // 🔹 NEW
+    { id: "all", label: "All Tags", slug: "", kind: "all" },
+  ]);
 
-    const [currentGenre, setCurrentGenre] = useState("")
+  const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
-    const [homePageBackground, setHomePageBackground] = useState({
-        backgroundImage: `url(${dataBaseBackground})`
-    })
+  const fetchLink = `${origin}games?key=${apiKey}&search_exact=true&ordering=-metacritic&page_size=${pageSize}&`;
 
-    //default fetch link that gathers 40 games sorted by metacritic rating from greatest to least
+  const totalPages = Math.max(1, Math.ceil((totalResults || 0) / pageSize));
 
-    let date = new Date
+  // 🔹 now also takes tagsArr
+  function buildLink(term, platformsArr, genresArr, tagsArr, page = 1) {
+    let link = fetchLink;
+    link += `page=${page}`;
 
-    let fetchLink = "https://rawg-video-games-database.p.rapidapi.com/games?key=99cd09f6c33b42b5a24a9b447ee04a81&search_exact=true&&ordering=-metacritic&page_size=40&"
+    if (term.trim()) link += `&search=${encodeURIComponent(term.trim())}`;
+    if (platformsArr.length > 0) link += `&platforms=${platformsArr.join(",")}`;
+    if (genresArr.length > 0) link += `&genres=${genresArr.join(",")}`;
+    if (tagsArr.length > 0) link += `&tags=${tagsArr.join(",")}`; // 🔹 RAWG tags filter
 
-    
-    function search(link){
-        const options = {
-            method: 'GET',
-            headers: {
-              'X-RapidAPI-key': 'c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c',
-              'X-RapidAPI-Host': 'rawg-video-games-database.p.rapidapi.com'
-            }
-          };
+    return link;
+  }
 
-          setLoading(true)
-          
-          fetch(link, options)
-            .then(response => {
-                return response.json()})
-            .then(response => {
-                setLoading(false)
-                console.log(response.results)
-                if(response.results.length===0){
-                    alert("No Results Found, Please Try Different Search Parameters")
-                }
+  function scrollToTop() {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
 
-    // Sets the link used with fetch to be able to recall the link when the home page is refreshed.
+  // runs the request + stores "last search" meta in localStorage
+  function runSearch(link, isFreshSearch = false, metaState) {
+    if (metaState) {
+      const { term, platforms = [], genres = [], tags = [], page } = metaState;
 
-                localStorage.setItem("currentLink",JSON.stringify(link))
-    // checks to see if the search is a fresh search so the local storage page can be remade
+      console.log(isFreshSearch ? "🔍 NEW / FRESH SEARCH" : "🔁 RE-RUN / RESTORED SEARCH");
+      console.log("Search Term:", term || "");
 
-                if(newSearch===true){
-                    setPageNumber(1)
-                    localStorage.setItem("currentPage",JSON.stringify(1))
-                }
-                if(localStorage.getItem("currentPage")==="1"){
-                    localStorage.setItem("topGameBackground",JSON.stringify(response.results[0].background_image))
-                    // console.log(response.results[0].background_image)
-                    if(response.results[0].background_image!=null){
-                        setHomePageBackground({
-                            backgroundImage: `url(${response.results[0].background_image})`
-                        })
-                    }else{
-                        setHomePageBackground({
-                            backgroundImage: `url(${noGameBackground})`
-                        })
-                    }
-                }else{
-                    setHomePageBackground({
-                        backgroundImage: `url(${localStorage.getItem("topGameBackground")})`
-                    })
-                }
-                setCurrentConsole(document.querySelectorAll(".css-qc6sy-singleValue")[0].innerHTML)
-                setCurrentGenre(document.querySelectorAll(".css-qc6sy-singleValue")[1].innerHTML)
-                return(setGatheredData([
-                    {
-                    results:response.results,
-                    next:response.next,
-                    previous:response.previous,
-    //loaded enables the page buttons to function if loaded = true
-                    loaded:true
-                }]))
+      console.log("Platforms Selected:");
+      if (platforms.length === 0) {
+        console.log("- (none) -> All Platforms");
+      } else {
+        platforms.forEach((pid) => {
+          const found = platformFilters.find((p) => p.platformId === pid);
+          const name = found?.label || "(name not loaded yet)";
+          console.log(`- ID: ${pid} | Name: ${name}`);
+        });
+      }
 
+      console.log("Genres Selected:");
+      if (genres.length === 0) {
+        console.log("- (none) -> All Genres");
+      } else {
+        genres.forEach((slug) => {
+          const found = genreFilters.find((g) => g.slug === slug);
+          const name = found?.label || "(name not loaded yet)";
+          console.log(`- Slug: ${slug} | Name: ${name}`);
+        });
+      }
 
-            })
-            .catch(err => console.error(err));
-            
-            document.querySelector('.app-container').style.display="flex"
-            document.querySelector('.game-page-buttons').style.display="flex"
-            document.querySelector('.game-page-buttons').style.justifyContent="center"
-            document.querySelector('.game-page-buttons').children[0].style.display="flex"
+      console.log("Tags Selected:");
+      if (tags.length === 0) {
+        console.log("- (none) -> All Tags");
+      } else {
+        tags.forEach((slug) => {
+          const found = tagFilters.find((t) => t.slug === slug);
+          const name = found?.label || "(name not loaded yet)";
+          console.log(`- Slug: ${slug} | Name: ${name}`);
+        });
+      }
 
-            document.querySelector('.home-page-section').classList.add('completed-search-con')
-
-        
-            // document.querySelector('.search-parameters-con').style.justifyContent="space-between"
-            document.querySelector('.search-parameters-con').style.maxWidth="1250px"
-            document.querySelector('.search-parameters-con').style.marginLeft='auto'
-            document.querySelector('.search-parameters-con').style.marginRight='auto'
-            
-            
-            let searchButtonCon = document.querySelector('.search-button-container')
-            
-            
-            document.querySelector('.game-search-input').style.width="100%"
-
-            // searchButtonCon.style.flexDirection="row"
-            
-            searchButtonCon.querySelector('.search-button').style.margintop="0px"
-            searchButtonCon.querySelector('.search-button').style.marginleft="10px"
-            // searchButtonCon.style.width="49.5%"
-            document.querySelector('.search-parameters-con h1').style.display="none"
-
-
-    }
-    
-    //this function is called when the search button is pressed so the fetch api function can know
-    //to remake the currentLink localStorage
-
-    function freshSearch(link){
-        newSearch=true
-        search(link)
+      console.log("Page:", page);
+      console.log("------------------------------------");
     }
 
-    //function checked if the fetch data is loaded then gets the length of the next page link so the
-    //splice on the link can be functional outside localhost:3000. Then it adds 1 to the currentPage state
-    //so the page number on screen can change while also setting the currentPage local storage as the
-    //page state but +1. then it makes newSearch false so when the search() function is called it doesnt 
-    //reset page number. Then combines origin and ending of fetches next link to make a usuable link to 
-    //set as localStorage current link and search with 
+    const options = {
+      method: "GET",
+      headers: {
+        "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
+        "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
+      },
+    };
 
-    function nextPage(){
+    setLoading(true);
 
+    fetch(link, options)
+      .then((res) => res.json())
+      .then((res) => {
+        setLoading(false);
+        setTotalResults(res.count || 0);
 
-        if(gatheredData[0].loaded===true){
-        let length = gatheredData[0].next.length
-        setPageNumber(prevState => prevState + 1)
-        localStorage.setItem("currentPage",JSON.stringify(pageNumber+1))
-        newSearch=false
-        localStorage.setItem("currentLink",JSON.stringify(origin+gatheredData[0].next.slice(24,length)))
-        search(origin+gatheredData[0].next.slice(24,length))
-        }else{
-
+        localStorage.setItem("currentLink", link);
+        if (metaState) {
+          localStorage.setItem("searchState", JSON.stringify(metaState));
+          if (typeof metaState.page === "number") {
+            localStorage.setItem("currentPage", String(metaState.page));
+          }
         }
+
+        const results = (res.results || []).slice(0, pageSize);
+
+        setGatheredData([
+          {
+            results,
+            next: res.next || "",
+            previous: res.previous || "",
+            loaded: true,
+          },
+        ]);
+      })
+      .catch((err) => {
+        setLoading(false);
+        console.error(err);
+      });
+  }
+
+  // fetch platform + genre + tag filters
+  useEffect(() => {
+    const options = {
+      method: "GET",
+      headers: {
+        "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
+        "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
+      },
+    };
+
+    // Platforms
+    fetch(`${origin}platforms?key=${apiKey}&page_size=50`, options)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
+        setPlatformFilters((prev) => [
+          prev[0],
+          ...sorted.map((p) => ({
+            id: String(p.id),
+            label: p.name,
+            platformId: p.id,
+          })),
+        ]);
+      });
+
+    // Genres
+    fetch(`${origin}genres?key=${apiKey}&page_size=40`, options)
+      .then((res) => res.json())
+      .then((data) => {
+        const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
+        setGenreFilters((prev) => [
+          prev[0],
+          ...sorted.map((g) => ({
+            id: String(g.id),
+            label: g.name,
+            slug: g.slug,
+            kind: "genre",
+          })),
+        ]);
+      });
+
+    // 🔹 Tags
+    fetch(`${origin}tags?key=${apiKey}&page_size=40`, options)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.results) return;
+        const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
+        setTagFilters((prev) => [
+          prev[0],
+          ...sorted.map((t) => ({
+            id: String(t.id),
+            label: t.name,
+            slug: t.slug,
+            kind: "tag",
+          })),
+        ]);
+      })
+      .catch((err) => {
+        console.error("Error fetching tags:", err);
+      });
+  }, []);
+
+  // close page dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsPageDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // On mount: if there's a saved search, restore it and re-run it
+  useEffect(() => {
+    const savedLink = localStorage.getItem("currentLink");
+    const savedStateRaw = localStorage.getItem("searchState");
+
+    if (savedLink && savedStateRaw) {
+      try {
+        const savedState = JSON.parse(savedStateRaw);
+
+        setSearchTerm(savedState.term || "");
+        setSelectedPlatforms(savedState.platforms || []);
+        setSelectedGenres(savedState.genres || []);
+        setSelectedTags(savedState.tags || []); // 🔹 restore tags
+        setPageNumber(savedState.page || 1);
+
+        runSearch(savedLink, false, savedState);
+      } catch (err) {
+        console.error("Failed to parse saved searchState", err);
+      }
+    }
+  }, []);
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const page = 1;
+
+    setPageNumber(page);
+    localStorage.setItem("currentPage", String(page));
+
+    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, page);
+
+    runSearch(link, true, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page,
+    });
+
+    scrollToTop();
+  }
+
+  function nextPage() {
+    if (loading || pageNumber >= totalPages) return;
+
+    const newPage = pageNumber + 1;
+    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, newPage);
+
+    setPageNumber(newPage);
+    localStorage.setItem("currentPage", String(newPage));
+
+    runSearch(link, false, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page: newPage,
+    });
+
+    scrollToTop();
+  }
+
+  function prevPage() {
+    if (loading || pageNumber <= 1) return;
+
+    const newPage = pageNumber - 1;
+    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, newPage);
+
+    setPageNumber(newPage);
+    localStorage.setItem("currentPage", String(newPage));
+
+    runSearch(link, false, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page: newPage,
+    });
+
+    scrollToTop();
+  }
+
+  function goToPage(num) {
+    if (loading || num === pageNumber) return;
+
+    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, num);
+
+    setPageNumber(num);
+    localStorage.setItem("currentPage", String(num));
+
+    runSearch(link, false, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page: num,
+    });
+
+    scrollToTop();
+  }
+
+  function revealSearchDropdown(e) {
+    let parent = e.target.parentNode;
+    let filters = parent.querySelector(".filters");
+
+    if (!filters) return;
+
+    const arrow = parent.querySelector("span");
+
+    if (arrow.style.transform === "" || arrow.style.transform === "rotate(0deg)") {
+      arrow.style.transform = "rotate(180deg)";
+      filters.style.height = "100%";
+      filters.style.marginTop = "15px";
+      parent.querySelector(".toggle").classList.add("active");
+    } else {
+      arrow.style.transform = "rotate(0deg)";
+      filters.style.height = "0px";
+      filters.style.marginTop = "0px";
+      parent.querySelector(".toggle").classList.remove("active");
+    }
+  }
+
+  function handlePlatformClick(p) {
+    if (p.id === "all") return setSelectedPlatforms([]);
+
+    setSelectedPlatforms((prev) =>
+      prev.includes(p.platformId) ? prev.filter((id) => id !== p.platformId) : [...prev, p.platformId]
+    );
+  }
+
+  function handleGenreClick(g) {
+    if (g.id === "all") return setSelectedGenres([]);
+
+    setSelectedGenres((prev) => (prev.includes(g.slug) ? prev.filter((sl) => sl !== g.slug) : [...prev, g.slug]));
+  }
+
+  // 🔹 Tag click handler
+  function handleTagClick(t) {
+    if (t.id === "all") return setSelectedTags([]);
+
+    setSelectedTags((prev) => (prev.includes(t.slug) ? prev.filter((sl) => sl !== t.slug) : [...prev, t.slug]));
+  }
+
+  function resetSearch() {
+    setSearchTerm("");
+    setSelectedPlatforms([]);
+    setSelectedGenres([]);
+    setSelectedTags([]); // 🔹 reset tags
+    setPageNumber(1);
+    setIsPageDropdownOpen(false);
+
+    setGatheredData([{ results: [], next: "", previous: "", loaded: false }]);
+    setTotalResults(0);
+    localStorage.removeItem("currentLink");
+    localStorage.removeItem("searchState");
+    localStorage.removeItem("currentPage");
+
+    scrollToTop();
+  }
+
+  const games = gatheredData[0].results.map((game) => (
+    <Games
+      key={game.id}
+      user={user} // ✅ IMPORTANT: Games can now block “Add to Library” when logged out
+      id={game.id}
+      name={game.name}
+      rating={game.metacritic}
+      developers={game.developers}
+      genre={game.genres}
+      background={game.background_image}
+      consoleList={game.platforms}
+      pageNumber={pageNumber}
+      esrb_rating={game.esrb_rating}
+      tag={game.tags}
+      stores={game.stores}
+    />
+  ));
+
+  function isPlatformActive(p) {
+    if (p.id === "all") return selectedPlatforms.length === 0;
+    return selectedPlatforms.includes(p.platformId);
+  }
+
+  function isGenreActive(g) {
+    if (g.id === "all") return selectedGenres.length === 0;
+    return selectedGenres.includes(g.slug);
+  }
+
+  function isTagActive(t) {
+    if (t.id === "all") return selectedTags.length === 0;
+    return selectedTags.includes(t.slug);
+  }
+
+  // selected platforms/genres/tags summary
+  const selectedPlatformLabels = platformFilters
+    .filter((p) => p.id !== "all" && selectedPlatforms.includes(p.platformId))
+    .map((p) => p.label);
+
+  const platformSummary = selectedPlatformLabels.length === 0 ? "All Platforms" : selectedPlatformLabels.join(", ");
+
+  const selectedGenreLabels = genreFilters
+    .filter((g) => g.id !== "all" && selectedGenres.includes(g.slug))
+    .map((g) => g.label);
+
+  const genreSummary = selectedGenreLabels.length === 0 ? "All Genres" : selectedGenreLabels.join(", ");
+
+  const selectedTagLabels = tagFilters
+    .filter((t) => t.id !== "all" && selectedTags.includes(t.slug))
+    .map((t) => t.label);
+
+  const tagSummary = selectedTagLabels.length === 0 ? "All Tags" : selectedTagLabels.join(", ");
+
+  const pageOptions = (() => {
+    const total = totalPages;
+    if (total <= 10) return Array.from({ length: total }, (_, i) => i + 1);
+
+    let start = pageNumber - 4;
+    let end = pageNumber + 5;
+
+    if (start < 1) {
+      start = 1;
+      end = 10;
+    }
+    if (end > total) {
+      end = total;
+      start = total - 9;
     }
 
-    //prev page function does pretty much the same thing as nextPage but wont decrease page state under 1
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  })();
 
-    function prevPage(){
-        if(gatheredData[0].loaded===true){
-        let length = gatheredData[0].previous.length
-        localStorage.setItem("currentLink",JSON.stringify("currentLink"))
-        search(origin+gatheredData[0].previous.slice(24,length))
-        newSearch=false
-        if(pageNumber>1){
-            setPageNumber(prevState => prevState - 1)
-            localStorage.setItem("currentPage",JSON.stringify(pageNumber-1))
-        }
-        }else{
-        }
-    }
+  const hasResults = gatheredData[0].loaded && gatheredData[0].results.length > 0;
+  const noResults = gatheredData[0].loaded && !loading && gatheredData[0].results.length === 0;
 
-    //Checks to see if a link is saved in local storage and if it is the link will be used in search
-    //function. then it will set page state as local storage page
+  return (
+    <div className="container">
+      <Header />
 
+      <div className="search-header">
+        <h1 className="search-title">Find Your Next Game</h1>
+        <p className="search-subtitle">Search thousands of titles across all platforms.</p>
+      </div>
 
-    function checkLocalLink(){
-        if(JSON.parse(localStorage.getItem("currentLink"))!=null){
-            setPageNumber(JSON.parse(localStorage.getItem("currentPage")))
-            search(JSON.parse(localStorage.getItem("currentLink")))
-        }
-    }
-    
-   
-   
-   
+      <div className="search-page-container">
+        <form onSubmit={handleSubmit}>
+          <div className="search-box-wrapper">
+            <input
+              className="search-box"
+              type="text"
+              placeholder="Search By Game Title..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <button type="submit" className="search-button" disabled={loading}>
+              {loading ? "Searching..." : "Search"}
+            </button>
+          </div>
 
-    //useEffect calls checkLocalLink once on first load
+          {/* PLATFORMS */}
+          <div className="platform-game-toggle multi-toggle">
+            <div className="toggle" onClick={revealSearchDropdown}>
+              <p className="toggle-selected">{platformSummary}</p>
+              <span>▾</span>
+            </div>
+            <div className="filters platform-filter">
+              {platformFilters.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={"filter-btn" + (isPlatformActive(p) ? " active" : "")}
+                  onClick={() => handlePlatformClick(p)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
+          {/* GENRES */}
+          <div className="platform-game-toggle multi-toggle">
+            <div className="toggle" onClick={revealSearchDropdown}>
+              <p className="toggle-selected">{genreSummary}</p>
+              <span>▾</span>
+            </div>
+            <div className="filters genre-filter">
+              {genreFilters.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  className={"filter-btn" + (isGenreActive(g) ? " active" : "")}
+                  onClick={() => handleGenreClick(g)}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-    //creates a game link for every game in fetchlinks result array
+          {/* TAGS 🔹 NEW */}
+          <div className="platform-game-toggle multi-toggle">
+            <div className="toggle" onClick={revealSearchDropdown}>
+              <p className="toggle-selected">{tagSummary}</p>
+              <span>▾</span>
+            </div>
+            <div className="filters tag-filter">
+              {tagFilters.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  className={"filter-btn" + (isTagActive(t) ? " active" : "")}
+                  onClick={() => handleTagClick(t)}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-     const games = gatheredData[0].results.map(game => {
-        
+          <button type="button" className="reset-search-button" onClick={resetSearch}>
+            Reset Search
+          </button>
+        </form>
 
-    
+        {loading && (
+          <div className="loading-wrapper">
+            <img src={loadingCircle} alt="Loading..." />
+          </div>
+        )}
 
-         return (
-             <Games
-                 key={game.id}
-                 id={game.id}
-                 name={game.name}
-                 rating={game.metacritic}
-                 background={game.short_screenshots}
-                 consoleList={game.platforms}
-                 pageNumber={pageNumber}
-             />
-         )
-     })
+        {hasResults && <div className="game-grid">{games}</div>}
 
-     console.log(gatheredData[0].loaded)
+        {noResults && (
+          <div className="no-results-message">
+            <h2>No games found</h2>
+            <p>
+              We couldn&apos;t find any games matching your search and filters. Try a different title, removing some
+              filters, or resetting the search.
+            </p>
+          </div>
+        )}
 
-     useEffect(() => {
-        // checkLocalLink();
-    }, [""]);
-    
+        {gatheredData[0].loaded && totalPages > 1 && hasResults && (
+          <div className="pagination">
+            <button className="page-btn" onClick={prevPage} disabled={pageNumber <= 1}>
+              ‹ Prev
+            </button>
 
-    return(
-        <div className="home-page-section" style={
-            homePageBackground
-        }>
-            <SearchContainer 
-                    data={gatheredData}
-                    handleSearch={freshSearch}
-                    link={fetchLink}
-                    loading={loading}
-                    nextPageHandler={nextPage}
-                    prevPageHandler={prevPage}
-                    changeConsole={setCurrentConsole}
-                    changeGenre={setCurrentGenre}
-                    user={user}     
-                    
-                />
-                {/*<h1>The Best {currentGenre}</h1>
-                <h1>Games Of The {currentConsole}</h1>*/} 
+            <div className={"dropdown" + (isPageDropdownOpen ? " open" : "")} ref={dropdownRef}>
+              <button className="dropdown-trigger" type="button" onClick={() => setIsPageDropdownOpen((v) => !v)}>
+                Page {pageNumber} of {totalPages} ▾
+              </button>
 
-
-            <div className='app-container'>
-                <div className="results-container">
-                    <div className='games-list'>
-
-                        {/* checks if search is loading and if it is, the loading screen will show but if it
-                        isnt the games will show */}
-                        {loading ? <div className='loading-gif'><img src={loadingCircle}></img></div> : games}
-                        {/* {gatheredData[0].loaded ? <></> : 
-                    <div className='home-page-header'>
-                        <div className='search-page-header'>
-                            <img src={whiteArrow}></img>
-                            <h1>START SEARCH ABOVE</h1> 
-                        </div>
-                        <div className='page-number-header'>
-                            <img src={whiteArrow}></img>
-                            <h1>Change Page Below</h1> 
-                        </div>
-                    </div>} */}
-                        
-                    </div>
+              {isPageDropdownOpen && (
+                <div className="dropdown-menu">
+                  {pageOptions.map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      className={"dropdown-item" + (n === pageNumber ? " current-page" : "")}
+                      onClick={() => goToPage(n)}
+                    >
+                      Page {n}
+                    </button>
+                  ))}
                 </div>
+              )}
             </div>
-            <div className='game-page-buttons'>
-                    <div>
-                        <div>
 
-                            {/* checks if search is loading and if it is, the loading screen will show but if it
-                            isnt arrows will show, this is used to prevent button presses during loading */}
+            <button className="page-btn" onClick={nextPage} disabled={pageNumber >= totalPages}>
+              Next ›
+            </button>
+          </div>
+        )}
+      </div>
 
-                            {loading ? <></> : <button onClick={prevPage}><img className="left-arrow" src={arrow}></img></button>}
-                        </div>
-                        <div className='page-number'>
-                            <p>{ gatheredData[0].loaded ? "Page " + pageNumber : <></>}</p>
-                        </div>
-                        <div>
-
-                            {/* checks if search is loading and if it is, the loading screen will show but if it
-                            isnt arrows will show, this is used to prevent button presses during loading */}
-
-                            {loading ? <></> : <button onClick={nextPage}><img className="right-arrow" src={arrow}></img></button>}
-                        </div>
-                    </div>
-            </div>
-        </div>
-    )
+      <Footer />
+    </div>
+  );
 }

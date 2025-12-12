@@ -1,110 +1,177 @@
-import {React,useEffect} from "react";
-import { Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from "react";
+import { Link } from "react-router-dom";
 
-import metacriticIcon from "../assets/images/metacriticIcon.png"
-import noGameBackground from '../assets/images/noGameBackground.jpg'
-import addIcon from '../assets/images/plus-icon.png'
+import metacriticIcon from "../assets/images/metacriticIcon.png";
+import noGameBackground from "../assets/images/noGameBackground.jpg";
+import addIcon from "../assets/images/plus-icon.png";
 
-export default function Games(props){
+// 🔐 Firebase
+import { auth, db } from "../firebase/firebase";
+import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
 
-    const gameBackgroundObj = props.background
+export default function Games(props) {
+  const [isHovered, setIsHovered] = useState(false);
 
-    function gameRanking(){
-        if((props.pageNumber===1)&&(document.querySelector(".games-list").children.length>=3)){
-            document.querySelector(".games-list").children[0].children[0].style.border="solid 3px gold"
-            document.querySelector(".games-list").children[1].children[0].style.border="solid 3px silver"
-            document.querySelector(".games-list").children[2].children[0].style.border="solid 3px #cd8032"
-        }
+  // Library state for THIS game
+  const [isInLibrary, setIsInLibrary] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const addButtonRef = useRef(null);
+
+  const img = props.background || noGameBackground;
+
+  const primaryGenre =
+    props.genre && props.genre.length > 0 && props.genre[0]?.name
+      ? props.genre[0].name
+      : "No Genre";
+
+  const hasRating =
+    typeof props.rating === "number" && !Number.isNaN(props.rating);
+
+  const metaText = hasRating ? `${props.rating} Metacritic` : "No Score";
+
+  // 🔍 On mount / when id changes, check if this game is already in library
+  useEffect(() => {
+    const checkInLibrary = async () => {
+      const user = auth.currentUser;
+      if (!user || !props.id) {
+        setIsInLibrary(false);
+        return;
+      }
+
+      try {
+        const ref = doc(db, "users", user.uid, "library", String(props.id));
+        const snap = await getDoc(ref);
+        setIsInLibrary(snap.exists());
+      } catch (err) {
+        console.error("Error checking library status for card:", err);
+      }
+    };
+
+    checkInLibrary();
+  }, [props.id]);
+
+  const handleAddToLibrary = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const user = auth.currentUser;
+    if (!user) {
+      alert("You need to be signed in to add games to your library.");
+      return;
     }
 
-   function favoriteGame(event) {
-        event.preventDefault();
-        event.stopPropagation();
+    if (!props.id) return;
 
-        const button = event.currentTarget;                  
-        const sibling = button.nextElementSibling;           
+    const docRef = doc(db, "users", user.uid, "library", String(props.id));
 
-        console.log(button);                                                            
-        if(button.parentElement.classList.contains('successfully-favorited')){
-            button.parentElement.classList.remove('successfully-favorited')
-            sibling.innerText="Favorite"  
-        }else{
-            button.parentElement.classList.add('successfully-favorited');
-            sibling.innerText="Favorited"  
-        }
-    
+    try {
+      setSaving(true);
+
+      await setDoc(
+        docRef,
+        {
+          id: props.id,
+          name: props.name || "",
+          background_image: img || null,
+          metacritic: hasRating ? props.rating : null,
+          rating: hasRating ? props.rating : null,
+          platforms: [], // you can pass real platforms via props later
+          genres: primaryGenre !== "No Genre" ? [primaryGenre] : [],
+          status: "backlog",
+          addedAt: new Date().toISOString(),
+        },
+        { merge: true }
+      );
+
+      setIsInLibrary(true);
+    } catch (err) {
+      console.error("Error adding game from card:", err);
+      alert("There was a problem adding this game. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemoveFromLibrary = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const user = auth.currentUser;
+    if (!user) {
+      alert("You need to be signed in to manage your library.");
+      return;
     }
 
+    if (!props.id) return;
 
-    let backgroundImg
+    const docRef = doc(db, "users", user.uid, "library", String(props.id));
 
-        if(gameBackgroundObj===null){
-            backgroundImg=`url(${noGameBackground})`
-        }
-        else if(gameBackgroundObj.length===0){
-            backgroundImg=`url(${noGameBackground})`
-        }
-        else{
-            backgroundImg = `
-        linear-gradient(to right,
-            rgba(0, 0, 0, .5), 
-            rgba(0, 0, 0, 0.0)),
-        url(${gameBackgroundObj[0].image})`
-        }
-
-    let style={
-        background: backgroundImg,
-        backgroundSize:"cover",
-        backgroundPosition:"center",
-        backgroundRepeat:"no-repeat"
+    try {
+      setSaving(true);
+      await deleteDoc(docRef);
+      setIsInLibrary(false);
+    } catch (err) {
+      console.error("Error removing game from card:", err);
+      alert("There was a problem removing this game. Please try again.");
+    } finally {
+      setSaving(false);
     }
+  };
 
+  return (
+    <div
+      className="game-wrapper"
+      onMouseEnter={() => {
+        console.log("Add Button Element (enter):", addButtonRef.current);
+        setIsHovered(true);
+      }}
+      onMouseLeave={() => {
+        console.log("Add Button Element (leave):", addButtonRef.current);
+        setIsHovered(false);
+      }}
+    >
+      <Link to={"/game#" + props.id} className="game-link">
+        <div className="game-card">
+          <div
+            className="game-img"
+            style={{ backgroundImage: `url('${img}')` }}
+          />
+          <div className="game-info">
+            <p className="game-title">{props.name}</p>
 
-    const platforms = (props.consoleList || []).map((platformObj, index) => {
-        if (!platformObj || !platformObj.platform) return null;
-
-        return (
-            <div key={platformObj.platform.id || index}>
-                <p>{platformObj.platform.name}</p>
+            <div className="game-sub-info">
+              <p className="game-genre">{primaryGenre} •</p>
+              <p className="game-meta">{metaText}</p>
             </div>
-        );
-    });
-
-
-    function createGame(){
-        
-    }
-
-    useEffect(() => {
-        gameRanking()
-    }, [""]);
-
-    
-    
-    return(
-        <Link to={"/game#"+props.id}>
-        <div className="game" style={style}>
-            <div className="game-name">
-                <p>{props.name}</p>
-                <div className="console-list">
-                    {platforms}
-                </div>
-            </div>
-            <div className="game-rating">
-                <div>
-                    <img src={metacriticIcon}></img>
-                    <p>{props.rating}</p>
-                </div>
-            </div>
-            {/* <div className="add-to-playlist successfully-favorited">
-                <button onClick={favoriteGame}><img src={addIcon}></img></button>
-                <p>Favorite</p>
-            </div> */}
-            <div className="add-to-playlist">
-                <button onClick={favoriteGame}><img src={addIcon}></img></button>
-                <p>Favorite</p>
-            </div>
+          </div>
         </div>
-        </Link>
-    )
+      </Link>
+
+      <div className="add-button-con">
+        {/* ADD button – only show if it's NOT in library */}
+        {!isInLibrary && (
+          <button
+            ref={addButtonRef}
+            className={`add-button ${isHovered ? "active" : ""}`}
+            onClick={handleAddToLibrary}
+            disabled={saving}
+          >
+            <img src={addIcon} alt="Add to library" />
+          </button>
+        )}
+
+        {/* REMOVE button – only show if it IS in library */}
+        {isInLibrary && (
+          <button
+            className={`remove-button ${isHovered ? "active" : ""}`}
+            onClick={handleRemoveFromLibrary}
+            disabled={saving}
+          >
+            <img src={addIcon} alt="Remove from library" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
 }

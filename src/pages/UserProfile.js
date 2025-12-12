@@ -1,88 +1,399 @@
-import react from "react"
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
-import arrow from '../assets/images/arrow.png'
-import editIcon from '../assets/images/pencilIcon.png'
-import defaultProfilePic from '../assets/images/defaultUser.png'
+import { auth, db } from "../firebase/firebase";
+import {
+  doc,
+  getDoc,
+  collection,
+  getDocs,
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
+import "../styles/profile.css";
 
+import userDefaultProfileImage from "../assets/images/defaultUser.png";
+import checkIcon from "../assets/images/check-icon.png";
 
-export default function UserProfile(){
-    return(
-        <div className="user-profile-page">
-            <div className="user-profile-container">
-                <h1>Welcome User</h1>
-                <div className="user-profile-image">
-                    <button className="user-profile-edit"><img src={editIcon}></img></button>
-                </div>
-                <h2>Favorite Games</h2>
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
-                <div className="favorite-genre">
-                    <div className="genre"><p>Action</p></div>
-                    <div className="genre"><p>Adventure</p></div>
-                    <div className="genre"><p>Horror</p></div>
-                    <div className="genre"><p>Puzzle</p></div>
-                    <div className="genre"><p>Mystery</p></div>
-                </div>
+export default function UserProfile() {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [authUser, setAuthUser] = useState(null);
 
-                <div className="favorite-games">
-                    <button className="left-button favorite-game-arrow"><img src={arrow}></img></button>
-                    <div className="favorite-game-wrapper">
-                        <div className="favorite-game-slider">
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+  // 🔹 Library / tracked games
+  const [libraryGames, setLibraryGames] = useState([]);
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                                <p className="favorite-game-rating">99</p>
-                            </Link>
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+  // 🔹 Pagination for completed games
+  const [completedPage, setCompletedPage] = useState(1);
+  const COMPLETED_PER_PAGE = 12;
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                            </Link>
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+  useEffect(() => {
+    // Watch auth state
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setAuthUser(user);
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                            </Link>
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+      if (!user) {
+        setProfile(null);
+        setLibraryGames([]);
+        setLoading(false);
+        return;
+      }
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                            </Link>
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+      try {
+        // Load profile doc
+        const ref = doc(db, "users", user.uid);
+        const snap = await getDoc(ref);
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                            </Link>
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+        if (snap.exists()) {
+          setProfile(snap.data());
+        } else {
+          setProfile(null);
+        }
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                            </Link>
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+        // 🔹 Load user's library from subcollection
+        const libraryRef = collection(db, "users", user.uid, "library");
+        const librarySnap = await getDocs(libraryRef);
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                            </Link>
-                            <Link className="favorite-game" to="/">
-                                <div className="favorite-game-art">
+        const games = librarySnap.docs.map((docSnap) => ({
+          id: docSnap.id,
+          ...docSnap.data(),
+        }));
 
-                                </div>
-                                <p className="favorite-game-name">Game Name</p>
-                            </Link>
-                        </div>
-                    </div>
-                    <button className="right-button favorite-game-arrow"><img src={arrow}></img></button>
-                </div>
-            </div>
+        setLibraryGames(games);
+      } catch (err) {
+        console.error("Error loading profile or library:", err);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // Derived values with fallbacks
+  const displayName =
+    profile?.displayName || authUser?.displayName || "NewPlayer";
+
+  const username = profile?.username || authUser?.displayName || "newuser";
+
+  const shortAboutMe =
+    profile?.shortAboutMe || "just a new gamer starting my gaming journey";
+
+  const aboutMe =
+    profile?.aboutMe ||
+    "Hey there! I just joined and I'm excited to start tracking the games I love.";
+
+  const selectedPlatforms = profile?.selectedPlatforms || [];
+  const selectedGenres = profile?.selectedGenres || [];
+  const profileTags = profile?.profileTags || [];
+
+  // Avatar
+  const avatarSrc = profile?.avatarPreview || userDefaultProfileImage;
+
+  // 🔹 Stats
+  const totalTracked = libraryGames.length;
+  const completedGames = libraryGames.filter(
+    (g) => g.status === "completed"
+  );
+  const completedCount = completedGames.length;
+
+  const playingCount = libraryGames.filter(
+    (g) => g.status === "playing"
+  ).length;
+
+  // 🧾 Define "in backlog" as: in library but not completed
+  const backlogGames = libraryGames.filter((g) => g.status !== "completed");
+  const backlogCount = backlogGames.length;
+
+  // ⭐ Favorites
+  const favoriteGames = libraryGames.filter((g) => g.isFavorite);
+
+  // Primary genre
+  const getPrimaryGenre = (game) =>
+    Array.isArray(game.genres) && game.genres.length > 0
+      ? game.genres[0]
+      : "Unknown genre";
+
+  // 🔹 Completed pagination logic
+  const totalCompletedPages =
+    completedCount > 0
+      ? Math.ceil(completedCount / COMPLETED_PER_PAGE)
+      : 1;
+
+  // Clamp current page if completed list shrinks
+  const safeCompletedPage = Math.min(completedPage, totalCompletedPages);
+  const completedStartIndex = (safeCompletedPage - 1) * COMPLETED_PER_PAGE;
+  const completedEndIndex = completedStartIndex + COMPLETED_PER_PAGE;
+  const paginatedCompletedGames = completedGames.slice(
+    completedStartIndex,
+    completedEndIndex
+  );
+
+  useEffect(() => {
+    // If completed games change drastically (e.g. user clears some),
+    // make sure we don't sit on an empty high page.
+    if (completedPage > totalCompletedPages) {
+      setCompletedPage(1);
+    }
+  }, [completedCount, totalCompletedPages, completedPage]);
+
+  if (loading) {
+    return (
+      <div className="profile-shell">
+        <Header />
+        <div className="profile profile-loading">
+          <p>Loading profile...</p>
         </div>
-    )
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="profile-shell">
+      <Header />
+
+      <div className="profile">
+        <section className="profile-header-card">
+          <div className="profile-main">
+            <div className="profile-avatar-wrapper">
+              <div className="profile-avatar">
+                <img src={avatarSrc} alt="Profile avatar" />
+              </div>
+              <div className="profile-status-dot"></div>
+            </div>
+
+            <div className="profile-identity">
+              <div className="profile-name-row">
+                <h1 className="profile-name">{displayName}</h1>
+                <span className="profile-username">@{username}</span>
+              </div>
+
+              <p className="profile-subline">{shortAboutMe}</p>
+
+              <div className="profile-tags">
+                {profileTags.length === 0 ? (
+                  <span className="profile-tag profile-tag--empty">
+                    Add profile tags in settings
+                  </span>
+                ) : (
+                  profileTags.map((tag) => (
+                    <span key={tag} className="profile-tag">
+                      {tag}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <p className="platform-title">Platforms</p>
+
+          <div className="game-platforms">
+            {selectedPlatforms.length === 0 ? (
+              <span className="profile-tag profile-tag--empty">
+                Add platforms in settings
+              </span>
+            ) : (
+              selectedPlatforms.map((platform) => (
+                <div key={platform}>{platform}</div>
+              ))
+            )}
+          </div>
+
+          <div className="profile-actions">
+            <Link to="/profile/customize">
+              <button className="btn btn-primary">Edit profile</button>
+            </Link>
+
+            <div className="profile-stats-row">
+              <div className="profile-stat-pill">
+                <strong>{totalTracked}</strong> Games in library
+              </div>
+              <div className="profile-stat-pill">
+                <strong>{completedCount}</strong> Completed
+              </div>
+              <div className="profile-stat-pill">
+                <strong>{playingCount}</strong> Currently playing
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="profile-main-grid">
+          {/* ⭐ FAVORITE GAMES SECTION */}
+          <article className="profile-panel">
+            <div className="profile-panel-header">
+              <h2>Top 5 Games</h2>
+              <span>Click a game to view details.</span>
+            </div>
+
+            <div className="favorite-games-row">
+              {favoriteGames.length === 0 ? (
+                <p className="profile-empty-state">
+                  You haven’t favorited any games yet.
+                  Go to a game page and click “Favorite game.”
+                </p>
+              ) : (
+                favoriteGames.slice(0, 12).map((game) => (
+                  <Link
+                    key={game.id}
+                    to={`/game#${game.id}`}
+                    className="favorite-game-card"
+                  >
+                    <div
+                      className="favorite-game-cover"
+                      style={{
+                        backgroundImage: game.background_image
+                          ? `url(${game.background_image})`
+                          : "none",
+                      }}
+                    ></div>
+                    <div className="favorite-game-body">
+                      <p className="favorite-game-title">
+                        {game.name || "Untitled game"}
+                      </p>
+                      <div className="favorite-game-meta">
+                        <span>{getPrimaryGenre(game)}</span>
+                        <span className="favorite-game-rating">
+                          {game.metacritic ?? "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </article>
+
+          {/* SIDEBAR */}
+          <aside className="profile-sidebar">
+            <div className="profile-panel profile-about">
+              <div className="profile-panel-header">
+                <h2>About</h2>
+              </div>
+              <p>{aboutMe}</p>
+
+              <span className="small-pill-label">Favorite genres</span>
+              <div className="profile-tags-cloud">
+                {selectedGenres.length === 0 ? (
+                  <span className="profile-tag profile-tag--empty">
+                    Add some favorite genres in settings
+                  </span>
+                ) : (
+                  selectedGenres.map((genre) => (
+                    <span key={genre}>{genre}</span>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="profile-panel">
+              <div className="profile-panel-header">
+                <h2>Library stats</h2>
+              </div>
+              <span className="small-pill-label">Overview</span>
+              <div className="backlog-stats-grid">
+                <div className="backlog-stat-item">
+                  <strong>{completedCount}</strong>
+                  Completed
+                </div>
+                <div className="backlog-stat-item">
+                  <strong>{playingCount}</strong>
+                  Playing
+                </div>
+                <div className="backlog-stat-item">
+                  <strong>{backlogCount}</strong>
+                  In backlog
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        {/* ✅ COMPLETED SECTION WITH PAGINATION */}
+        <section className="completed-section">
+          <h2>Completed</h2>
+          <div className="completed-container">
+            {completedGames.length === 0 ? (
+              <p className="profile-empty-state">
+                You haven’t completed any games yet.
+              </p>
+            ) : (
+              paginatedCompletedGames.map((game) => (
+                <Link
+                  key={game.id}
+                  to={`/game#${game.id}`}
+                  className="completed-game-card"
+                >
+                  <div className="select-icon">
+                    <img src={checkIcon} alt="Selected" />
+                  </div>
+                  <div
+                    className="completed-game-cover"
+                    style={{
+                      backgroundImage: game.background_image
+                        ? `url(${game.background_image})`
+                        : "none",
+                    }}
+                  ></div>
+                  <div className="completed-game-body">
+                    <p className="completed-game-title">
+                      {game.name || "Untitled game"}
+                    </p>
+                    <div className="completed-game-meta">
+                      <span>{getPrimaryGenre(game)}</span>
+                      <span className="completed-game-rating">
+                        {game.metacritic ?? "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
+          </div>
+
+          {/* Pagination controls */}
+          {completedGames.length > COMPLETED_PER_PAGE && (
+            <div className="pagination">
+              <button
+                type="button"
+                className="page-btn"
+                disabled={safeCompletedPage === 1}
+                onClick={() =>
+                  setCompletedPage((prev) =>
+                    Math.max(1, prev - 1)
+                  )
+                }
+              >
+                ‹ Prev
+              </button>
+
+              <span className="page-info">
+                Page {safeCompletedPage} of {totalCompletedPages}
+              </span>
+
+              <button
+                type="button"
+                className="page-btn"
+                disabled={safeCompletedPage === totalCompletedPages}
+                onClick={() =>
+                  setCompletedPage((prev) =>
+                    Math.min(totalCompletedPages, prev + 1)
+                  )
+                }
+              >
+                Next ›
+              </button>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <Footer />
+    </div>
+  );
 }

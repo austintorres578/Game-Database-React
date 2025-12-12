@@ -1,5 +1,10 @@
-html{
+/* html{
     height: 100%;
+} */
+
+#root {
+  height: 100%;
+  width: 100%;
 }
 
 body{
@@ -56,46 +61,25 @@ body{
     background-repeat: no-repeat;
 }
 
-.home-page-section{
-    height:100%;
-    display:flex;
-    flex-direction: column;
-    justify-content: center;
-    background-color: white;
-    background-size: 90%;
-    background-repeat: repeat;
-    background-position: center;
-}
+/* removed: .home-page-section (used by SearchPage) */
 
 @media(max-height:1005px){
     body .results-container{
-        height: 75%;
+        /* removed, results-container used by SearchPage */
     }
 }
 
 @media(max-height:600px){
     body .results-container{
-        height: 70%;
+        /* removed, results-container used by SearchPage */
     }
 }
 
 @media(max-width:785px){
-    .search-parameters-con{
-    align-items: center;
-    flex-direction: column;
-    }
-
-    body .completed-search-con .search-parameters-con{
-        flex-direction: column;
-    }
 
     body .completed-search-con .search-parameters{
         width: 100%;
     }
-
-    /* body .completed-search-con .search-container{
-        height: 80px;
-    } */
 
     body .completed-search-con .search-button-container{
         width: 100%;
@@ -107,8 +91,7 @@ body{
     }
 
     body .results-container {
-        height: 82%;
-        top: 37px;
+        /* removed, results-container used by SearchPage */
     }
 
     body .add-to-playlist{
@@ -116,8 +99,7 @@ body{
     }
 
     body .games-list{
-        padding-left: 15px;
-        padding-right: 15px;
+        /* removed, games-list used by SearchPage */
     }
 
     body .completed-search-con .search-parameters-con .search-parameters-wrapper{
@@ -125,62 +107,46 @@ body{
     }
 }
 @media(max-width:550px){
-    .search-parameters-con{
-        flex-direction: column;
-    }
 }
 
-header{
-    border: solid 1px red;
-    padding: 10px;
+/* header{
+    background-color: rgb(96, 96, 255);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+} */
+
+.home-hero{
+    min-height: 500px;
+    background-image:url('./assets/images/dataBaseBackground.webp');
+    background-size: cover;
+    background-repeat: no-repeat;
 }
 
-header .header-wrapper{
+.home-hero{
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
+    flex-direction: column;
 }
 
-header .header-wrapper{
-    max-width:1250px;
-    margin-left: auto;
-    margin-right: auto;
+.home-hero div{
+    text-align: center;
 }
 
-.header-logo img{
-    height: 75px;
-    width: auto;
-    object-fit: contain;
+.home-hero div button{
+    background: linear-gradient(270deg, #feb414, #f15c21);
+    color: white;
+    padding: 15px 20px;
+    font-size: 20px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
 }
-
-header nav a{
-    margin: 5px 10px;
-}
-
-/* @media(max-width:450px){
-    .search-parameters .console-input{
-        width: 150px;
-    }
-    .search-parameters .genre-input{
-        width: 150px;
-    }
-} */
-
-/* .completed-search-con{
-    padding-top: 2vh;
-    padding-bottom: 2vh;
-} */
 
 .completed-search-con{
     display: block;
-    /* padding-bottom: 80px;
-    padding-top: 90px; */
     height: 100vh;
-}
-
-.completed-search-con .search-parameters-con{
-    flex-direction: column-reverse;
-    justify-content: center;
 }
 
 .completed-search-con .signed-in-container{
@@ -190,160 +156,15 @@ header nav a{
     display: none;
 }
 
-/* .completed-search-con .signed-in-container{
-    position: absolute;
-    right: 50px;
-} */
-
 .completed-search-con .search-parameters-con .search-parameters-wrapper{
     width: 90%;
 }
 
-.search-parameters-con{
-    display: flex;
-    /* justify-content: space-between; */
-    flex-direction: column;
-    justify-content: space-around;
-    /* background-color: #808080bd;
-    padding:25px;
-    border-radius: 10px; */
-    align-items:center;
-    height:100%;
-}
-
-.search-parameters-con h1{
-    text-align:center;
-    color: white;
-    text-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-    max-width:450px;
-    line-height:34px;
-    text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.game-search-input{
-    height:38px;
-    border-radius:3px;
-    border: none;
-    /* padding:0px 10px; */
-    box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-    width: 98%;
-    padding-left: 10px;
-
-}
-
-.game-search-input::placeholder{
-    color:black;
-    font-size:15px;
-}
-
-.home-page-section .completed-search-con{
-    height: 70px;
-    width: 100%;
-    /* position: fixed; */
-    top: 0px;
-    padding: 0px;
-}
-
-.completed-search-con .search-container{
-    width: 100%;
-    padding: 0px;
-    position: fixed;
-    top: 0px;
-    height: 120px;
-    border-radius: 0px;
-}
-
-.search-container{
-    margin-left: auto;
-    margin-right: auto;
-    z-index: 10;
-    background-color: #d3d3d3;
-    padding:25px;
-    border-radius: 10px;
-    box-shadow: 0 0px 8px rgba(0, 0, 0, 0.5);
-}
-
-.completed-search-con .search-parameters{
-    width:100%;
-}
-
-.completed-search-con .completed-sign-in-button-con{
-    width: 10%;
-    display: flex;
-    justify-content: center;
-}
-
-.search-parameters{
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    flex-wrap: wrap;
-    /* margin-bottom: 5px; */
-}
-
-.search-parameters > div{
-    margin: 5px 0px;
-}
-
-/* .search-parameters div{
-    margin-right: 3px;
-} */
-.search-input{
-    font-size: 18px;
-}
-.console-input{
-    height: 38px;
-    width: 49.5%;
-    box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-    border-radius: 3px;
-}
-.genre-input{
-    max-height: 38px;
-    width: 49.5%;
-    box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-    border-radius: 3px;
-}
-.game-search{
-    margin-top: auto;
-    margin-bottom:auto;
-}
-.game-search input{
-    height: 20px;
-    width: 196px;
-}
-.loading-gif{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    align-items: center;
-    height: 100%;
-    width: 100%;
-    background-color: gray;
-    
-}
-.loading-gif img{
-    height: 50px;
-    width: 50px;
-    margin:20px;
-}
+/* removed: .loading-gif (used by SearchPage) */
+/* removed: .loading-gif img (used by SearchPage) */
 
 .completed-search-con .search-button-container{
     flex-direction: row;
-    width: 100%;
-}
-
-.search-button-container{
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    text-align: center;
-    padding-top: 5px;
-    padding-bottom: 5px;
-    align-items: center;
-    position: relative;
     width: 100%;
 }
 
@@ -383,7 +204,6 @@ header nav a{
 
 .sign-in-container .sign-in-button{
     font-size: 14px;
-    /* margin: 5px 0px; */
     max-width: 145px;
     margin-left: auto;
     margin-right: auto;
@@ -402,7 +222,7 @@ header nav a{
 }
 
 .sign-in-inputs p{
-        color: white;
+    color: white;
     text-shadow: 0 0px 5px rgba(0, 0, 0, 1);
     font-weight: bold;
     font-size: 15px;
@@ -449,8 +269,7 @@ header nav a{
     justify-content: center;
 }
 
- .completed-search-con .sign-in-container {
-    /* display: flex; */
+.completed-search-con .sign-in-container {
     display: none;
     align-items: center;
     margin-top: 0px;
@@ -458,19 +277,15 @@ header nav a{
     width: fit-content;
 }
 
- .completed-search-con .sign-in-container p{
+.completed-search-con .sign-in-container p{
     margin:0px;
     display:none;
  }
 
-  .completed-search-con .sign-in-container button{
+.completed-search-con .sign-in-container button{
     width: 80px;
     padding:15px;
-  }
-
-/* .search-button-container input{
-    margin-right: 10px;
-} */
+}
 
 .completed-search-con .completed-sign-in{
     display: block;
@@ -485,40 +300,16 @@ header nav a{
     border-radius: 5px;
     font-weight: bold;
     color: white;
-    /* display: block; */
     display: none;
     margin:5px;
     font-size: 20px;
 }
 
-.search-button{
-    position: absolute;
-    cursor: pointer;
-    background-color: rgb(96, 96, 255);
-    border-radius: 3px;
-    color: white;
-    font-weight: bold;
-    border: none;
-    font-size: 20px;
-    height:88%;
-    right: -1px;
-    border-radius: 0px 5px 5px 0px;
-    width:95px;
-}
-.results-container::-webkit-scrollbar {
-    width: 5px;
-}
-.results-container{
-    height: 84%;
-    overflow-y: scroll;
-    scroll-behavior: smooth;
-    position: relative;
-    top: 22px;
-}
+/* removed: .results-container::-webkit-scrollbar (SearchPage) */
+/* removed: .results-container (SearchPage) */
+
 @media(max-width:575px){
-    .home-page-section .app-container{
-        width: 99%;
-    }
+    /* removed: .home-page-section .app-container (SearchPage) */
     .game .game-name p{
         font-size: 18px;
     }
@@ -526,19 +317,8 @@ header nav a{
         font-size: 13px;
     }
 }
-.app-container{
-    /* display: flex; */
-    display:none;
-    flex-direction: column;
-    justify-content: center;
-    margin-left: auto;
-    margin-right: auto;
-    height: 100%;
-    width: 100%;
-    z-index: 9;
-}
 
-
+/* removed: .app-container (SearchPage) */
 
 .game-catagories{
     display: grid;
@@ -576,7 +356,6 @@ header nav a{
     height: 90px;
     position: relative;
     z-index: 1;
-    
 }
 .game:hover{
     border: solid 3px white;
@@ -609,7 +388,6 @@ header nav a{
 }
 .console-list{
     display: flex;
-    
 }
 .console-list div{
     margin-right: 10px;
@@ -647,64 +425,17 @@ header nav a{
     width: auto;
 }
 
-.game-page-buttons{
-    background-color: #d3d3d3;
-    position: fixed;
-    height: 70px;
-    width: 100%;
-    bottom: 0px;
-    z-index: 10;
-    box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-    display: none;
-}
+/* removed: .game-page-buttons, .game-page-buttons > div, .game-page-buttons button (SearchPage) */
 
-.game-page-buttons > div{
-    display: none;
-    width: 100%;
-    /* display: flex; */
-    /* height: 70px;
-    width: 100%; */
-    /* margin-top: 10px; */
-    align-items: center;
-    justify-content: space-between;
-    /* bottom: 0px;
-    z-index: 10; */
-    /* box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5); */
-    max-width: 1250px;
-    margin-left: auto;
-    margin-right: auto;
-}
-.game-page-buttons button{
-    background-color: #d3d3d3;
-    cursor: pointer;
-    color: white;
-    font-weight: bold;
-    font-size: 20px;
-    height: 30px;
-    width: auto;
-    border: none
-}
 .catagories-rating{
     text-align: center;
 }
 
-.page-number p{
-    background-color: #d3d3d3;
-    font-weight: bold;
-    margin: 0px;
-    font-size: 20px;
-}
-.games-list{
-    position: relative;
-    height: 100%;
-    padding-left: 100px;
-    padding-right: 100px;
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 900px;
-}
+/* removed: .page-number p (SearchPage) */
+
+/* removed: .games-list (SearchPage list layout) */
+
 .loading-text{
-    position: absolute;
     position: absolute;
     top: 40%;
     left: 50%;
@@ -713,281 +444,16 @@ header nav a{
     font-size: 24px;
     color: white;
 }
-.left-arrow{
-    height: 100%;
-    width: auto;
-}
-.right-arrow{
-    height: 100%;
-    width: auto;
-    transform: scaleX(-1);
-}
-.game-page-section{
-    display: flex;
-    justify-content: center;
-    padding: 15px;
-    background-color: white;
-}
-.game-page{
-    background-color: rgba(116, 116, 116, 0.904);
-    padding: 60px 30px 60px 30px;
-    height: 95%;
-    width: 95%;
-}
-.game-screenshots{
-    position: relative;
-    display: flex;
-    overflow-x: scroll;
-    width: 100%;
-}
-.game-screenshots div{
-    margin-right: 15px;
-}
-.game-screenshots div img{
-    height: auto;
-    width: 300px;
-}
-.screnshot-load{
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-}
-.header{
-    text-align: center;
-}
-.game-description{
-    display: flex;
-    flex-direction: column;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 15px;
-    padding-right:15px;
-    text-align: left;
-}
-
-.game-description p{
-    font-size: 18px;
-}
-.game-page-rating h1{
-    margin-top: 10px;
-    margin-bottom: 10px;
-    font-size: 80px;
-}
-.game-release{
-    align-items: center;
-}
-.game-release strong{
-    font-size: 22px;
-}
-.game-page-genres-container{
-    text-align: center;
-}
-.game-page-genres-container h3{
-    font-size: 22px;
-}
-.game-release p{
-    font-size: 18px;
-}
-.genre-labels{
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    color: black;
-}
-.genre-labels div{
-    background-color: darkgray;
-    border-radius: 3px;
-    font-weight: bold;
-    padding: 5px;
-    margin-right: 5px;
-    width: fit-content;
-}
-.genre-labels div p{
-    margin: 0px;
-}
-.platforms-container{
-    text-align: center;
-}
-.platform-labels{
-    color: black;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-.platform-labels div{
-    background-color: darkgray;
-    border-radius: 3px;
-    font-weight: bold;
-    padding: 5px;
-    margin-right: 5px;
-    margin-bottom: 5px;
-    width: fit-content;
-}
-.platform-labels div p{
-    margin: 0px;
-}
-.game-page-loading{
-    position: relative;
-    background-color: rgba(116, 116, 116, 0.904);
-    padding: 15px;
-    height: 100vh;
-    width: 95%;
-}
-.game-page-loading h3{
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    margin: auto;
-}
-
-.dev-pub-container{
-    text-align: center;
-}
-.no-images{
-    text-align: center;
-    color: red;
-}
-
-.sign-in-page-con{
-    background:url('./assets/images/dataBaseBackground.webp');
-    background-size: 95%;
-    background-repeat: repeat;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.sign-in-page-box{
-    display: block;
-    width: 440px;
-    margin-left: auto;
-    margin-right: auto;
-    background-color:#d3d3d3;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.sign-in-page-box h2{
-    margin-top: 0px;
-    margin-bottom: 0px;
-    text-align: center;
-    margin-bottom: 10px;
-    color: white;
-    text-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-    font-size: 30px;
-    line-height:34px;
-}
-
-.sign-in-inputs{
-    display: flex;
-    flex-direction: column;
-    margin-left: auto;
-    margin-right: auto;;
-}
-
-.sign-in-inputs input{
-    margin-bottom: 10px;
-    height: 25px;
-    border-radius: 5px;
-    border: none;
-    padding:5px;
-    box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-}
-
-.sign-in-inputs button{
-    background-color: rgb(96, 96, 255);
-    border: none;
-    padding: 7px 12px;
-    border-radius: 5px;
-    font-weight: bold;
-    color: white;
-    display: block;
-    margin: 5px;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    cursor: pointer;
-}
 
 
-.sign-up-page-con{
-    background:url('./assets/images/dataBaseBackground.webp');
-    background-size: 95%;
-    background-repeat: repeat;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
+/* removed: .left-arrow, .right-arrow (SearchPage pagination arrows) */
 
-.sign-up-page-box{
-    display: block;
-    width: 440px;
-    margin-left: auto;
-    margin-right: auto;
-    background-color:#d3d3d3;
-    padding: 20px;
-    border-radius: 10px;
-}
-
-.sign-up-page-box h2{
-    margin-top: 0px;
-    margin-bottom: 0px;
-    text-align: center;
-    margin-bottom: 10px;
-    color: white;
-    text-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-    font-size: 30px;
-    line-height:34px;
-}
-
-.sign-up-inputs{
-    display: flex;
-    flex-direction: column;
-    margin-left: auto;
-    margin-right: auto;;
-}
-
-.sign-up-inputs input{
-    margin-bottom: 10px;
-    height: 25px;
-    border-radius: 5px;
-    border: none;
-    padding:5px;
-    box-shadow: 0 0px 5px rgba(0, 0, 0, 0.5);
-}
-
-.sign-up-inputs button{
-    background-color: rgb(96, 96, 255);
-    border: none;
-    padding: 7px 12px;
-    border-radius: 5px;
-    font-weight: bold;
-    color: white;
-    display: block;
-    margin: 5px;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-    cursor: pointer;
-}
-
-/* .signed-in-container{
-    display: none;
-} */
-
+/* sign-in-page-con / sign-in-page-box / sign-in-inputs / sign-in-loading / sign-in-error / sign-in-success
+   REMOVED because controlled by new JSX design */
 
 .completed-search-con .signed-in-container p{
     display: none;
 }
-
 
 .signed-in-container a button{
     cursor: pointer;
@@ -1016,36 +482,6 @@ header nav a{
     margin-top: 5px;
 }
 
-.sign-in-loading{
-    display: flex;
-    /* display: none; */
-    justify-content: center;
-}
-
-.sign-in-error{
-    text-align: center;
-    color: red;
-        text-shadow: 0 0px 1px rgba(0, 0, 0, 0.5);
-}
-
-.sign-in-success{
-    text-align: center;
-    padding-top: 10px;
-    padding-bottom: 10px;
-    /* display: none; */
-}
-
-.sign-in-success h3{
-    margin-top: 0px;
-    margin-bottom: 0px;
-    text-align: center;
-    margin-bottom: 10px;
-    color: white;
-    /* text-shadow: 0 0px 5px rgba(0, 0, 0, 0.5); */
-    color: rgb(40, 218, 40);
-    font-size: 16px;
-}
-
 .game:hover .add-to-playlist button{
     opacity: 1;
     pointer-events: all;
@@ -1061,7 +497,6 @@ header nav a{
     right: -85px;
     z-index: -5;
     padding-left: 50px;
-    /* opacity: 0; */
     pointer-events: none;
     transition: .25s;
     display: flex;
@@ -1071,14 +506,6 @@ header nav a{
     height: 75px;
     cursor: pointer;
 }
-
-/* .add-to-playlist button{
-    position: relative;
-    opacity: 0;
-} */
-
-
-
 
 .add-to-playlist button:after{
     content: "";
@@ -1108,7 +535,6 @@ header nav a{
     opacity: 0;
 }
 
-
 .add-to-playlist button{
     border-radius: 35px;
     height: 50px;
@@ -1125,7 +551,6 @@ header nav a{
     pointer-events: all;
     position: relative;
     opacity: 0;
-    
 }
 
 .add-to-playlist button:hover{
@@ -1136,62 +561,6 @@ header nav a{
     height: 100%;
     width: 100%;
     pointer-events: none;
-}
-
-.game-page .favorite-button{
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    color: white;
-    background-color: #6060ff;
-    padding: 10px 25px;
-    border: none;
-    border-radius: 5px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: .25s;
-    position: relative;
-    z-index: 1;
-}
-
-.game-page .favorite-button:after{
-    content:"";
-    display: block;
-    height: 100%;
-    width:50px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%,-50%);
-    background:url('./assets/images/check-icon.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    position: absolute;
-    z-index: 2;
-    opacity: 0;
-}
-
-.game-page .favorite-button:hover{
-    background-color: #3e3ea4;
-}
-
-.game-page .successfully-favorited{
-    background-color: rgb(1, 187, 1) !important;
-    color: rgb(1, 187, 1) !important;
-}
-
-.game-page .successfully-favorited:after{
-    opacity: 1;
-}
-
-.game-page .successfully-favorited:before{
-    content: "Favorited";
-    color: white;
-    position: absolute;
-    top: -50%;
-    left: 50%;
-    transform: translate(-50%,-50%);
 }
 
 .game-list .successfully-favorited button{
@@ -1266,7 +635,6 @@ header nav a{
 }
 
 .user-profile-page .favorite-genre div{
-    border: solid 1px red;
     margin: 5px;
     padding: 5px 15px;
     background-color: #6060ff;
@@ -1297,7 +665,6 @@ header nav a{
     width: fit-content;
     margin-left: auto;
     margin-right: auto;
-
 }
 
 .user-profile-page .favorite-game{
@@ -1346,7 +713,6 @@ header nav a{
     background-position: center;
     background-repeat: no-repeat;
 }
-
 
 .favorite-games .left-button{
     height: 30px;
@@ -1415,4 +781,3 @@ header nav a{
     width:100%;
     object-fit: contain;
 }
-

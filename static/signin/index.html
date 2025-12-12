@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Sign In</title>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 55%),
+                  radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.35), transparent 55%),
+                  #020617;
+      color: #e5e7eb;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .auth-shell {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .auth-card {
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.94));
+      border-radius: 1.25rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 26px 70px rgba(0, 0, 0, 0.9);
+      padding: 1.9rem 1.7rem 1.6rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .auth-logo {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .auth-logo-circle {
+      height: 52px;
+      width: 52px;
+      border-radius: 999px;
+      background: radial-gradient(circle at 30% 10%, #22c55e, #16a34a);
+      box-shadow: 0 20px 40px rgba(34, 197, 94, 0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      color: #022c22;
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .auth-header h1 {
+      margin: 0 0 0.4rem;
+      font-size: 1.6rem;
+    }
+
+    .auth-header p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .auth-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .auth-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 0.8rem;
+    }
+
+    .auth-label-row label {
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .auth-label-row a {
+      color: #a5b4fc;
+      text-decoration: none;
+      font-size: 0.8rem;
+    }
+
+    .auth-label-row a:hover {
+      color: #818cf8;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      border-radius: 0.75rem;
+      border: 1px solid rgba(30, 64, 175, 0.7);
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.92rem;
+      outline: none;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+    }
+
+    .auth-input::placeholder {
+      color: #6b7280;
+    }
+
+    .auth-input:focus {
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.7);
+      background: #020617;
+    }
+
+    .auth-remember-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #9ca3af;
+      margin-bottom: 0.3rem;
+      margin-top: 0.2rem;
+    }
+
+    .auth-remember-left {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .auth-remember-left input[type="checkbox"] {
+      accent-color: #22c55e;
+      width: 14px;
+      height: 14px;
+    }
+
+    .auth-submit-btn {
+      width: 100%;
+      margin-top: 0.4rem;
+      border-radius: 999px;
+      border: none;
+      padding: 0.7rem 1.2rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+      box-shadow: 0 20px 40px rgba(34, 197, 94, 0.45);
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        opacity 0.15s ease;
+    }
+
+    .auth-submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 24px 54px rgba(34, 197, 94, 0.6);
+    }
+
+    .auth-submit-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 18px 40px rgba(34, 197, 94, 0.5);
+    }
+
+    .auth-footer {
+      text-align: center;
+      font-size: 0.82rem;
+      color: #9ca3af;
+      margin-top: 0.6rem;
+    }
+
+    .auth-footer a {
+      color: #a5b4fc;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .auth-footer a:hover {
+      color: #818cf8;
+    }
+
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 1.6rem 1.2rem 1.4rem;
+      }
+
+      .auth-header h1 {
+        font-size: 1.45rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="auth-shell">
+    <section class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-circle">GD</div>
+      </div>
+
+      <header class="auth-header">
+        <h1>Sign in to Game DB</h1>
+        <p>Track your backlog and pick your next game faster.</p>
+      </header>
+
+      <form class="auth-form">
+        <div class="auth-field">
+          <div class="auth-label-row">
+            <label for="email">Email</label>
+          </div>
+          <input
+            id="email"
+            type="email"
+            class="auth-input"
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div class="auth-field">
+          <div class="auth-label-row">
+            <label for="password">Password</label>
+            <a href="#">Forgot?</a>
+          </div>
+          <input
+            id="password"
+            type="password"
+            class="auth-input"
+            placeholder="••••••••"
+          />
+        </div>
+
+        <div class="auth-remember-row">
+          <div class="auth-remember-left">
+            <input id="remember" type="checkbox" />
+            <label for="remember">Remember me</label>
+          </div>
+          <span>Secure sign-in</span>
+        </div>
+
+        <button type="submit" class="auth-submit-btn">
+          Sign in
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don’t have an account?
+        <a href="#">Create one</a>
+      </div>
+    </section>
+  </main>
+
+</body>
+</html>

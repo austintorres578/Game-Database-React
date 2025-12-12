@@ -1,540 +1,805 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import parse from "html-react-parser";
-import loadingCircle from "../assets/images/loading.gif"
+import loadingCircle from "../assets/images/loading.gif";
 
-import { useState, useEffect } from 'react';
+import Footer from "../components/Footer.js";
+import Header from "../components/Header";
 
-import defaultBackground from "../assets/images/background.png"
+import defaultBackground from "../assets/images/background.png";
+import "../styles/gamePage.css";
 
-export default function GamePage(){
+import { useNavigate } from "react-router-dom";
 
-    //state used to determine if gamePage fetch is loading
+// 🔐 Firebase imports
+import { auth, db } from "../firebase/firebase";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  deleteDoc,
+  collection,
+  getDocs,
+} from "firebase/firestore";
 
-    const [loading, setLoading] = useState(false)
+export default function GamePage() {
+  const navigate = useNavigate();
 
-    //gamePage data is stored here with preset data before fetch to prevent errors
+  const [loading, setLoading] = useState(false);
+  const [gameData, setGameData] = useState(null);
+  const [gameScreenshots, setGameScreenshots] = useState([]);
 
-    const [gameData,setGameData] = useState({
-        "id": 0,
-        "slug": "",
-        "name": "",
-        "name_original": "",
-        "description": "",
-        "metacritic": 0,
-        "metacritic_platforms": [],
-        "released": "",
-        "tba": false,
-        "updated": "2021-10-06T21:31:50",
-        "background_image": defaultBackground,
-        "background_image_additional": "https://media.rawg.io/media/screenshots/259/259c7b0d3a1e85f3339d07d0b65133e0.jpg",
-        "website": "https://www.nintendo.com/games/detail/super-mario-odyssey-switch",
-        "rating": 4.44,
-        "rating_top": 5,
-        "ratings": [
-            {
-                "id": 5,
-                "title": "exceptional",
-                "count": 1022,
-                "percent": 65.01
-            },
-            {
-                "id": 4,
-                "title": "recommended",
-                "count": 383,
-                "percent": 24.36
-            },
-            {
-                "id": 3,
-                "title": "meh",
-                "count": 84,
-                "percent": 5.34
-            },
-            {
-                "id": 1,
-                "title": "skip",
-                "count": 83,
-                "percent": 5.28
-            }
-        ],
-        "reactions": {
-            "1": 10,
-            "2": 1,
-            "3": 13,
-            "4": 4,
-            "7": 8,
-            "8": 1,
-            "10": 3,
-            "11": 3,
-            "12": 5,
-            "14": 1,
-            "15": 1,
-            "16": 1,
-            "18": 1
-        },
-        "added": 3037,
-        "added_by_status": {
-            "yet": 152,
-            "owned": 597,
-            "beaten": 1501,
-            "toplay": 397,
-            "dropped": 145,
-            "playing": 245
-        },
-        "playtime": 0,
-        "screenshots_count": 17,
-        "movies_count": 0,
-        "creators_count": 14,
-        "achievements_count": 0,
-        "parent_achievements_count": 0,
-        "reddit_url": "https://www.reddit.com/r/SuperMarioOdyssey/",
-        "reddit_name": "Super Mario Odyssey",
-        "reddit_description": "A subreddit for anything and everything related to Super Mario Odyssey on Nintendo Switch.",
-        "reddit_logo": "https://b.thumbs.redditmedia.com/sNHLMe8a7tkZN-CGnquV1u2npw5b4Q17_U6Ro_FKFkk.png",
-        "reddit_count": 4061,
-        "twitch_count": 108,
-        "youtube_count": 1000000,
-        "reviews_text_count": 30,
-        "ratings_count": 1542,
-        "suggestions_count": 463,
-        "alternative_names": [],
-        "metacritic_url": "",
-        "parents_count": 0,
-        "additions_count": 0,
-        "game_series_count": 17,
-        "user_game": null,
-        "reviews_count": 1572,
-        "saturated_color": "0f0f0f",
-        "dominant_color": "0f0f0f",
-        "parent_platforms": [
-            {
-                "platform": {
-                    "id": 7,
-                    "name": "Nintendo",
-                    "slug": "nintendo"
-                }
-            }
-        ],
-        "platforms": [
-            {
-                "platform": {
-                    "id": 7,
-                    "name": "Nintendo Switch",
-                    "slug": "nintendo-switch",
-                    "image": null,
-                    "year_end": null,
-                    "year_start": null,
-                    "games_count": 4866,
-                    "image_background": "https://media.rawg.io/media/games/618/618c2031a07bbff6b4f611f10b6bcdbc.jpg"
-                },
-                "released_at": "2017-10-27",
-                "requirements": {}
-            }
-        ],
-        "stores": [
-            {
-                "id": 32920,
-                "url": "",
-                "store": {
-                    "id": 6,
-                    "name": "Nintendo Store",
-                    "slug": "nintendo",
-                    "domain": "nintendo.com",
-                    "games_count": 8835,
-                    "image_background": "https://media.rawg.io/media/games/713/713269608dc8f2f40f5a670a14b2de94.jpg"
-                }
-            }
-        ],
-        "developers": [
-            {
-                "id": 16257,
-                "name": "Nintendo",
-                "slug": "nintendo",
-                "games_count": 413,
-                "image_background": "https://media.rawg.io/media/games/45f/45f6d31b0fcefe029e33d258a7beb6a2.jpg"
-            }
-        ],
-        "genres": [
-            {
-                "id": 11,
-                "name": "Arcade",
-                "slug": "arcade",
-                "games_count": 22500,
-                "image_background": "https://media.rawg.io/media/games/23d/23d78acedbb5f40c9fb64e73af5af65d.jpg"
-            },
-            {
-                "id": 83,
-                "name": "Platformer",
-                "slug": "platformer",
-                "games_count": 89004,
-                "image_background": "https://media.rawg.io/media/games/718/71891d2484a592d871e91dc826707e1c.jpg"
-            }
-        ],
-        "tags": [
-            {
-                "id": 31,
-                "name": "Singleplayer",
-                "slug": "singleplayer",
-                "language": "eng",
-                "games_count": 169812,
-                "image_background": "https://media.rawg.io/media/games/34b/34b1f1850a1c06fd971bc6ab3ac0ce0e.jpg"
-            },
-            {
-                "id": 72,
-                "name": "Local Multiplayer",
-                "slug": "local-multiplayer",
-                "language": "eng",
-                "games_count": 11482,
-                "image_background": "https://media.rawg.io/media/games/27b/27b02ffaab6b250cc31bf43baca1fc34.jpg"
-            },
-            {
-                "id": 37796,
-                "name": "exclusive",
-                "slug": "exclusive",
-                "language": "eng",
-                "games_count": 4513,
-                "image_background": "https://media.rawg.io/media/games/fba/fbae1bcfae1feffda6a11fbc1c939420.jpg"
-            },
-            {
-                "id": 107,
-                "name": "Family Friendly",
-                "slug": "family-friendly",
-                "language": "eng",
-                "games_count": 3628,
-                "image_background": "https://media.rawg.io/media/games/a44/a444a7628bdb49b24d06a7672f805814.jpg"
-            },
-            {
-                "id": 88,
-                "name": "Cute",
-                "slug": "cute",
-                "language": "eng",
-                "games_count": 23506,
-                "image_background": "https://media.rawg.io/media/games/c40/c40f9f0a3d1b4601a7a44d230c95f126.jpg"
-            },
-            {
-                "id": 37797,
-                "name": "true exclusive",
-                "slug": "true-exclusive",
-                "language": "eng",
-                "games_count": 3997,
-                "image_background": "https://media.rawg.io/media/games/1de/1deed95a21d854f8a5cdfc249ff54c6c.jpg"
-            },
-            {
-                "id": 229,
-                "name": "3D Platformer",
-                "slug": "3d-platformer",
-                "language": "eng",
-                "games_count": 7450,
-                "image_background": "https://media.rawg.io/media/games/9a1/9a18c226cf379272c698f26d2b79b3da.jpg"
-            },
-            {
-                "id": 284,
-                "name": "Cult Classic",
-                "slug": "cult-classic",
-                "language": "eng",
-                "games_count": 904,
-                "image_background": "https://media.rawg.io/media/games/ccf/ccf26f6e3d553a04f0033a8107a521b8.jpg"
-            },
-            {
-                "id": 1325,
-                "name": "kids",
-                "slug": "kids",
-                "language": "eng",
-                "games_count": 5065,
-                "image_background": "https://media.rawg.io/media/screenshots/256/256a021ab30040282517b855dd174d4e.jpg"
-            }
-        ],
-        "publishers": [
-            {
-                "id": 10681,
-                "name": "Nintendo",
-                "slug": "nintendo",
-                "games_count": 1214,
-                "image_background": "https://media.rawg.io/media/games/98c/98c87b286cd2a2ba942167df384a9bd3.jpg"
-            }
-        ],
-        "esrb_rating": {
-            "id": 2,
-            "name": "Everyone 10+",
-            "slug": "everyone-10-plus"
-        },
-        "clip": null,
-        "description_raw": "Super Mario Odyssey is a 3D platform game, a part of Nintendo’s Super Mario series. \n\n###Story \nThe game follows Mario on his quest to save Princess Peach from her forced marriage with Bowser. The game starts with Mario fighting Bowser on its aircraft. Bowers knock Mario off the ship and shreds his cap into pieces. Mario awakens in the Cap Kingdom inhabited with hat-like spirits and befriends one of them named Cappy. It turns out, Bowser also kidnapped Cappy’s sister Tiara, and now the heroes must chase Bowser through several kingdoms to save Peach and Tiara. \n\n###Gameplay \nThe gameplay of Super Mario Odyssey draws inspiration from Super Mario 64 and Super Mario Sunshine. The game consists 17 levels (named as “kingdoms”). In most of them, your goal is to collect a certain amount of Power Moons. Collecting enough of them allows the player to progress to the next kingdom. Some moons can be found in different parts of the level or acquired as a reward for completing certain tasks or challenges. The Mario’s moveset mostly resembles that of Super Mario 64 and includes wall jumps, triple jumps, somersaults, long jumps, rolling on the ground. The main new gameplay feature is that Mario can throw his hat to create temporary platforms, grab objects, attack enemies, or possess them. Possessing enemies gives you new moves and sometimes is necessary to reach certain parts of the level."
-    })
+  // 🔹 NEW: videos
+  const [gameVideos, setGameVideos] = useState([]);
 
-    //seperate state that stores game screenshots since gameFetch doesnt have screenshots, alse has preset
-    //screenshots to prevent errors
+  // fullscreen state
+  const [isFullScreenshotOpen, setIsFullScreenshotOpen] = useState(false);
+  const [activeScreenshotIndex, setActiveScreenshotIndex] = useState(null);
 
-    const [gameScreenshots, setGamescreenshots] = useState([
-        {
-            "id": 752887,
-            "image": "https://media.rawg.io/media/screenshots/ab7/ab7efedd1d85fb0007f84a2955ac9d39.jpg",
-            "width": 640,
-            "height": 480,
-            "is_deleted": false
-        },
-        {
-            "id": 752888,
-            "image": "https://media.rawg.io/media/screenshots/788/78816464d5fddfa7f81b892b9b7c6a39.jpg",
-            "width": 640,
-            "height": 480,
-            "is_deleted": false
-        },
-        {
-            "id": 752889,
-            "image": "https://media.rawg.io/media/screenshots/6d9/6d9a1de06e87730707e4f39acd6cc237.jpg",
-            "width": 640,
-            "height": 480,
-            "is_deleted": false
-        },
-        {
-            "id": 752890,
-            "image": "https://media.rawg.io/media/screenshots/c11/c11eaf445d1146cad23f499adbd86b85.jpg",
-            "width": 640,
-            "height": 480,
-            "is_deleted": false
-        },
-        {
-            "id": 752891,
-            "image": "https://media.rawg.io/media/screenshots/29f/29fb6ff5828089ce44aa0e82fe75b176.jpg",
-            "width": 640,
-            "height": 480,
-            "is_deleted": false
-        },
-        {
-            "id": 752892,
-            "image": "https://media.rawg.io/media/screenshots/4ca/4ca53cc663eeea9eb0652413ea4e8372.jpg",
-            "width": 640,
-            "height": 480,
-            "is_deleted": false
-        }
-    ])
+  // library / favorite / completed state
+  const [isInLibrary, setIsInLibrary] = useState(false);
+  const [savingLibrary, setSavingLibrary] = useState(false);
 
-    //variable that has description of game from gamefetch
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [savingFavorite, setSavingFavorite] = useState(false);
 
-    let description = gameData.description
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [savingCompleted, setSavingCompleted] = useState(false);
 
-    //variable that stores link in address bar
+  // Custom groups for this user
+  const [userGroups, setUserGroups] = useState([]);
+  const [groupDropdownOpen, setGroupDropdownOpen] = useState(false);
+  const [savingGroupId, setSavingGroupId] = useState(null);
 
-    let addressBarLink=window.location.href
+  // ref for the fullscreen container so we can scroll to it
+  const fullscreenRef = useRef(null);
 
-    //variable used to create the link used on gamefetch to get game information
+  // 🔹 Ref + state for draggable screenshots row
+  const screenshotsRowRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const scrollStartX = useRef(0);
 
-    let fetchLink 
+  const addressBarLink = window.location.href;
+  const key = "?key=99cd09f6c33b42b5a24a9b447ee04a81";
 
-    //api key
+  function htmlParser(html) {
+    return parse(html);
+  }
 
-    let key = "?key=99cd09f6c33b42b5a24a9b447ee04a81"
+  function requireAuth(actionLabel) {
+    const user = auth.currentUser;
+    if (!user) {
+      alert(`Please sign in to ${actionLabel}.`);
+      navigate("/signin");
+      return false;
+    }
+    return true;
+  }
 
-    //function used to parse game description since it comes as an html string then returns parsed string
+  function createGameLink() {
+    const rawId = addressBarLink.split("#").pop();
 
-function htmlParser(html){
-   return parse(html)
-}
-
-//function is used to determine the length of the game id to create the correct game fetch link
-
-
-function createGameLink(){
-
-    if(addressBarLink.slice(addressBarLink.length-7,addressBarLink.length)[0]==="#"){
-         fetchLink= "https://rawg-video-games-database.p.rapidapi.com/games/"+addressBarLink.slice(addressBarLink.length-6,addressBarLink.length)
-         searchForData(fetchLink+key)
-        //  searchForImages(fetchLink+"/screenshots"+key)
-
-    }else if(addressBarLink.slice(addressBarLink.length-6,addressBarLink.length)[0]==="#"){
-        fetchLink= "https://rawg-video-games-database.p.rapidapi.com/games/"+addressBarLink.slice(addressBarLink.length-5,addressBarLink.length)
-        searchForData(fetchLink+key)
-        // searchForImages(fetchLink+"/screenshots"+key)
-    }else if(addressBarLink.slice(addressBarLink.length-5,addressBarLink.length)[0]==="#"){
-        fetchLink= "https://rawg-video-games-database.p.rapidapi.com/games/"+addressBarLink.slice(addressBarLink.length-4,addressBarLink.length)
-        searchForData(fetchLink+key)
-        // searchForImages(fetchLink+"/screenshots"+key)
-    }else if(addressBarLink.slice(addressBarLink.length-4,addressBarLink.length)[0]==="#"){
-        fetchLink= "https://rawg-video-games-database.p.rapidapi.com/games/"+addressBarLink.slice(addressBarLink.length-3,addressBarLink.length)
-        searchForData(fetchLink+key)
-        // searchForImages(fetchLink+"/screenshots"+key)
-    }else if(addressBarLink.slice(addressBarLink.length-3,addressBarLink.length)[0]==="#"){
-        fetchLink= "https://rawg-video-games-database.p.rapidapi.com/games/"+addressBarLink.slice(addressBarLink.length-2,addressBarLink.length)
-        searchForData(fetchLink+key)
-        // searchForImages(fetchLink+"/screenshots"+key)
-    }else if(addressBarLink.slice(addressBarLink.length-2,addressBarLink.length)[0]==="#"){
-        fetchLink= "https://rawg-video-games-database.p.rapidapi.com/games/"+addressBarLink.slice(addressBarLink.length-1,addressBarLink.length)
-        searchForData(fetchLink+key)
-        // searchForImages(fetchLink+"/screenshots"+key)
+    if (!rawId) {
+      console.error("No game ID found in URL hash");
+      return;
     }
 
- }
+    const baseUrl = "https://api.rawg.io/api/games/";
+    const gameUrl = baseUrl + rawId + key;
+    const screenshotsUrl = baseUrl + rawId + "/screenshots" + key;
+    const videosUrl = baseUrl + rawId + "/movies" + key; // 🔹 NEW
 
-//searches for game information
+    searchForData(gameUrl);
+    searchForImages(screenshotsUrl);
+    searchForVideos(videosUrl); // 🔹 NEW
+  }
 
-function searchForData(link){
-    const options = {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-key': 'c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c',
-          'X-RapidAPI-Host': 'rawg-video-games-database.p.rapidapi.com'
+  function searchForData(link) {
+    setLoading(true);
+
+    fetch(link)
+      .then((response) => response.json())
+      .then((response) => {
+        console.log("Game data:", response);
+        setGameData(response);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Game data error:", err);
+        setLoading(false);
+      });
+  }
+
+  function searchForImages(link) {
+    console.log("Screenshots URL:", link);
+
+    fetch(link)
+      .then((response) => response.json())
+      .then((response) => {
+        console.log("Screenshots response:", response);
+        setGameScreenshots(response.results || []);
+      })
+      .catch((err) => console.error("Screenshots error:", err));
+  }
+
+  // 🔹 NEW: fetch and log video info
+  function searchForVideos(link) {
+    console.log("Videos URL:", link);
+
+    fetch(link)
+      .then((response) => response.json())
+      .then((response) => {
+        console.log("🎥 RAWG video data:", response);
+        const results = response.results || [];
+        setGameVideos(results);
+
+        if (results.length > 0) {
+          console.log("🎥 First video clip info:", results[0]);
+        } else {
+          console.log("No videos found for this game.");
         }
-      };
+      })
+      .catch((err) => console.error("Videos error:", err));
+  }
 
-      setLoading(true)
+  useEffect(() => {
+    createGameLink();
+    // eslint-disable-next-line
+  }, []);
 
-      fetch(link, options)
-        .then(response => {
-            return response.json()})
-        .then(response => {
-            console.log(response)
-            setLoading(false)
-            return(setGameData(response))
-        })
-        .catch(err => console.error(err));
+  // 🔍 After game data loads, check current state in user's library
+  useEffect(() => {
+    const checkLibraryState = async () => {
+      const user = auth.currentUser;
+      if (!user || !gameData?.id) {
+        setIsInLibrary(false);
+        setIsFavorite(false);
+        setIsCompleted(false);
+        return;
+      }
 
-}
+      try {
+        const ref = doc(db, "users", user.uid, "library", String(gameData.id));
+        const snap = await getDoc(ref);
 
-//searches for game screenshots
-
-
-function searchForImages(link){
-    const options = {
-        method: 'GET',
-        headers: {
-          'X-RapidAPI-key': 'c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c',
-          'X-RapidAPI-Host': 'rawg-video-games-database.p.rapidapi.com'
+        if (snap.exists()) {
+          const data = snap.data();
+          setIsInLibrary(true);
+          setIsFavorite(!!data.isFavorite);
+          setIsCompleted(data.status === "completed");
+        } else {
+          setIsInLibrary(false);
+          setIsFavorite(false);
+          setIsCompleted(false);
         }
-      };
-      console.log(link)
+      } catch (err) {
+        console.error("Error checking library state:", err);
+      }
+    };
 
-      setLoading(true)
+    checkLibraryState();
+  }, [gameData]);
 
-      fetch(link, options)
-        .then(response => {
-            console.log(response)
-            return response.json()})
-        .then(response => {
-            setLoading(false)
-            return setGamescreenshots(response.results)
-        })
-        .catch(err => console.error(err));
+  // 🔹 Load user's custom groups
+  useEffect(() => {
+    const loadGroups = async () => {
+      const user = auth.currentUser;
+      if (!user) {
+        setUserGroups([]);
+        return;
+      }
 
-}
-    
-//runs once on load
+      try {
+        const groupsRef = collection(db, "users", user.uid, "groups");
+        const snap = await getDocs(groupsRef);
 
-    useEffect(() => {
-        createGameLink();
-    }, [""]);
+        const groups = snap.docs.map((docSnap) => {
+          const data = docSnap.data();
+          return {
+            id: docSnap.id,
+            name: data.name || "Untitled Group",
+            pinned: data.pinned ?? true,
+            gameIds: Array.isArray(data.gameIds) ? data.gameIds : [],
+          };
+        });
 
-    //style object used to use the background from data or default to blue one if backgroun isnt present
+        // Sort alphabetically by name
+        groups.sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
 
-    let gamePageSectionStyle = {
-        "position":"relative",
-        "display": "flex",
-        "justifyContent": "center",
-        "padding": "15px",
-        "backgroundImage": `url(${gameData.background_image ? gameData.background_image : defaultBackground})`,
-        "backgroundPosition": "center center",
-        "backgroundRepeat":"no-repeat",
-        "backgroundSize":"cover",
-        "color":"white",
-        "min-height":"100vh"  
+        setUserGroups(groups);
+      } catch (err) {
+        console.error("Error loading user groups:", err);
+      }
+    };
+
+    if (gameData?.id) {
+      loadGroups();
     }
+  }, [gameData]);
 
-    //checks to see if screenshots are present and if not will display no images h3
+  // Helper: base payload used whenever we create/update a library doc
+  function buildBaseGamePayload() {
+    if (!gameData) return {};
+    return {
+      id: gameData.id,
+      name: gameData.name,
+      slug: gameData.slug || "",
+      background_image: gameData.background_image || null,
+      released: gameData.released || null,
+      metacritic: gameData.metacritic ?? null,
+      rating: gameData.rating ?? null,
+      platforms:
+        gameData.platforms
+          ?.map((p) => p.platform?.name)
+          .filter(Boolean) || [],
+      genres: gameData.genres?.map((g) => g.name).filter(Boolean) || [],
+      addedAt: new Date().toISOString(),
+    };
+  }
 
-    const screenShotChecker=()=>{
-        if(gameScreenshots.length===0){
-            return <div className="no-images"><h3>No Images</h3></div>
-            
-        }
-    } 
+  // ✅ Toggle: add to or remove from LIBRARY (doc existence)
+  async function handleToggleLibrary(event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-    function favoriteGame(event) {
-        event.preventDefault();
-        event.stopPropagation();
+    if (!gameData) return;
+    if (!requireAuth("manage your library")) return;
 
-        const button = event.currentTarget;                  
-        const sibling = button.nextElementSibling;           
+    const user = auth.currentUser;
+    const docRef = doc(db, "users", user.uid, "library", String(gameData.id));
 
-        console.log(button);                                                            
-        if(button.classList.contains('successfully-favorited')){
-            button.classList.remove('successfully-favorited')
-            // sibling.innerText="Favorite"  
-        }else{
-            button.classList.add('successfully-favorited');
-            // sibling.innerText="Favorited"  
-        }
-    
+    try {
+      setSavingLibrary(true);
+
+      if (isInLibrary) {
+        // 🔻 Remove entirely from library (also removes completed/favorite)
+        await deleteDoc(docRef);
+        setIsInLibrary(false);
+        setIsCompleted(false);
+        setIsFavorite(false);
+      } else {
+        // 🔺 Add to library (no specific status yet)
+        await setDoc(
+          docRef,
+          {
+            ...buildBaseGamePayload(),
+            status: null,
+            isFavorite: false,
+          },
+          { merge: true }
+        );
+        setIsInLibrary(true);
+      }
+    } catch (error) {
+      console.error("Error updating library:", error);
+      alert("There was a problem updating your library. Please try again.");
+    } finally {
+      setSavingLibrary(false);
     }
+  }
 
-    return(
-        <div style={gamePageSectionStyle}>
-            {loading ? <div className='loading-gif'><img src={loadingCircle}></img></div> : <div className="game-page">
-                {/* <button className="favorite-button successfully-favorited">Favorite Game</button> */}
-                <button className="favorite-button" onClick={favoriteGame}>Favorite Game</button>
-                <div className="game-title header">
-                    <h1>{gameData.name_original}</h1>
-                </div>
-                <div className="game-page-rating header"> 
-                    <h1>{gameData.metacritic}</h1>
-                </div>
-                <div className="game-release header">
-                    <p><strong>Released:</strong> {gameData.released}</p>
-                </div>
-                <div className="platforms-container">
-                    <h3>Platforms</h3>
-                    <div className="platform-labels">
-                    {loading ? <div className='loading-gif'><img src={loadingCircle}></img></div> : gameData.platforms.map(platformArray => 
-                            <div>
-                                <p>{platformArray.platform.name}</p>
-                            </div>)}
-                    </div>
-                </div>
-                <div className="game-page-genres-container">
-                    <h3>Genres</h3>
-                    <div className="genre-labels">   
-                        {loading ? <div className='loading-gif'><img src={loadingCircle}></img></div> : gameData.genres.map(genresArray => 
-                            <div>
-                                <p>{genresArray.name}</p>
-                            </div>)}
-                    </div>
-                </div>
-                <div className="dev-pub-container">
-                    <h3>Developers/Publishers</h3>
-                    <div>
+  // 🟢 Toggle COMPLETED (inside the library)
+  async function handleToggleCompleted(event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-                        {/* checks if developers or publisher info is present, if not they will say unlisted */}
+    if (!gameData) return;
+    if (!requireAuth("mark games as completed")) return;
 
-                        <p>Developer: {gameData.developers[0] ? gameData.developers[0].name : "Unlisted"}</p>
-                        <p>Publisher: {gameData.publishers[0] ? gameData.publishers[0].name : "Unlisted"}</p>
-                    </div>
-                </div>
-                <div className="game-description-container">
-                    <div className="header">
-                        <h2>Description</h2>
-                    </div>
-                    <div className="game-description">
-                        <div>
-                            {htmlParser(description)}
-                        </div>
-                    </div>
-                </div>
-                {/* <div className="game-screenshots-container">
-                    <div className="header">
-                        <h2>Screenshots</h2>
-                    </div>
-                    {screenShotChecker()}
-                    <div className="game-screenshots">
-                    {
-                    loading ? 
-                        <p className="screenshot-load"><strong>Loading...</strong></p> 
-                        : 
-                        gameScreenshots.map(imageArray => 
-                        <div key={imageArray.id}>
-                            <img src={imageArray.image}></img>
-                        </div>
-                    )}
-                    </div>
-                </div> */}
-            </div>}
+    const user = auth.currentUser;
+    const docRef = doc(db, "users", user.uid, "library", String(gameData.id));
+
+    try {
+      setSavingCompleted(true);
+
+      if (isCompleted) {
+        // 🔻 Unmark completed but keep game in library
+        await setDoc(
+          docRef,
+          {
+            ...buildBaseGamePayload(),
+            status: null,
+          },
+          { merge: true }
+        );
+        setIsCompleted(false);
+        setIsInLibrary(true);
+      } else {
+        // ✅ Mark as completed (auto-add to library if needed)
+        await setDoc(
+          docRef,
+          {
+            ...buildBaseGamePayload(),
+            status: "completed",
+          },
+          { merge: true }
+        );
+        setIsCompleted(true);
+        setIsInLibrary(true);
+      }
+    } catch (error) {
+      console.error("Error updating completed status:", error);
+      alert(
+        "There was a problem updating your completed games. Please try again."
+      );
+    } finally {
+      setSavingCompleted(false);
+    }
+  }
+
+  // ⭐ Toggle favorite; DOES NOT add to library or touch isInLibrary
+  async function handleToggleFavorite(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!gameData) return;
+    if (!requireAuth("favorite games")) return;
+
+    const user = auth.currentUser;
+    const docRef = doc(db, "users", user.uid, "library", String(gameData.id));
+
+    try {
+      setSavingFavorite(true);
+
+      await setDoc(
+        docRef,
+        {
+          ...buildBaseGamePayload(),
+          isFavorite: !isFavorite,
+        },
+        { merge: true }
+      );
+
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error("Error updating favorite:", error);
+      alert("There was a problem updating favorites. Please try again.");
+    } finally {
+      setSavingFavorite(false);
+    }
+  }
+
+  // ➕ Add game to a custom group from dropdown
+  async function handleAddToGroup(groupId) {
+    if (!gameData) return;
+    if (!requireAuth("manage groups")) return;
+
+    const user = auth.currentUser;
+
+    const libraryDocId = String(gameData.id);
+    const libraryRef = doc(db, "users", user.uid, "library", libraryDocId);
+    const groupRef = doc(db, "users", user.uid, "groups", groupId);
+
+    try {
+      setSavingGroupId(groupId);
+
+      // Ensure game exists in library so group linkage makes sense
+      await setDoc(
+        libraryRef,
+        {
+          ...buildBaseGamePayload(),
+          status: null,
+        },
+        { merge: true }
+      );
+      setIsInLibrary(true);
+
+      const snap = await getDoc(groupRef);
+      if (!snap.exists()) {
+        console.error("Group not found:", groupId);
+        return;
+      }
+
+      const data = snap.data();
+      const currentIdsRaw = Array.isArray(data.gameIds) ? data.gameIds : [];
+      const currentIds = currentIdsRaw.map((id) => String(id));
+
+      if (!currentIds.includes(libraryDocId)) {
+        const updatedIds = [...currentIds, libraryDocId];
+
+        await setDoc(groupRef, { gameIds: updatedIds }, { merge: true });
+
+        // Update local state
+        setUserGroups((prev) =>
+          prev.map((g) => (g.id === groupId ? { ...g, gameIds: updatedIds } : g))
+        );
+      }
+    } catch (err) {
+      console.error("Error adding game to group:", err);
+      alert("There was a problem adding this game to the group.");
+    } finally {
+      setSavingGroupId(null);
+      setGroupDropdownOpen(false);
+    }
+  }
+
+  // open fullscreen with a specific screenshot (by index)
+  function openScreenshot(index) {
+    setActiveScreenshotIndex(index);
+    setIsFullScreenshotOpen(true);
+  }
+
+  // close fullscreen
+  function closeScreenshot() {
+    setIsFullScreenshotOpen(false);
+    setActiveScreenshotIndex(null);
+  }
+
+  function showPrevScreenshot() {
+    if (!gameScreenshots.length || activeScreenshotIndex === null) return;
+
+    setActiveScreenshotIndex((prevIndex) => {
+      const newIndex =
+        (prevIndex - 1 + gameScreenshots.length) % gameScreenshots.length;
+      return newIndex;
+    });
+  }
+
+  function showNextScreenshot() {
+    if (!gameScreenshots.length || activeScreenshotIndex === null) return;
+
+    setActiveScreenshotIndex((prevIndex) => {
+      const newIndex = (prevIndex + 1) % gameScreenshots.length;
+      return newIndex;
+    });
+  }
+
+  // When fullscreen opens, scroll to its container
+  useEffect(() => {
+    if (isFullScreenshotOpen && fullscreenRef.current) {
+      fullscreenRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [isFullScreenshotOpen]);
+
+  // 🖱️ Mouse drag for screenshots row
+  function handleMouseDown(e) {
+    if (!screenshotsRowRef.current) return;
+    setIsDragging(true);
+    dragStartX.current = e.pageX - screenshotsRowRef.current.offsetLeft;
+    scrollStartX.current = screenshotsRowRef.current.scrollLeft;
+  }
+
+  function handleMouseMove(e) {
+    if (!isDragging || !screenshotsRowRef.current) return;
+    e.preventDefault(); // prevent text/image selection while dragging
+    const x = e.pageX - screenshotsRowRef.current.offsetLeft;
+    const walk = x - dragStartX.current; // distance moved
+    screenshotsRowRef.current.scrollLeft = scrollStartX.current - walk;
+  }
+
+  function stopDragging() {
+    setIsDragging(false);
+  }
+
+  // 📱 Touch drag
+  function handleTouchStart(e) {
+    if (!screenshotsRowRef.current) return;
+    const touch = e.touches[0];
+    setIsDragging(true);
+    dragStartX.current = touch.pageX - screenshotsRowRef.current.offsetLeft;
+    scrollStartX.current = screenshotsRowRef.current.scrollLeft;
+  }
+
+  function handleTouchMove(e) {
+    if (!isDragging || !screenshotsRowRef.current) return;
+    const touch = e.touches[0];
+    const x = touch.pageX - screenshotsRowRef.current.offsetLeft;
+    const walk = x - dragStartX.current;
+    screenshotsRowRef.current.scrollLeft = scrollStartX.current - walk;
+  }
+
+  if (!gameData) {
+    return (
+      <div className="game-page-shell">
+        <Header />
+        <div className="game-page-container loading-state">
+          <img src={loadingCircle} alt="Loading..." />
         </div>
-    )
+      </div>
+    );
+  }
+
+  return (
+    <div className="game-page-shell">
+      <Header />
+
+      <div className="game-page-container">
+        {/* HERO SECTION */}
+        <section className="game-hero">
+          <div className="game-cover-wrapper">
+            <div className="game-cover">
+              <div
+                className="game-cover-img"
+                style={{
+                  backgroundImage: `url(${gameData.background_image || defaultBackground})`,
+                }}
+              ></div>
+            </div>
+          </div>
+
+          <div className="game-info">
+            <div className="game-title-row">
+              <h1 className="game-page-title">{gameData.name}</h1>
+              <span className="game-year">
+                {gameData.released ? `(${gameData.released.slice(0, 4)})` : ""}
+              </span>
+            </div>
+
+            <div className="game-meta-row">
+              <div>
+                <span className="meta-label">Metascore</span>
+                <span className="metascore-pill">{gameData.metacritic ?? "N/A"}</span>
+              </div>
+              <div className="meta-divider"></div>
+              <div>
+                <span className="meta-label">User score</span>
+                <span> {gameData.rating ?? "N/A"} / 5</span>
+              </div>
+            </div>
+
+            <div className="game-genres">
+              <span className="meta-label">Genres</span>
+              <br />
+              <div className="genres">
+                {gameData.genres?.length ? (
+                  gameData.genres.map((genre) => <p key={genre.id}>{genre.name}</p>)
+                ) : (
+                  <p>Unlisted</p>
+                )}
+              </div>
+            </div>
+
+            <div className="game-platforms">
+              <span className="meta-label">Platforms</span>
+              <br />
+              <div className="platforms">
+                {gameData.platforms?.length ? (
+                  gameData.platforms.map((platform) => (
+                    <p key={platform.platform.id}>{platform.platform.name}</p>
+                  ))
+                ) : (
+                  <p>Unlisted</p>
+                )}
+              </div>
+            </div>
+
+            <p className="game-short-info">
+              {gameData.description_raw || "No description available."}
+            </p>
+
+            <div className="game-hero-actions">
+              {/* Library toggle */}
+              <button
+                className={
+                  "btn btn-primary in-library" +
+                  (isInLibrary ? " successfully-favorited" : "")
+                }
+                onClick={handleToggleLibrary}
+                disabled={savingLibrary || savingFavorite || savingCompleted}
+              >
+                {savingLibrary
+                  ? "Updating..."
+                  : isInLibrary
+                  ? "Remove from Library"
+                  : "Add to Library"}
+              </button>
+
+              {/* Completed toggle */}
+              <button
+                className={
+                  "btn btn-ghost completed-button" +
+                  (isCompleted ? " completed-button--active" : "")
+                }
+                onClick={handleToggleCompleted}
+                disabled={savingCompleted || savingLibrary || savingFavorite}
+              >
+                {savingCompleted
+                  ? "Updating..."
+                  : isCompleted
+                  ? "Unmark Completed"
+                  : "Mark as Completed"}
+              </button>
+
+              {/* Favorite toggle */}
+              <button
+                className={
+                  "btn btn-ghost favorite-button" +
+                  (isFavorite ? " favorite-button--active" : "")
+                }
+                onClick={handleToggleFavorite}
+                disabled={savingFavorite || savingLibrary || savingCompleted}
+              >
+                {savingFavorite
+                  ? "Updating..."
+                  : isFavorite
+                  ? "Unfavorite game"
+                  : "Favorite game"}
+              </button>
+
+              {/* Group dropdown */}
+              {auth.currentUser && userGroups.length > 0 && (
+                <div className={"dropdown group-dropdown" + (groupDropdownOpen ? " open" : "")}>
+                  <button
+                    type="button"
+                    className="btn btn-ghost dropdown-trigger"
+                    onClick={() => setGroupDropdownOpen((prev) => !prev)}
+                  >
+                    Add to Group ▾
+                  </button>
+
+                  {groupDropdownOpen && (
+                    <div className="dropdown-menu">
+                      {userGroups.map((group) => {
+                        const libraryDocId = String(gameData.id);
+
+                        const inGroup = Array.isArray(group.gameIds)
+                          ? group.gameIds.some((id) => String(id) === libraryDocId)
+                          : false;
+
+                        return (
+                          <button
+                            key={group.id}
+                            type="button"
+                            className={"dropdown-item" + (inGroup ? " in-group" : "")}
+                            disabled={inGroup || savingGroupId === group.id}
+                            onClick={() => handleAddToGroup(group.id)}
+                          >
+                            <span className="dropdown-item-label">{group.name}</span>
+                            {inGroup && (
+                              <span className="dropdown-item-status">
+                                ✓ Already in this group
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* MAIN LAYOUT */}
+        <section className="game-main-layout">
+          <article className="game-panel game-description">
+            <h2 className="panel-title">About this game</h2>
+            <p>{gameData.description_raw}</p>
+
+            <div className="digital-stores">
+              {gameData.stores?.length ? (
+                gameData.stores.map((entry, index) => {
+                  const store = entry.store;
+                  if (!store || !store.domain) return null;
+
+                  return (
+                    <a
+                      key={store.id || index}
+                      href={"https://" + store.domain}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="store-link"
+                    >
+                      {store.name}
+                    </a>
+                  );
+                })
+              ) : (
+                <p>No store listed</p>
+              )}
+            </div>
+          </article>
+
+          <aside className="game-sidebar">
+            <div className="game-panel">
+              <h2 className="panel-title">Game details</h2>
+              <p className="panel-sub">Quick facts at a glance.</p>
+
+              <div className="stat-grid">
+                <div className="stat-item">
+                  <span className="stat-label">Release date</span>
+                  <span className="stat-value">{gameData.released || "Unknown"}</span>
+                </div>
+
+                <div className="stat-item">
+                  <span className="stat-label">Developer</span>
+                  <span className="stat-value">{gameData.developers?.[0]?.name || "Unknown"}</span>
+                </div>
+
+                <div className="stat-item">
+                  <span className="stat-label">Publisher</span>
+                  <span className="stat-value">{gameData.publishers?.[0]?.name || "Unknown"}</span>
+                </div>
+
+                <div className="stat-item">
+                  <span className="stat-label">Age rating</span>
+                  <span className="stat-value">{gameData.esrb_rating?.name || "Unrated"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="game-panel">
+              <h2 className="panel-title">Tags</h2>
+              <div className="game-tags-cloud">
+                {gameData.tags?.length ? (
+                  gameData.tags.map((tag) => <span key={tag.id}>{tag.name}</span>)
+                ) : (
+                  <span>No tags</span>
+                )}
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        {/* SCREENSHOTS */}
+        <section className="game-screenshots-section">
+          <div className="screenshots-header">
+            <h2>Screenshots</h2>
+            <span>Scroll horizontally or drag to view more.</span>
+          </div>
+
+          <div
+            className={`screenshots-row${isDragging ? " is-dragging" : ""}`}
+            ref={screenshotsRowRef}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={stopDragging}
+            onMouseLeave={stopDragging}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={stopDragging}
+          >
+            {gameScreenshots.length > 0 ? (
+              gameScreenshots.map((shot, index) => (
+                <button
+                  type="button"
+                  className="screenshot-card"
+                  key={shot.id}
+                  onClick={() => openScreenshot(index)}
+                >
+                  <div
+                    className="screenshot-img"
+                    style={{ backgroundImage: `url(${shot.image})` }}
+                  ></div>
+                </button>
+              ))
+            ) : (
+              <div className="no-images">
+                <h3>No Images</h3>
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
+
+      {/* FULLSCREEN VIEW */}
+      {isFullScreenshotOpen && (
+        <div id="full-screenshot" className="full-screenshot" ref={fullscreenRef}>
+          <button className="screenshot-close-btn" onClick={closeScreenshot}>
+            X
+          </button>
+          <img
+            src={
+              activeScreenshotIndex !== null && gameScreenshots[activeScreenshotIndex]
+                ? gameScreenshots[activeScreenshotIndex].image
+                : defaultBackground
+            }
+            alt="Full screenshot"
+          />
+          <div className="screenshot-buttons">
+            <button onClick={showPrevScreenshot}>Prev</button>
+            <button onClick={showNextScreenshot}>Next</button>
+          </div>
+        </div>
+      )}
+
+      <Footer />
+    </div>
+  );
 }

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Game Search Mockup</title>
+<style>
+    body {
+        margin: 0;
+        font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+        background: #030712;
+        color: #f3f4f6;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+    }
+
+    /* SEARCH BAR */
+    .search-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .search-title {
+        font-size: 2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .search-subtitle {
+        color: #9ca3af;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-box-wrapper {
+        display: flex;
+        justify-content: center;
+    }
+
+    .search-box {
+        width: 100%;
+        max-width: 500px;
+        padding: 0.8rem 1rem;
+        border-radius: 999px;
+        background: #0f172a;
+        color: #f3f4f6;
+        border: 1px solid rgba(148,163,184,0.3);
+        font-size: 1rem;
+        outline: none;
+        box-shadow: 0 0 0 rgba(34,197,94,0);
+        transition: 0.2s ease;
+    }
+
+    .search-box:focus {
+        border-color: #22c55e;
+        box-shadow: 0 0 12px rgba(34,197,94,0.35);
+    }
+
+    /* FILTER BAR */
+    .filters {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .filter-btn {
+        background: rgba(15,23,42,0.6);
+        border: 1px solid rgba(148,163,184,0.4);
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        cursor: pointer;
+        color: #e5e7eb;
+        font-size: 0.85rem;
+        transition: 0.2s ease;
+    }
+
+    .filter-btn:hover {
+        border-color: #22c55e;
+        color: #22c55e;
+    }
+
+    .filter-btn.active {
+        background: #22c55e;
+        color: #0b1120;
+        border-color: #22c55e;
+        font-weight: 600;
+    }
+
+    /* GAME GRID */
+    .game-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .game-card {
+        background: rgba(15,23,42,0.85);
+        border: 1px solid rgba(148,163,184,0.25);
+        border-radius: 0.8rem;
+        overflow: hidden;
+        cursor: pointer;
+        transition: 0.25s ease;
+        box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+    }
+
+    .game-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 22px 40px rgba(34,197,94,0.2);
+        border-color: #22c55e;
+    }
+
+    .game-img {
+        height: 210px;
+        background: #1e293b;
+        background-size: cover;
+        background-position: center;
+    }
+
+    .game-info {
+        padding: 0.75rem 1rem;
+    }
+
+    .game-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.4rem;
+        color: #f9fafb;
+    }
+
+    .game-meta {
+        font-size: 0.85rem;
+        color: #9ca3af;
+    }
+
+    /* RESPONSIVE TWEAK */
+    @media (max-width: 600px) {
+        .search-title {
+            font-size: 1.7rem;
+        }
+        .game-img {
+            height: 180px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- SEARCH HEADER -->
+    <div class="search-header">
+        <h1 class="search-title">Find Your Next Game</h1>
+        <p class="search-subtitle">Search thousands of titles across all platforms.</p>
+
+        <div class="search-box-wrapper">
+            <input class="search-box" type="text" placeholder="Search games..." />
+        </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filters">
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">PC</button>
+        <button class="filter-btn">PlayStation</button>
+        <button class="filter-btn">Xbox</button>
+        <button class="filter-btn">Nintendo</button>
+        <button class="filter-btn">Mobile</button>
+    </div>
+
+    <!-- GAME GRID -->
+    <div class="game-grid">
+
+        <div class="game-card">
+            <div class="game-img" style="background-image:url('https://via.placeholder.com/300x400');"></div>
+            <div class="game-info">
+                <p class="game-title">Example Game</p>
+                <p class="game-meta">Action • 87 Metascore</p>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-img" style="background-image:url('https://via.placeholder.com/300x400');"></div>
+            <div class="game-info">
+                <p class="game-title">Another Game</p>
+                <p class="game-meta">RPG • 92 Metascore</p>
+            </div>
+        </div>
+
+        <div class="game-card">
+            <div class="game-img" style="background-image:url('https://via.placeholder.com/300x400');"></div>
+            <div class="game-info">
+                <p class="game-title">Game Title</p>
+                <p class="game-meta">Adventure • 75 Metascore</p>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

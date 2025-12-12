@@ -1,19 +1,49 @@
-import React, { useState} from "react";
-import { Link } from 'react-router-dom';
-import { signInWithEmailAndPassword } from "firebase/auth";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  // If you ever want "no persistence even on refresh", also:
+  // inMemoryPersistence,
+} from "firebase/auth";
 import { auth } from "../firebase/firebase";
 
+import Header from "../components/Header";
+import Footer from "../components/Footer";
+
+import "../styles/signIn.css";
 import loadingGif from "../assets/images/loading.gif";
 
 export default function SignInPage(props) {
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError]       = useState("");
-  const [loading, setLoading]   = useState(false);
-  const [signedIn, setSignedIn] = useState(false);
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [error, setError]         = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [signedIn, setSignedIn]   = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Load rememberMe from localStorage (default = false / unchecked)
+  const [rememberMe, setRememberMe] = useState(() => {
+    const stored = localStorage.getItem("rememberMe");
+    if (stored === null) return false;
+    return stored === "true";
+  });
+
+  // Check if user is already signed in on mount
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setSignedIn(!!user);
+      setCheckingAuth(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const handleLogin = async (e) => {
-    if (e) e.preventDefault(); 
+    if (e) e.preventDefault();
     setError("");
 
     if (!email || !password) {
@@ -23,6 +53,14 @@ export default function SignInPage(props) {
 
     try {
       setLoading(true);
+
+      // Set persistence based on "Remember me"
+      await setPersistence(
+        auth,
+        rememberMe ? browserLocalPersistence : browserSessionPersistence
+        // If you want NO persistence when unchecked, use:
+        // rememberMe ? browserLocalPersistence : inMemoryPersistence
+      );
 
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -38,7 +76,6 @@ export default function SignInPage(props) {
 
       setEmail("");
       setPassword("");
-
     } catch (err) {
       console.error(err);
       setError("Invalid email or password.");
@@ -47,59 +84,109 @@ export default function SignInPage(props) {
     }
   };
 
+  // While Firebase is figuring out if user is logged in
+  if (checkingAuth) {
+    return (
+      <main className="auth-shell">
+        <Header />
+        <section className="auth-card">
+          <p>Loading...</p>
+        </section>
+        <Footer />
+      </main>
+    );
+  }
+
   return (
-    <div className="sign-in-page-con">
-      <div className="sign-in-page-box">
+    <main className="auth-shell">
+      <Header />
 
-        {/* HIDE H2 when loading OR signed in */}
-        {!loading && !signedIn && <h2>Sign In</h2>}
+      {signedIn ? (
+        // Show this if Firebase says user is already signed in
+        <section className="sucessful-signin-block">
+          <h2>You’re signed in!</h2>
+          <Link to="/profile" className="auth-submit-btn">
+            View Profile
+          </Link>
+        </section>
+      ) : (
+        // Otherwise show sign-in form
+        <section className="auth-card">
+          <div className="auth-logo">
+            <div className="auth-logo-circle">GD</div>
+          </div>
 
-        {/* INPUT FORM */}
-        {!loading && !signedIn && (
-          <form className="sign-in-inputs" onSubmit={handleLogin}>
-            <input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <header className="auth-header">
+            <h1>Sign in to Game DB</h1>
+            <p>Track your backlog and pick your next game faster.</p>
+          </header>
 
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+          {error && <div className="auth-error">{error}</div>}
 
-            {error && <p className="sign-in-error">{error}</p>}
+          <form className="auth-form" onSubmit={handleLogin}>
+            <div className="auth-field">
+              <div className="auth-label-row">
+                <label htmlFor="email">Email</label>
+              </div>
+              <input
+                id="email"
+                type="email"
+                className="auth-input"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-            <button className="sign-in-submit-button" type="submit">
-              Sign In
+            <div className="auth-field">
+              <div className="auth-label-row">
+                <label htmlFor="password">Password</label>
+                <Link to="/reset-password">Forgot?</Link>
+              </div>
+              <input
+                id="password"
+                type="password"
+                className="auth-input"
+                placeholder="Enter Your Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+
+            <div className="auth-remember-row">
+              <div className="auth-remember-left">
+                <input
+                  id="remember"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setRememberMe(checked);
+                    localStorage.setItem("rememberMe", String(checked));
+                  }}
+                />
+                <label htmlFor="remember">Remember me</label>
+              </div>
+              <span>Secure sign-in</span>
+            </div>
+
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={loading}
+            >
+              {loading ? "Signing in..." : "Sign in"}
             </button>
-
-            <p>No account? <Link to="/signup">Sign Up Today!</Link></p>
-
           </form>
-        )}
 
-        {/* LOADING */}
-        {loading && !signedIn && (
-          <div className="sign-in-loading" style={{ display: "flex" }}>
-            <img src={loadingGif} alt="Loading..." />
+          <div className="auth-footer">
+            Don’t have an account?
+            <Link to="/signup"> Create one</Link>
           </div>
-        )}
+        </section>
+      )}
 
-        {/* SUCCESS */}
-        {signedIn && (
-          <div className="sign-in-success" style={{ display: "block" }}>
-            <h3>Signed in Successfully!</h3>
-            <Link to="/">Back To Search</Link>
-          </div>
-        )}
-
-      </div>
-    </div>
+      <Footer />
+    </main>
   );
 }

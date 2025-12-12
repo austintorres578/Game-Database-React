@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Your Library • VGDB</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    /* ================================
+       BASE
+       ================================ */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      color: #e5e7eb;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 55%),
+        radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.35), transparent 60%),
+        #020617;
+      background-attachment: fixed;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    /* ================================
+       HEADER — GLASS NAV
+       ================================ */
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 2000;
+      width: 100%;
+      backdrop-filter: blur(16px);
+      background: rgba(3, 7, 18, 0.6);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+
+    .header-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-decoration: none;
+    }
+
+    .header-logo-mark {
+      height: 38px;
+      width: 38px;
+      border-radius: 0.8rem;
+      background: radial-gradient(circle at 30% 0%, #22c55e, #22c55e 10%, #16a34a 40%, #0f172a 90%);
+      box-shadow: 0 16px 40px rgba(34, 197, 94, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #0b1120;
+    }
+
+    .header-logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-logo-text span:first-child {
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #e5e7eb;
+    }
+
+    .header-logo-text span:last-child {
+      font-size: 0.78rem;
+      color: #9ca3af;
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      font-size: 0.93rem;
+    }
+
+    .header-nav a {
+      color: #e5e7eb;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      position: relative;
+      transition: opacity 0.2s ease, color 0.2s ease;
+    }
+
+    .header-nav a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: -0.3rem;
+      height: 2px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      opacity: 0;
+      transform: scaleX(0.4);
+      transform-origin: center;
+      transition: opacity 0.15s ease, transform 0.15s ease;
+    }
+
+    .header-nav a:hover {
+      color: #22c55e;
+    }
+
+    .header-nav a.is-active {
+      color: #22c55e;
+    }
+
+    .header-nav a.is-active::after {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .header-avatar {
+      height: 32px;
+      width: 32px;
+      border-radius: 999px;
+      border: 2px solid rgba(34, 197, 94, 0.75);
+      background: url("https://images.igdb.com/igdb/image/upload/t_cover_big/co1wyy.png")
+        center/cover no-repeat;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+    }
+
+    .header-cta {
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #0b1120 !important;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .header-cta:hover {
+      opacity: 0.9;
+    }
+
+    /* ================================
+       BUTTONS / TAGS
+       ================================ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 0.6rem 1.3rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: 1px solid transparent;
+      text-decoration: none;
+      cursor: pointer;
+      transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #0b1120;
+      box-shadow: 0 18px 40px rgba(34, 197, 94, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 22px 50px rgba(34, 197, 94, 0.45);
+    }
+
+    .btn-ghost {
+      background: rgba(15, 23, 42, 0.7);
+      color: #e5e7eb;
+      border-color: rgba(148, 163, 184, 0.6);
+    }
+
+    .btn-ghost:hover {
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.9);
+      white-space: nowrap;
+    }
+
+    .tag-status {
+      border: none;
+      background: rgba(34, 197, 94, 0.15);
+      color: #bbf7d0;
+    }
+
+    .tag-status-playing {
+      background: rgba(59, 130, 246, 0.12);
+      color: #bfdbfe;
+    }
+
+    .tag-status-backlog {
+      background: rgba(148, 163, 184, 0.2);
+      color: #e5e7eb;
+    }
+
+    .tag-status-completed {
+      background: rgba(34, 197, 94, 0.2);
+      color: #bbf7d0;
+    }
+
+    .tag-status-wishlist {
+      background: rgba(236, 72, 153, 0.18);
+      color: #f9a8d4;
+    }
+
+    /* ================================
+       LAYOUT SHELL
+       ================================ */
+    .library-page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    /* ================================
+       HERO / SUMMARY CARD
+       ================================ */
+    .library-header-card {
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.97), rgba(15, 23, 42, 0.93));
+      border-radius: 1.5rem;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      box-shadow: 0 26px 70px rgba(0, 0, 0, 0.9);
+      padding: 1.7rem 1.6rem;
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.9fr);
+      gap: 1.6rem;
+      align-items: center;
+      margin-bottom: 2.6rem;
+      backdrop-filter: blur(10px);
+    }
+
+    .library-header-main h1 {
+      font-size: 1.9rem;
+      margin: 0 0 0.6rem;
+      color: #f9fafb;
+    }
+
+    .library-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.18rem 0.7rem;
+      font-size: 0.75rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.8);
+      color: #9ca3af;
+      margin-bottom: 0.7rem;
+    }
+
+    .library-kicker-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+    }
+
+    .library-header-main p {
+      margin: 0 0 1.1rem;
+      max-width: 520px;
+      color: #d1d5db;
+      font-size: 0.95rem;
+    }
+
+    .library-header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .library-header-meta {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      font-size: 0.82rem;
+    }
+
+    .library-stat {
+      padding: 0.7rem 0.9rem;
+      border-radius: 1rem;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+    }
+
+    .library-stat-label {
+      color: #9ca3af;
+      font-size: 0.75rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .library-stat-value {
+      font-weight: 600;
+      color: #f9fafb;
+      font-size: 0.95rem;
+    }
+
+    .library-stat-sub {
+      color: #6b7280;
+      font-size: 0.72rem;
+      margin-top: 0.1rem;
+    }
+
+    /* ================================
+       FILTER BAR
+       ================================ */
+    .library-filters {
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .filter-pill {
+      border-radius: 999px;
+      padding: 0.35rem 0.9rem;
+      font-size: 0.8rem;
+      border: 1px solid rgba(75, 85, 99, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      color: #e5e7eb;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+
+    .filter-pill span {
+      opacity: 0.7;
+    }
+
+    .filter-pill.is-active {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border-color: transparent;
+      color: #0b1120;
+      box-shadow: 0 12px 30px rgba(34, 197, 94, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .filter-pill.is-active span {
+      opacity: 0.9;
+    }
+
+    .filter-count {
+      font-size: 0.7rem;
+      padding: 0.05rem 0.45rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(15, 23, 42, 0.9);
+    }
+
+    .library-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.2rem;
+      font-size: 0.82rem;
+    }
+
+    .toolbar-left {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.7rem;
+      color: #9ca3af;
+    }
+
+    .toolbar-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(75, 85, 99, 0.9);
+    }
+
+    .toolbar-right {
+      display: flex;
+      gap: 0.7rem;
+      align-items: center;
+    }
+
+    .toolbar-select,
+    .toolbar-search {
+      border-radius: 999px;
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      background: rgba(15, 23, 42, 0.98);
+      color: #e5e7eb;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.9rem;
+    }
+
+    .toolbar-select {
+      padding-right: 1.9rem;
+    }
+
+    .toolbar-search {
+      min-width: 180px;
+    }
+
+    .toolbar-select:focus,
+    .toolbar-search:focus {
+      outline: none;
+      border-color: #22c55e;
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.6);
+    }
+
+    /* ================================
+       GAME GRID
+       ================================ */
+    .game-grid {
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .game-card {
+      width: 320px;
+      background: rgba(15, 23, 42, 0.92);
+      border-radius: 0.9rem;
+      border: 1px solid rgba(148, 163, 184, 0.28);
+      overflow: hidden;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 22px 40px rgba(34, 197, 94, 0.25);
+      border-color: #22c55e;
+    }
+
+    .game-cover {
+      position: relative;
+      height: 165px;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+
+    .game-cover::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(15, 23, 42, 0.9), transparent 50%);
+    }
+
+    .game-badge-row {
+      position: absolute;
+      left: 0.85rem;
+      right: 0.85rem;
+      bottom: 0.7rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+      font-size: 0.78rem;
+    }
+
+    .game-meta-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.9);
+      color: #e5e7eb;
+    }
+
+    .game-meta-pill small {
+      color: #9ca3af;
+      font-size: 0.72rem;
+    }
+
+    .game-score-pill {
+      padding: 0.24rem 0.58rem;
+      border-radius: 999px;
+      background: rgba(22, 163, 74, 0.15);
+      border: 1px solid rgba(22, 163, 74, 0.7);
+      color: #bbf7d0;
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+
+    .game-info {
+      padding: 0.95rem 0.95rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .game-header-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.6rem;
+      align-items: flex-start;
+    }
+
+    .game-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0;
+      color: #f9fafb;
+    }
+
+    .game-subtitle {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    .game-platform-pill {
+      font-size: 0.74rem;
+      border-radius: 999px;
+      border: 1px solid rgba(75, 85, 99, 0.9);
+      padding: 0.2rem 0.55rem;
+      color: #e5e7eb;
+      background: rgba(15, 23, 42, 0.95);
+      white-space: nowrap;
+    }
+
+    .game-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .game-progress-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+      margin-top: 0.25rem;
+    }
+
+    .game-progress-group {
+      flex: 1;
+    }
+
+    .game-progress-bar {
+      position: relative;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(31, 41, 55, 0.9);
+      overflow: hidden;
+      margin-bottom: 0.22rem;
+    }
+
+    .game-progress-fill {
+      height: 100%;
+      width: 45%;
+      border-radius: inherit;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.7);
+    }
+
+    .game-progress-label {
+      font-size: 0.72rem;
+      color: #9ca3af;
+    }
+
+    .game-hours {
+      font-size: 0.8rem;
+      color: #e5e7eb;
+      white-space: nowrap;
+    }
+
+    .game-hours span {
+      color: #9ca3af;
+      font-size: 0.75rem;
+    }
+
+    /* ================================
+       RESPONSIVE
+       ================================ */
+    @media (max-width: 900px) {
+      .library-header-card {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .library-header-main h1 {
+        font-size: 1.7rem;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .header-wrapper {
+        padding-inline: 1rem;
+      }
+
+      .header-nav {
+        display: none;
+      }
+
+      .library-page {
+        padding-inline: 1rem;
+      }
+
+      .library-header-card {
+        padding: 1.4rem 1.2rem;
+      }
+
+      .library-toolbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .toolbar-right {
+        width: 100%;
+      }
+
+      .toolbar-search {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .game-card {
+        width: 100%;
+        max-width: 480px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-wrapper">
+      <div class="header-left">
+        <a href="#" class="header-logo">
+          <div class="header-logo-mark">VG</div>
+          <div class="header-logo-text">
+            <span>VGDB</span>
+            <span>Your personal game database</span>
+          </div>
+        </a>
+      </div>
+      <nav class="header-nav">
+        <a href="#">Home</a>
+        <a href="#">Browse</a>
+        <a href="#" class="is-active">Your Library</a>
+        <a href="#">Profile</a>
+      </nav>
+      <div class="header-right">
+        <a href="#" class="header-cta">
+          <span>+ Add Game</span>
+        </a>
+        <div class="header-avatar"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="library-page">
+    <!-- HERO / SUMMARY -->
+    <section class="library-header-card">
+      <div class="library-header-main">
+        <div class="library-kicker">
+          <span class="library-kicker-dot"></span>
+          <span>Your Library</span>
+        </div>
+        <h1>All your games in one place.</h1>
+        <p>
+          Track what you’re playing, what you’ve finished, and what’s still living in the backlog.
+          Filter by status, platform, or genre to decide what to play next.
+        </p>
+        <div class="library-header-actions">
+          <a href="#" class="btn btn-primary">Add your next game</a>
+          <button class="btn btn-ghost">Import from Steam</button>
+        </div>
+      </div>
+      <div class="library-header-meta">
+        <div class="library-stat">
+          <div class="library-stat-label">Total games</div>
+          <div class="library-stat-value">124</div>
+          <div class="library-stat-sub">42 completed • 18 in progress</div>
+        </div>
+        <div class="library-stat">
+          <div class="library-stat-label">Estimated backlog time</div>
+          <div class="library-stat-value">348 hrs</div>
+          <div class="library-stat-sub">If you play ~2h/day: ~6 months</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FILTERS -->
+    <section>
+      <div class="library-filters">
+        <button class="filter-pill is-active">
+          <span>All</span>
+          <span class="filter-count">124</span>
+        </button>
+        <button class="filter-pill">
+          <span>Backlog</span>
+          <span class="filter-count">64</span>
+        </button>
+        <button class="filter-pill">
+          <span>Playing</span>
+          <span class="filter-count">8</span>
+        </button>
+        <button class="filter-pill">
+          <span>Completed</span>
+          <span class="filter-count">42</span>
+        </button>
+        <button class="filter-pill">
+          <span>Wishlist</span>
+          <span class="filter-count">10</span>
+        </button>
+      </div>
+
+      <div class="library-toolbar">
+        <div class="toolbar-left">
+          <span>Showing 24 of 124 games</span>
+          <span class="toolbar-dot"></span>
+          <span>Filtered by: <strong>All statuses</strong>, <strong>All platforms</strong></span>
+        </div>
+        <div class="toolbar-right">
+          <select class="toolbar-select">
+            <option>Sort by: Recently played</option>
+            <option>Sort by: Title (A–Z)</option>
+            <option>Sort by: Completion</option>
+            <option>Sort by: Playtime (high → low)</option>
+          </select>
+          <input
+            class="toolbar-search"
+            type="search"
+            placeholder="Search in your library…" />
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME GRID -->
+    <section>
+      <div class="game-grid">
+        <!-- CARD 1 -->
+        <article class="game-card">
+          <div
+            class="game-cover"
+            style="background-image: url('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/scb7r7.jpg');">
+            <div class="game-badge-row">
+              <div class="game-meta-pill">
+                <span>Action RPG</span>
+                <small>2022</small>
+              </div>
+              <div class="game-score-pill">94</div>
+            </div>
+          </div>
+          <div class="game-info">
+            <div class="game-header-row">
+              <div>
+                <h3 class="game-title">Elden Ring</h3>
+                <p class="game-subtitle">FromSoftware • Bandai Namco</p>
+              </div>
+              <div class="game-platform-pill">PC • PS5</div>
+            </div>
+            <div class="game-tag-row">
+              <span class="tag tag-status tag-status-playing">Playing</span>
+              <span class="tag">Open World</span>
+              <span class="tag">Soulslike</span>
+            </div>
+            <div class="game-progress-row">
+              <div class="game-progress-group">
+                <div class="game-progress-bar">
+                  <div class="game-progress-fill" style="width: 65%;"></div>
+                </div>
+                <div class="game-progress-label">65% complete • main story</div>
+              </div>
+              <div class="game-hours">
+                40.2 hrs
+                <span>logged</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 2 -->
+        <article class="game-card">
+          <div
+            class="game-cover"
+            style="background-image: url('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/scfmxp.jpg');">
+            <div class="game-badge-row">
+              <div class="game-meta-pill">
+                <span>JRPG</span>
+                <small>1997</small>
+              </div>
+              <div class="game-score-pill">92</div>
+            </div>
+          </div>
+          <div class="game-info">
+            <div class="game-header-row">
+              <div>
+                <h3 class="game-title">Final Fantasy VII</h3>
+                <p class="game-subtitle">Square • PS1 Classic</p>
+              </div>
+              <div class="game-platform-pill">PS Vita</div>
+            </div>
+            <div class="game-tag-row">
+              <span class="tag tag-status tag-status-backlog">Backlog</span>
+              <span class="tag">Turn-based</span>
+              <span class="tag">Story-rich</span>
+            </div>
+            <div class="game-progress-row">
+              <div class="game-progress-group">
+                <div class="game-progress-bar">
+                  <div class="game-progress-fill" style="width: 10%;"></div>
+                </div>
+                <div class="game-progress-label">Just getting started</div>
+              </div>
+              <div class="game-hours">
+                3.1 hrs
+                <span>logged</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 3 -->
+        <article class="game-card">
+          <div
+            class="game-cover"
+            style="background-image: url('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc7y0f.jpg');">
+            <div class="game-badge-row">
+              <div class="game-meta-pill">
+                <span>Survival Horror</span>
+                <small>2002</small>
+              </div>
+              <div class="game-score-pill">91</div>
+            </div>
+          </div>
+          <div class="game-info">
+            <div class="game-header-row">
+              <div>
+                <h3 class="game-title">Resident Evil (Remake)</h3>
+                <p class="game-subtitle">Capcom</p>
+              </div>
+              <div class="game-platform-pill">PC</div>
+            </div>
+            <div class="game-tag-row">
+              <span class="tag tag-status tag-status-completed">Completed</span>
+              <span class="tag">Fixed Camera</span>
+              <span class="tag">Atmospheric</span>
+            </div>
+            <div class="game-progress-row">
+              <div class="game-progress-group">
+                <div class="game-progress-bar">
+                  <div class="game-progress-fill" style="width: 100%;"></div>
+                </div>
+                <div class="game-progress-label">All campaigns finished</div>
+              </div>
+              <div class="game-hours">
+                32.7 hrs
+                <span>total</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 4 -->
+        <article class="game-card">
+          <div
+            class="game-cover"
+            style="background-image: url('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc7lh9.jpg');">
+            <div class="game-badge-row">
+              <div class="game-meta-pill">
+                <span>Immersive Sim</span>
+                <small>2017</small>
+              </div>
+              <div class="game-score-pill">89</div>
+            </div>
+          </div>
+          <div class="game-info">
+            <div class="game-header-row">
+              <div>
+                <h3 class="game-title">Prey</h3>
+                <p class="game-subtitle">Arkane Studios</p>
+              </div>
+              <div class="game-platform-pill">PC</div>
+            </div>
+            <div class="game-tag-row">
+              <span class="tag tag-status tag-status-wishlist">Wishlist</span>
+              <span class="tag">Sci-fi</span>
+              <span class="tag">System Shock-like</span>
+            </div>
+            <div class="game-progress-row">
+              <div class="game-progress-group">
+                <div class="game-progress-bar">
+                  <div class="game-progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="game-progress-label">Yet to start</div>
+              </div>
+              <div class="game-hours">
+                0 hrs
+                <span>logged</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 5 -->
+        <article class="game-card">
+          <div
+            class="game-cover"
+            style="background-image: url('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/sc8myc.jpg');">
+            <div class="game-badge-row">
+              <div class="game-meta-pill">
+                <span>Metroidvania</span>
+                <small>2017</small>
+              </div>
+              <div class="game-score-pill">90</div>
+            </div>
+          </div>
+          <div class="game-info">
+            <div class="game-header-row">
+              <div>
+                <h3 class="game-title">Hollow Knight</h3>
+                <p class="game-subtitle">Team Cherry</p>
+              </div>
+              <div class="game-platform-pill">PC • Switch</div>
+            </div>
+            <div class="game-tag-row">
+              <span class="tag tag-status tag-status-playing">Playing</span>
+              <span class="tag">Platformer</span>
+              <span class="tag">Exploration</span>
+            </div>
+            <div class="game-progress-row">
+              <div class="game-progress-group">
+                <div class="game-progress-bar">
+                  <div class="game-progress-fill" style="width: 40%;"></div>
+                </div>
+                <div class="game-progress-label">40% completion • no DLC</div>
+              </div>
+              <div class="game-hours">
+                12.4 hrs
+                <span>logged</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CARD 6 -->
+        <article class="game-card">
+          <div
+            class="game-cover"
+            style="background-image: url('https://images.igdb.com/igdb/image/upload/t_screenshot_huge/scb7z8.jpg');">
+            <div class="game-badge-row">
+              <div class="game-meta-pill">
+                <span>Tactical RPG</span>
+                <small>2019</small>
+              </div>
+              <div class="game-score-pill">89</div>
+            </div>
+          </div>
+          <div class="game-info">
+            <div class="game-header-row">
+              <div>
+                <h3 class="game-title">Fire Emblem: Three Houses</h3>
+                <p class="game-subtitle">Intelligent Systems</p>
+              </div>
+              <div class="game-platform-pill">Switch</div>
+            </div>
+            <div class="game-tag-row">
+              <span class="tag tag-status tag-status-backlog">Backlog</span>
+              <span class="tag">Strategy</span>
+              <span class="tag">Long Campaign</span>
+            </div>
+            <div class="game-progress-row">
+              <div class="game-progress-group">
+                <div class="game-progress-bar">
+                  <div class="game-progress-fill" style="width: 5%;"></div>
+                </div>
+                <div class="game-progress-label">Prologue finished</div>
+              </div>
+              <div class="game-hours">
+                1.8 hrs
+                <span>logged</span>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
