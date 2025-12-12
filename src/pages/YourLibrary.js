@@ -22,6 +22,9 @@ import "../styles/yourLibrary.css";
 
 const ITEMS_PER_PAGE = 12;
 
+// ✅ your deployed backend
+const BACKEND_BASE = "https://game-database-backend.onrender.com";
+
 export default function YourLibrary() {
   const [stats, setStats] = useState({
     total: 0,
@@ -137,6 +140,59 @@ export default function YourLibrary() {
     setCurrentPage(1);
     setIsPageDropdownOpen(false);
   }
+
+  // ✅ Steam login redirect
+  function handleSteamLogin() {
+    window.location.href = `${BACKEND_BASE}/auth/steam`;
+  }
+
+  // ✅ Steam import: /api/me + /api/steam/owned-games
+  async function handleSteamImport() {
+    try {
+      const meRes = await fetch(`${BACKEND_BASE}/api/me`, {
+        credentials: "include",
+      });
+
+      const meData = await meRes.json();
+      console.log("✅ Steam /api/me:", meData);
+
+      if (!meRes.ok || !meData?.loggedIn) {
+        alert("Steam session not found. Please Sign in with Steam first.");
+        return;
+      }
+
+      const gamesRes = await fetch(`${BACKEND_BASE}/api/steam/owned-games`, {
+        credentials: "include",
+      });
+
+      const gamesData = await gamesRes.json();
+      console.log("🎮 Steam owned-games:", gamesData);
+
+      if (!gamesRes.ok) {
+        alert(
+          "Could not fetch Steam library. Your Steam Game Details might be private."
+        );
+        return;
+      }
+
+      // Optional: log only titles
+      console.log(
+        "🎮 Steam titles:",
+        (gamesData.games || []).map((g) => g.name)
+      );
+    } catch (err) {
+      console.error("🔥 Steam import error:", err);
+    }
+  }
+
+  // ✅ Auto-run after successful Steam redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("steam") === "linked") {
+      handleSteamImport();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Load stats + full library list + groups
   useEffect(() => {
@@ -277,9 +333,6 @@ export default function YourLibrary() {
   const safeActiveGroupIds = Array.isArray(activeGroupIds)
     ? activeGroupIds
     : ["all-platforms"];
-
-  const onlyAllPlatformsSelected =
-    safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "all-platforms";
 
   const onlyUngroupedSelected =
     safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "ungrouped";
@@ -640,11 +693,23 @@ export default function YourLibrary() {
             living in the backlog. Filter by status, platform, or genre to
             decide what to play next.
           </p>
+
           <div className="library-header-actions">
             <Link to="/search" className="btn btn-primary">
               Search For Game
             </Link>
+
             <button className="btn btn-ghost">Import Games To Library</button>
+
+            {/* ✅ Steam login */}
+            <button className="btn btn-primary steam-login-btn invisible" onClick={handleSteamLogin}>
+              Sign in with Steam
+            </button>
+
+            {/* ✅ Steam import */}
+            <button className="btn btn-ghost invisible" onClick={handleSteamImport}>
+              Steam Import
+            </button>
           </div>
         </div>
 
@@ -927,10 +992,7 @@ export default function YourLibrary() {
             </label>
 
             <div className="game-selection-con">
-              <div
-                className="game-selection-toggle"
-                onClick={toggleGameSelection}
-              >
+              <div className="game-selection-toggle" onClick={toggleGameSelection}>
                 <div className="game-selection-count">
                   <p>Game Selection</p>
                   <span>{selectedGroupGameIds.length}</span>
@@ -956,16 +1018,14 @@ export default function YourLibrary() {
                       return (
                         <div
                           key={game.id}
-                          className={`filter-game${
-                            checked ? " selected-game" : ""
-                          }`}
+                          className={`filter-game${checked ? " selected-game" : ""}`}
                           onClick={() => toggleGameInGroup(game.id)}
                         >
                           <p>{game.title}</p>
                           <input
                             type="checkbox"
                             checked={checked}
-                            onClick={(e) => e.stopPropagation()} // ⛔ prevent double toggle
+                            onClick={(e) => e.stopPropagation()}
                             onChange={() => toggleGameInGroup(game.id)}
                           />
                         </div>

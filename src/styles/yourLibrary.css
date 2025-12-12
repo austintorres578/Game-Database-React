@@ -838,6 +838,10 @@
   border-radius: 10px;
 }
 
+.library-page .invisible{
+  display: none;
+}
+
 .library-page .game-selection-list::-webkit-scrollbar-thumb:hover {
   background: #8492b1;
 }
