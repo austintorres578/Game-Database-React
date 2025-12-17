@@ -28,7 +28,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div>
+    <div className='home-page'>
       <Header />
 
       <section className="home-hero">

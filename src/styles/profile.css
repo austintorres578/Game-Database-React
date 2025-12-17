@@ -1,3 +1,19 @@
+    @media(max-width:765px){
+      body .profile{
+        max-width: 95%;
+        padding-left: 0px;
+        padding-right: 0px;
+      }
+    }
+
+    @media(max-width:620px){
+      body .completed-game-card{
+        width: 95%;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+    
     body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -18,7 +34,7 @@
     .profile{
       max-width: 1250px;
       margin: 50px auto;
-      padding: 0px 50px;
+      padding: 90px 50px 0px 50px;
     }
 
     /* ======================
@@ -43,6 +59,7 @@
       display: flex;
       gap: 1.3rem;
       align-items: center;
+      flex-wrap: wrap;
     }
 
     .profile-avatar-wrapper {
@@ -497,9 +514,9 @@
         grid-template-columns: minmax(0, 1fr);
       }
 
-      .profile-shell {
+      /* .profile-shell {
         padding-top: 2.4rem;
-      }
+      } */
 
       .profile-main {
         align-items: flex-start;
@@ -557,14 +574,13 @@
     }
 
     .completed-section .pagination{
-    position: absolute;
-    top: 107%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+        position: absolute;
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    bottom: -95px;
+    left: 0px;
     }
 
     .completed-section .pagination button{
@@ -583,8 +599,7 @@
     }
 
     .completed-game-card {
-    min-width: 180px;
-    width: 22%;
+    width: 265px;
     background: rgba(15, 23, 42, 0.98);
     border-radius: 1rem;
     border: 1px solid rgba(51, 65, 85, 0.95);
@@ -642,9 +657,9 @@
 
 
 .completed-container{
-      display: flex;
+        display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     flex-wrap: wrap;
-    gap:44px;
+    gap: 14px;
 }

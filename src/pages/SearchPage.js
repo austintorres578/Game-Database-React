@@ -462,7 +462,7 @@ export default function SearchPage({ user }) {
   const noResults = gatheredData[0].loaded && !loading && gatheredData[0].results.length === 0;
 
   return (
-    <div className="container">
+    <div className="search-container">
       <Header />
 
       <div className="search-header">

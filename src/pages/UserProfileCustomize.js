@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   doc,
   setDoc,
@@ -352,7 +353,7 @@ export default function UserProfileCustomizer() {
           </div>
 
           <div className="profile-settings-header-cta">
-            <button className="btn btn-ghost">Back to profile</button>
+            <Link to="/profile"><button className="btn btn-ghost">Back to profile</button></Link>
           </div>
         </header>
 

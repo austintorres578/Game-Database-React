@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import metacriticIcon from "../assets/images/metacriticIcon.png";
 import noGameBackground from "../assets/images/noGameBackground.jpg";
 import addIcon from "../assets/images/plus-icon.png";
 
@@ -30,17 +29,39 @@ export default function Games(props) {
 
   const metaText = hasRating ? `${props.rating} Metacritic` : "No Score";
 
+  // ✅ OLD doc-id convention (pre rawg_):
+  // Firestore doc id === RAWG id as a string, e.g. "3498"
+  function getLibraryDocId(rawgId) {
+    if (rawgId === null || rawgId === undefined) return null;
+    return String(rawgId);
+  }
+
+  // Helper to normalize platforms into string array
+  function extractPlatformNames(consoleList) {
+    // RAWG search results typically look like:
+    // consoleList = [{ platform: { id, name, ... } }, ...]
+    if (!Array.isArray(consoleList)) return [];
+    return consoleList.map((p) => p?.platform?.name || p?.name).filter(Boolean);
+  }
+
   // 🔍 On mount / when id changes, check if this game is already in library
   useEffect(() => {
     const checkInLibrary = async () => {
       const user = auth.currentUser;
+
       if (!user || !props.id) {
         setIsInLibrary(false);
         return;
       }
 
       try {
-        const ref = doc(db, "users", user.uid, "library", String(props.id));
+        const docId = getLibraryDocId(props.id);
+        if (!docId) {
+          setIsInLibrary(false);
+          return;
+        }
+
+        const ref = doc(db, "users", user.uid, "library", docId);
         const snap = await getDoc(ref);
         setIsInLibrary(snap.exists());
       } catch (err) {
@@ -63,7 +84,10 @@ export default function Games(props) {
 
     if (!props.id) return;
 
-    const docRef = doc(db, "users", user.uid, "library", String(props.id));
+    const docId = getLibraryDocId(props.id);
+    if (!docId) return;
+
+    const docRef = doc(db, "users", user.uid, "library", docId);
 
     try {
       setSaving(true);
@@ -71,15 +95,30 @@ export default function Games(props) {
       await setDoc(
         docRef,
         {
+          // ✅ Keep useful fields, but docId is the source of truth now
+          rawgId: props.id,
           id: props.id,
+
+          title: props.name || "",
           name: props.name || "",
+
+          slug: props.slug || null,
+
           background_image: img || null,
+          backgroundImage: img || null,
+
           metacritic: hasRating ? props.rating : null,
           rating: hasRating ? props.rating : null,
-          platforms: [], // you can pass real platforms via props later
+
+          platforms: extractPlatformNames(props.consoleList),
+
           genres: primaryGenre !== "No Genre" ? [primaryGenre] : [],
+
           status: "backlog",
+          isFavorite: false,
           addedAt: new Date().toISOString(),
+
+          _source: "search_quick_add",
         },
         { merge: true }
       );
@@ -105,7 +144,10 @@ export default function Games(props) {
 
     if (!props.id) return;
 
-    const docRef = doc(db, "users", user.uid, "library", String(props.id));
+    const docId = getLibraryDocId(props.id);
+    if (!docId) return;
+
+    const docRef = doc(db, "users", user.uid, "library", docId);
 
     try {
       setSaving(true);
@@ -131,6 +173,7 @@ export default function Games(props) {
         setIsHovered(false);
       }}
     >
+      {/* ✅ Keep RAWG id in the hash (game page fetches by RAWG id) */}
       <Link to={"/game#" + props.id} className="game-link">
         <div className="game-card">
           <div
@@ -156,6 +199,7 @@ export default function Games(props) {
             className={`add-button ${isHovered ? "active" : ""}`}
             onClick={handleAddToLibrary}
             disabled={saving}
+            type="button"
           >
             <img src={addIcon} alt="Add to library" />
           </button>
@@ -167,6 +211,7 @@ export default function Games(props) {
             className={`remove-button ${isHovered ? "active" : ""}`}
             onClick={handleRemoveFromLibrary}
             disabled={saving}
+            type="button"
           >
             <img src={addIcon} alt="Remove from library" />
           </button>
