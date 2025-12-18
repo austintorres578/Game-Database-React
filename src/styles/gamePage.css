@@ -32,6 +32,16 @@
   }
 }
 
+@media(max-width:460px){
+  body .game-hero-actions .btn{
+    width: 100%;
+  }
+
+  body .group-dropdown{
+    width: 100%;
+  }
+}
+
 body {
       margin: 0;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

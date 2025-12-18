@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { auth } from "../firebase/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
@@ -25,31 +25,46 @@ export default function Header() {
     setIsMobileNavOpen(false);
   };
 
+  const navClass = ({ isActive }) => (isActive ? "nav-link is-active" : "nav-link");
+
   return (
     <header className="site-header">
       <div className="header-wrapper">
-        <Link to="/" className="header-logo">
+        <NavLink to="/" className="header-logo" end>
           <img src={headerLogo} alt="Game Database logo" />
-        </Link>
+        </NavLink>
 
         {/* Desktop Nav */}
         <nav className="header-nav">
-          <Link to="/search">Search For Games</Link>
+          <NavLink to="/search" className={navClass}>
+            Search For Games
+          </NavLink>
 
           {user ? (
             <>
-              <Link to="/library">Game Library</Link>
-              <Link to="/profile">Profile</Link>
-              <a href="#" onClick={handleLogout} className="logout-link">
+              <NavLink to="/library" className={navClass}>
+                Game Library
+              </NavLink>
+              <NavLink to="/profile" className={navClass}>
+                Profile
+              </NavLink>
+              <a href="#" onClick={handleLogout} className="nav-link logout-link">
                 Log Out
               </a>
             </>
           ) : (
             <>
-              <Link to="/signin">Log In</Link>
-              <Link to="/signup" className="header-cta">
+              <NavLink to="/signin" className={navClass}>
+                Log In
+              </NavLink>
+              <NavLink
+                to="/signup"
+                className={({ isActive }) =>
+                  isActive ? "header-cta is-active" : "header-cta"
+                }
+              >
                 Sign Up
-              </Link>
+              </NavLink>
             </>
           )}
 
@@ -75,33 +90,33 @@ export default function Header() {
             <img src={plusIcon} alt="Close menu" />
           </button>
 
-          <Link to="/search" onClick={() => setIsMobileNavOpen(false)}>
+          <NavLink to="/search" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
             Search For Games
-          </Link>
+          </NavLink>
 
           {user ? (
             <>
-              <Link to="/library" onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink to="/library" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
                 Game Library
-              </Link>
+              </NavLink>
 
-              <Link to="/profile" onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink to="/profile" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
                 Profile
-              </Link>
+              </NavLink>
 
-              <a href="#" onClick={handleLogout} className="logout-link">
+              <a href="#" onClick={handleLogout} className="nav-link logout-link">
                 Log Out
               </a>
             </>
           ) : (
             <>
-              <Link to="/signin" onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink to="/signin" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
                 Log In
-              </Link>
+              </NavLink>
 
-              <Link to="/signup" onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink to="/signup" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
                 Sign Up
-              </Link>
+              </NavLink>
             </>
           )}
         </nav>

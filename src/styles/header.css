@@ -12,6 +12,20 @@
     display: none;
   }
 
+  body .header-logo img{
+    height: 45px;
+  }
+
+  body .header-wrapper{
+    height: 60px;
+  }
+
+  body .mobile-nav-button img{
+    width: 25px;
+    height: 35px;
+    object-fit: contain;
+  }
+
 }  
 
 @media(max-width:620px){
@@ -29,6 +43,10 @@
   backdrop-filter: blur(16px);
   background: rgba(3, 7, 18, 0.6);
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.site-header .is-active{
+  color: #22c55e;
 }
 
 .header-wrapper {
