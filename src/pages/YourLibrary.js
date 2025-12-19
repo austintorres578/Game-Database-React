@@ -1,4 +1,10 @@
-// YourLibrary.jsx
+// YourLibrary.jsx  (FRONTEND FIX for Option B "session-only" Steam)
+// Key changes vs your current file:
+// 1) handleSteamLogin(): remove ?uid= (backend ignores it now)
+// 2) handleSteamSync(): stop expecting boundUid, stop sending x-firebase-uid header
+// 3) Steam auto-sync after redirect: call handleSteamSync({ allowAutoRelink: false }) and don't loop
+// 4) /api/me now returns 200 {loggedIn:false} — treat that as normal state
+
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -419,10 +425,15 @@ export default function YourLibrary() {
   }
 
   function normalizeResultToLibraryDoc(r) {
-    const title = r?.name || r?.title || r?.gameTitle || r?.slug || "Untitled game";
+    const title =
+      r?.name || r?.title || r?.gameTitle || r?.slug || "Untitled game";
 
     const backgroundImage =
-      r?.background_image || r?.backgroundImage || r?.image || r?.coverImage || "";
+      r?.background_image ||
+      r?.backgroundImage ||
+      r?.image ||
+      r?.coverImage ||
+      "";
 
     const genres =
       r?.genres ||
@@ -430,10 +441,15 @@ export default function YourLibrary() {
       r?.genre_names ||
       (Array.isArray(r?.tags) ? r.tags : []);
 
-    const metacritic = r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
+    const metacritic =
+      r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
 
     const platforms =
-      r?.platforms || r?.parent_platforms || r?.platform || r?.platformName || "";
+      r?.platforms ||
+      r?.parent_platforms ||
+      r?.platform ||
+      r?.platformName ||
+      "";
 
     return {
       title,
@@ -783,7 +799,9 @@ export default function YourLibrary() {
       const combined = results.filter(Boolean).join("\n\n---\n\n");
       setScanText(combined);
 
-      const { sortedTitles, nextCandidates } = await extractCandidatesWithLLM(combined);
+      const { sortedTitles, nextCandidates } = await extractCandidatesWithLLM(
+        combined
+      );
 
       setScanCleanText(sortedTitles.join("\n"));
       setCandidates(nextCandidates);
@@ -810,28 +828,26 @@ export default function YourLibrary() {
   }, [scanPreviewUrls]);
 
   /* ===========================================================================
-    STEAM: LOGIN + SYNC (✅ LOOP-PROOF + BACKEND UID BINDING)
-  =========================================================================== */
+    STEAM: LOGIN + SYNC (✅ OPTION B SESSION-ONLY)
+============================================================================= */
   function handleSteamLogin() {
     if (!authUser?.uid) {
       alert("Please sign in first.");
       return;
     }
 
-    window.location.href = `${BACKEND_BASE}/auth/steam?uid=${encodeURIComponent(
-      authUser.uid
-    )}`;
+    // ✅ Option B: no uid binding parameter anymore
+    window.location.href = `${BACKEND_BASE}/auth/steam`;
   }
 
   async function handleSteamSync({ allowAutoRelink = true } = {}) {
     try {
-      const uid = authUser?.uid;
-      if (!uid) {
+      if (!authUser?.uid) {
         alert("Please sign in first.");
         return;
       }
 
-      // 1) Check session state
+      // 1) Check Steam session state
       const meRes = await fetch(`${BACKEND_BASE}/api/me`, {
         method: "GET",
         credentials: "include",
@@ -842,33 +858,26 @@ export default function YourLibrary() {
       console.log("✅ Steam /api/me:", meData);
 
       const loggedIn = !!meData?.loggedIn;
-      const boundUid = meData?.boundUid || null;
 
-      const needsRelink = !loggedIn || !boundUid || boundUid !== uid;
-
-      if (needsRelink) {
+      // If not logged in to Steam, redirect to Steam login once (when allowed)
+      if (!loggedIn) {
         if (!allowAutoRelink) {
           setScanError(
             meData?.error ||
-              "Steam session still not bound to your user. Click 'Link Steam' to try again."
+              "Not linked to Steam in this browser. Click 'Link Steam' to connect your Steam account."
           );
           return;
         }
 
-        window.location.href = `${BACKEND_BASE}/auth/steam?uid=${encodeURIComponent(
-          uid
-        )}`;
+        window.location.href = `${BACKEND_BASE}/auth/steam`;
         return;
       }
 
-      // 2) Fetch owned games (✅ requires x-firebase-uid header)
+      // 2) Fetch owned games (Option B: no x-firebase-uid header)
       const gamesRes = await fetch(`${BACKEND_BASE}/api/steam/owned-games`, {
         method: "GET",
         credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "x-firebase-uid": uid,
-        },
+        headers: { Accept: "application/json" },
       });
 
       const gamesData = await gamesRes.json().catch(() => ({}));
@@ -877,15 +886,12 @@ export default function YourLibrary() {
       if (!gamesRes.ok) {
         const errMsg = String(gamesData?.error || gamesData?.message || "");
 
+        // If Steam session expired, optionally relink once
         if (
           allowAutoRelink &&
-          (errMsg.toLowerCase().includes("not bound") ||
-            errMsg.toLowerCase().includes("different signed-in account") ||
-            errMsg.toLowerCase().includes("not logged in"))
+          errMsg.toLowerCase().includes("not logged in with steam")
         ) {
-          window.location.href = `${BACKEND_BASE}/auth/steam?uid=${encodeURIComponent(
-            uid
-          )}`;
+          window.location.href = `${BACKEND_BASE}/auth/steam`;
           return;
         }
 
@@ -930,11 +936,11 @@ export default function YourLibrary() {
 
   /* ===========================================================================
     EFFECT: AUTO-RUN STEAM SYNC AFTER REDIRECT (?steam=linked)
-    ✅ fixes loop by:
-    - waiting for authUser
-    - running only once
-    - removing the param immediately
-    - disallowing auto-relink inside the callback (prevents infinite redirect)
+    ✅ loop-proof:
+    - waits for authUser
+    - runs only once
+    - strips param immediately
+    - does NOT auto-relink inside the callback (prevents infinite redirect)
   =========================================================================== */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -942,10 +948,9 @@ export default function YourLibrary() {
 
     if (steamParam === "linked" && authUser?.uid && !hasAutoSyncedRef.current) {
       hasAutoSyncedRef.current = true;
-
       stripSteamQueryParam();
 
-      // do one sync attempt; if still unbound, show error instead of re-redirecting forever
+      // ✅ do one sync attempt; if still not logged in, show error (no redirect loop)
       handleSteamSync({ allowAutoRelink: false });
     }
 
@@ -1045,7 +1050,11 @@ export default function YourLibrary() {
           })
         );
 
-        const fullFilters = [ALL_PLATFORMS_FILTER, UNGROUPED_FILTER, ...userGroups];
+        const fullFilters = [
+          ALL_PLATFORMS_FILTER,
+          UNGROUPED_FILTER,
+          ...userGroups,
+        ];
 
         // Default group restore (your existing logic)
         let initialGroups = ["all-platforms"];
@@ -1211,7 +1220,9 @@ export default function YourLibrary() {
   }
 
   const totalPages =
-    filteredGames.length === 0 ? 1 : Math.ceil(filteredGames.length / ITEMS_PER_PAGE);
+    filteredGames.length === 0
+      ? 1
+      : Math.ceil(filteredGames.length / ITEMS_PER_PAGE);
 
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
@@ -1249,7 +1260,13 @@ export default function YourLibrary() {
 
     try {
       if (editingGroupId) {
-        const groupDocRef = doc(db, "users", authUser.uid, "groups", editingGroupId);
+        const groupDocRef = doc(
+          db,
+          "users",
+          authUser.uid,
+          "groups",
+          editingGroupId
+        );
         await setDoc(groupDocRef, newFilter, { merge: false });
 
         setCustomFilters((prev) => {
@@ -1261,7 +1278,9 @@ export default function YourLibrary() {
           );
 
           const updatedRest = rest
-            .map((g) => (g.id === editingGroupId ? { id: editingGroupId, ...newFilter } : g))
+            .map((g) =>
+              g.id === editingGroupId ? { id: editingGroupId, ...newFilter } : g
+            )
             .sort((a, b) =>
               String(a.name || "").localeCompare(String(b.name || ""), undefined, {
                 sensitivity: "base",
@@ -1273,7 +1292,9 @@ export default function YourLibrary() {
 
         setActiveGroups((prev) => {
           const arr = Array.isArray(prev) ? prev : ["all-platforms"];
-          const nonPermanent = arr.filter((id) => id !== "all-platforms" && id !== "ungrouped");
+          const nonPermanent = arr.filter(
+            (id) => id !== "all-platforms" && id !== "ungrouped"
+          );
           const merged = Array.from(new Set([...nonPermanent, editingGroupId]));
           return merged.length > 0 ? merged : ["all-platforms"];
         });
@@ -1329,11 +1350,19 @@ export default function YourLibrary() {
       return;
     }
 
-    const confirmed = window.confirm("Are you sure you want to delete this group?");
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this group?"
+    );
     if (!confirmed) return;
 
     try {
-      const groupDocRef = doc(db, "users", authUser.uid, "groups", editingGroupId);
+      const groupDocRef = doc(
+        db,
+        "users",
+        authUser.uid,
+        "groups",
+        editingGroupId
+      );
       await deleteDoc(groupDocRef);
 
       setCustomFilters((prev) => prev.filter((g) => g.id !== editingGroupId));
@@ -1462,7 +1491,11 @@ export default function YourLibrary() {
             </Link>
 
             <a href="#filter-settings">
-              <button className="btn btn-ghost" type="button" onClick={openImportPanel}>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={openImportPanel}
+              >
                 Import Games To Library
               </button>
             </a>
@@ -1491,23 +1524,33 @@ export default function YourLibrary() {
               onClick={() => handleStatusFilterChange("all")}
             >
               <span>All</span>
-              <span className="filter-count">{loadingStats ? "…" : groupStats.total}</span>
+              <span className="filter-count">
+                {loadingStats ? "…" : groupStats.total}
+              </span>
             </button>
 
             <button
-              className={`filter-pill ${statusFilter === "backlog" ? "is-active" : ""}`}
+              className={`filter-pill ${
+                statusFilter === "backlog" ? "is-active" : ""
+              }`}
               onClick={() => handleStatusFilterChange("backlog")}
             >
               <span>Backlog</span>
-              <span className="filter-count">{loadingStats ? "…" : groupStats.backlog}</span>
+              <span className="filter-count">
+                {loadingStats ? "…" : groupStats.backlog}
+              </span>
             </button>
 
             <button
-              className={`filter-pill ${statusFilter === "completed" ? "is-active" : ""}`}
+              className={`filter-pill ${
+                statusFilter === "completed" ? "is-active" : ""
+              }`}
               onClick={() => handleStatusFilterChange("completed")}
             >
               <span>Completed</span>
-              <span className="filter-count">{loadingStats ? "…" : groupStats.completed}</span>
+              <span className="filter-count">
+                {loadingStats ? "…" : groupStats.completed}
+              </span>
             </button>
           </div>
 
@@ -1524,7 +1567,9 @@ export default function YourLibrary() {
             {customFilters.map((f) => (
               <button
                 key={f.id}
-                className={`filter-pill ${safeActiveGroupIds.includes(f.id) ? "is-active" : ""}`}
+                className={`filter-pill ${
+                  safeActiveGroupIds.includes(f.id) ? "is-active" : ""
+                }`}
                 onClick={() => handleToggleGroup(f.id)}
               >
                 {safeText(f.name, "Group")}
@@ -1569,7 +1614,8 @@ export default function YourLibrary() {
               const metacriticScore =
                 game.metacritic ?? game.metacriticScore ?? game.metaScore ?? null;
 
-              const hasScore = metacriticScore !== null && metacriticScore !== undefined;
+              const hasScore =
+                metacriticScore !== null && metacriticScore !== undefined;
 
               const groupTags = Array.from(
                 new Set(
@@ -1584,7 +1630,9 @@ export default function YourLibrary() {
                     .map((g) => safeText(g.name, ""))
                     .filter(Boolean)
                 )
-              ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+              ).sort((a, b) =>
+                a.localeCompare(b, undefined, { sensitivity: "base" })
+              );
 
               const gameHash = game.rawgId || game.slug || game.id;
 
@@ -1594,13 +1642,19 @@ export default function YourLibrary() {
                     <div className="game-card">
                       <div
                         className="game-img"
-                        style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}}
+                        style={
+                          imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}
+                        }
                       ></div>
 
                       <div className="game-info">
-                        <p className="game-title">{safeText(game.title, "Untitled game")}</p>
+                        <p className="game-title">
+                          {safeText(game.title, "Untitled game")}
+                        </p>
                         <div className="game-sub-info">
-                          {primaryGenre && <p className="game-genre">{primaryGenre}</p>}
+                          {primaryGenre && (
+                            <p className="game-genre">{primaryGenre}</p>
+                          )}
                           <p className="game-meta">
                             {hasScore ? `${metacriticScore} Metacritic` : "Unrated"}
                           </p>
@@ -1610,7 +1664,10 @@ export default function YourLibrary() {
                       {groupTags.length > 0 && (
                         <div className="game-group-tags">
                           {groupTags.map((name) => (
-                            <span key={`${game.id}-${name}`} className="game-group-tag">
+                            <span
+                              key={`${game.id}-${name}`}
+                              className="game-group-tag"
+                            >
                               {name}
                             </span>
                           ))}
@@ -1742,7 +1799,9 @@ export default function YourLibrary() {
                       <p>No games found.</p>
                     ) : (
                       libraryGames.map((game) => {
-                        const checked = selectedGroupGameIds.map(String).includes(String(game.id));
+                        const checked = selectedGroupGameIds
+                          .map(String)
+                          .includes(String(game.id));
 
                         return (
                           <div
@@ -1851,7 +1910,10 @@ export default function YourLibrary() {
                       <div className="candidate-section" style={{ marginTop: "14px" }}>
                         <p className="candidate-section-title" style={{ marginBottom: "8px" }}>
                           Candidates (A–Z) — edit + uncheck junk:
-                          <span className="candidate-found" style={{ marginLeft: "10px", opacity: 0.9 }}>
+                          <span
+                            className="candidate-found"
+                            style={{ marginLeft: "10px", opacity: 0.9 }}
+                          >
                             Imported: {scanImportedCount} / {selectedCandidateIds.size}
                           </span>
                         </p>
@@ -1927,7 +1989,10 @@ export default function YourLibrary() {
                           </button>
                         </div>
 
-                        <div className="candidate-grid scanned-text-grid" style={{ display: "grid", gap: "8px" }}>
+                        <div
+                          className="candidate-grid scanned-text-grid"
+                          style={{ display: "grid", gap: "8px" }}
+                        >
                           {candidates.map((c) => {
                             const checked = selectedCandidateIds.has(c.id);
                             const state = candidateImportStatus?.[c.id]?.state;
@@ -1974,7 +2039,9 @@ export default function YourLibrary() {
                                     onChange={(e) => {
                                       const val = e.target.value;
                                       setCandidates((prev) =>
-                                        prev.map((x) => (x.id === c.id ? { ...x, cleaned: val } : x))
+                                        prev.map((x) =>
+                                          x.id === c.id ? { ...x, cleaned: val } : x
+                                        )
                                       );
                                     }}
                                     style={{
@@ -1989,7 +2056,14 @@ export default function YourLibrary() {
                                   />
 
                                   {state && (
-                                    <span className={["candidate-status", state ? `is-${state}` : ""].filter(Boolean).join(" ")}>
+                                    <span
+                                      className={[
+                                        "candidate-status",
+                                        state ? `is-${state}` : "",
+                                      ]
+                                        .filter(Boolean)
+                                        .join(" ")}
+                                    >
                                       {state}
                                     </span>
                                   )}
@@ -2003,11 +2077,12 @@ export default function YourLibrary() {
                                   </button>
                                 </div>
 
-                                {(state === "error" || state === "skipped") && message && (
-                                  <p className="candidate-error" style={{ margin: 0 }}>
-                                    {state === "error" ? "❌" : "ℹ️"} {message}
-                                  </p>
-                                )}
+                                {(state === "error" || state === "skipped") &&
+                                  message && (
+                                    <p className="candidate-error" style={{ margin: 0 }}>
+                                      {state === "error" ? "❌" : "ℹ️"} {message}
+                                    </p>
+                                  )}
                               </div>
                             );
                           })}
@@ -2032,7 +2107,10 @@ export default function YourLibrary() {
                             <p className="not-found-title" style={{ margin: "6px 0" }}>
                               Couldn’t find these — add manually:
                             </p>
-                            <ul className="not-found-list" style={{ margin: 0, paddingLeft: "18px" }}>
+                            <ul
+                              className="not-found-list"
+                              style={{ margin: 0, paddingLeft: "18px" }}
+                            >
                               {notFoundCandidates.map((x) => (
                                 <li key={x.id} className="not-found-item">
                                   {x.title}
@@ -2085,3 +2163,5 @@ export default function YourLibrary() {
     </main>
   );
 }
+
+
