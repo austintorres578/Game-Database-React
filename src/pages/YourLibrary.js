@@ -1,9 +1,14 @@
-// YourLibrary.jsx  (FRONTEND FIX for Option B "session-only" Steam)
-// Key changes vs your current file:
-// 1) handleSteamLogin(): remove ?uid= (backend ignores it now)
-// 2) handleSteamSync(): stop expecting boundUid, stop sending x-firebase-uid header
-// 3) Steam auto-sync after redirect: call handleSteamSync({ allowAutoRelink: false }) and don't loop
-// 4) /api/me now returns 200 {loggedIn:false} — treat that as normal state
+// YourLibrary.jsx  (FULL FILE)
+// Option B (session-only Steam) + UI toggle (Link vs Sync) + restored Library Search bar
+// ✅ FIXED: "search query text" reflects the real searchTerm + result count
+// ✅ UPDATED: pagination dropdown-menu now renders ALL pages (use CSS overflow-y scroll)
+// ✅ UPDATED: scan detected textarea is editable + Regenerate button rebuilds candidates from textarea
+// ✅ UPDATED: Text Import panelMode ("text") with same textarea/candidates UI + Regenerate
+// ✅ FIXED (NEW): Text Import no longer duplicates the textarea (renderCandidateImportUI can hide its textarea)
+// ✅ FIXED (NEW): Text Import no longer duplicates the Regenerate button (renderCandidateImportUI can hide it)
+// ✅ FIXED (NEW): Text Import button says "Generate" until candidates exist
+// ✅ FIXED (NEW): Text Import helper text stays until candidates exist (typing alone won't flip the UI)
+// ✅ FIXED (NEW): Text Import no longer duplicates the "Candidates..." heading
 
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -79,7 +84,7 @@ export default function YourLibrary() {
   /* ===========================================================================
     STATE: GROUP BUILDER (MODAL -> group mode)
   =========================================================================== */
-  const [panelMode, setPanelMode] = useState("group"); // "group" | "import"
+  const [panelMode, setPanelMode] = useState("group"); // "group" | "import" | "text"
   const [showGameSelection, setShowGameSelection] = useState(false);
 
   const [selectedGroupGameIds, setSelectedGroupGameIds] = useState([]);
@@ -124,18 +129,26 @@ export default function YourLibrary() {
   // choose group to add imported games to
   const [importTargetGroupId, setImportTargetGroupId] = useState("none");
 
-  // NEW: Steam titles (optional, mostly for debug / future UI)
+  // Steam titles (optional)
   const [steamTitles, setSteamTitles] = useState([]);
 
   // ✅ prevents infinite auto-sync loop after redirect
   const hasAutoSyncedRef = useRef(false);
+
+  // ✅ Steam session state (Option B)
+  // null = unknown (still checking), true/false = known
+  const [steamLinked, setSteamLinked] = useState(null);
+  const [steamCheckLoading, setSteamCheckLoading] = useState(false);
+
+  // ✅ Restore library search bar + functionality
+  const [searchTerm, setSearchTerm] = useState("");
 
   /* ===========================================================================
     CONSTANTS: PERMANENT GROUPS + GROUP LIST
   =========================================================================== */
   const ALL_PLATFORMS_FILTER = {
     id: "all-platforms",
-    name: "All Platforms",
+    name: "All Games",
     gameIds: null,
   };
 
@@ -190,10 +203,36 @@ export default function YourLibrary() {
 
   function safeText(v, fallback = "") {
     if (typeof v === "string") return v;
-    if (v && typeof v === "object")
-      return v.name || v.title || v.slug || fallback;
+    if (v && typeof v === "object") return v.name || v.title || v.slug || fallback;
     if (typeof v === "number") return String(v);
     return fallback;
+  }
+
+  /* ===========================================================================
+    ✅ NEW HELPERS: GROUP / UNGROUPED MEMBERSHIP CHECKS
+  =========================================================================== */
+  function getGroupedIdSetFromCustomFilters(filters) {
+    const set = new Set();
+    (filters || []).forEach((g) => {
+      if (g.id === "all-platforms" || g.id === "ungrouped") return;
+      if (Array.isArray(g.gameIds)) {
+        g.gameIds.forEach((id) => set.add(String(id)));
+      }
+    });
+    return set;
+  }
+
+  function isGameInGroup(filters, groupId, gameId) {
+    const gid = String(gameId);
+    const group = (filters || []).find((g) => g.id === groupId);
+    if (!group || !Array.isArray(group.gameIds)) return false;
+    return group.gameIds.some((x) => String(x) === gid);
+  }
+
+  function isGameUngrouped(filters, gameId) {
+    const gid = String(gameId);
+    const groupedSet = getGroupedIdSetFromCustomFilters(filters);
+    return !groupedSet.has(gid);
   }
 
   /* ===========================================================================
@@ -237,10 +276,7 @@ export default function YourLibrary() {
 
   function writeLibraryViewState(uid, state) {
     try {
-      window.localStorage.setItem(
-        getLibraryViewStateKey(uid),
-        JSON.stringify(state)
-      );
+      window.localStorage.setItem(getLibraryViewStateKey(uid), JSON.stringify(state));
     } catch {
       // ignore
     }
@@ -297,6 +333,13 @@ export default function YourLibrary() {
 
   function openImportPanel() {
     setPanelMode("import");
+    setEditingGroupId(null);
+    setShowGameSelection(false);
+    openCustomFilterPanel();
+  }
+
+  function openTextImportPanel() {
+    setPanelMode("text");
     setEditingGroupId(null);
     setShowGameSelection(false);
     openCustomFilterPanel();
@@ -413,27 +456,14 @@ export default function YourLibrary() {
     IMPORT HELPERS
   =========================================================================== */
   function getResultId(r) {
-    return (
-      r?.rawgId ||
-      r?.id ||
-      r?.gameId ||
-      r?.slug ||
-      r?.name ||
-      r?.title ||
-      null
-    );
+    return r?.rawgId || r?.id || r?.gameId || r?.slug || r?.name || r?.title || null;
   }
 
   function normalizeResultToLibraryDoc(r) {
-    const title =
-      r?.name || r?.title || r?.gameTitle || r?.slug || "Untitled game";
+    const title = r?.name || r?.title || r?.gameTitle || r?.slug || "Untitled game";
 
     const backgroundImage =
-      r?.background_image ||
-      r?.backgroundImage ||
-      r?.image ||
-      r?.coverImage ||
-      "";
+      r?.background_image || r?.backgroundImage || r?.image || r?.coverImage || "";
 
     const genres =
       r?.genres ||
@@ -441,15 +471,10 @@ export default function YourLibrary() {
       r?.genre_names ||
       (Array.isArray(r?.tags) ? r.tags : []);
 
-    const metacritic =
-      r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
+    const metacritic = r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
 
     const platforms =
-      r?.platforms ||
-      r?.parent_platforms ||
-      r?.platform ||
-      r?.platformName ||
-      "";
+      r?.platforms || r?.parent_platforms || r?.platform || r?.platformName || "";
 
     return {
       title,
@@ -508,6 +533,9 @@ export default function YourLibrary() {
     );
   }
 
+  /* ===========================================================================
+    ✅ FIXED: Import behavior is group-aware (NOT library-wide)
+  =========================================================================== */
   async function importSelectedCandidatesDirect() {
     if (!authUser) {
       alert("You must be signed in to import games.");
@@ -531,7 +559,7 @@ export default function YourLibrary() {
     let importedCount = 0;
     let skippedCount = 0;
     const notFound = [];
-    const importedDocIds = [];
+    const toAddToGroupIds = []; // ✅ add-to-group list (includes already-in-library games)
 
     for (const c of selected) {
       const q = String(c.cleaned || "").trim();
@@ -586,45 +614,84 @@ export default function YourLibrary() {
           continue;
         }
 
-        const docId = String(resultId);
+        const docIdStr = String(resultId);
 
+        // Does it exist in the library?
         const existsInLocalLibrary = (libraryGames || []).some(
-          (g) => String(g.id) === String(docId)
+          (g) => String(g.id) === docIdStr
         );
-        if (existsInLocalLibrary) {
+
+        // Determine target bucket:
+        // - "none" means "Ungrouped" bucket
+        const targetIsNone = importTargetGroupId === "none";
+        const targetGroupId = targetIsNone ? null : importTargetGroupId;
+
+        // Is it already in the selected bucket?
+        let alreadyInTarget = false;
+
+        if (targetIsNone) {
+          alreadyInTarget = existsInLocalLibrary && isGameUngrouped(customFilters, docIdStr);
+        } else if (targetGroupId) {
+          alreadyInTarget = isGameInGroup(customFilters, targetGroupId, docIdStr);
+        }
+
+        // Skip only if already in target bucket
+        if (alreadyInTarget) {
           skippedCount += 1;
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
-            [c.id]: { state: "skipped", message: "Already in library" },
+            [c.id]: {
+              state: "skipped",
+              message: targetIsNone ? "Already ungrouped" : "Already in selected group",
+            },
           }));
           continue;
         }
 
-        const gameDocRef = doc(db, "users", authUser.uid, "library", docId);
-        const payload = normalizeResultToLibraryDoc(chosen);
+        // If group selected (not none), queue it to be added to group (even if already in library)
+        if (importTargetGroupId !== "none") {
+          toAddToGroupIds.push(docIdStr);
+        }
 
-        // eslint-disable-next-line no-await-in-loop
-        await setDoc(gameDocRef, payload, { merge: true });
+        // If it doesn't exist in library, create it
+        if (!existsInLocalLibrary) {
+          const gameDocRef = doc(db, "users", authUser.uid, "library", docIdStr);
+          const payload = normalizeResultToLibraryDoc(chosen);
 
-        setLibraryGames((prev) => {
-          const exists = (prev || []).some((g) => String(g.id) === String(docId));
-          if (exists) return prev;
+          // eslint-disable-next-line no-await-in-loop
+          await setDoc(gameDocRef, payload, { merge: true });
 
-          const next = [{ id: docId, ...payload }, ...(prev || [])];
-          return next.sort((a, b) =>
-            String(a.title || "").localeCompare(String(b.title || ""), undefined, {
-              sensitivity: "base",
-            })
-          );
-        });
+          setLibraryGames((prev) => {
+            const exists = (prev || []).some((g) => String(g.id) === docIdStr);
+            if (exists) return prev;
 
-        importedDocIds.push(docId);
-        importedCount += 1;
+            const next = [{ id: docIdStr, ...payload }, ...(prev || [])];
+            return next.sort((a, b) =>
+              String(a.title || "").localeCompare(String(b.title || ""), undefined, {
+                sensitivity: "base",
+              })
+            );
+          });
 
-        setCandidateImportStatus((prev) => ({
-          ...(prev || {}),
-          [c.id]: { state: "imported" },
-        }));
+          importedCount += 1;
+
+          setCandidateImportStatus((prev) => ({
+            ...(prev || {}),
+            [c.id]: { state: "imported" },
+          }));
+        } else {
+          // Already in library, but not in target bucket => don't skip
+          setCandidateImportStatus((prev) => ({
+            ...(prev || {}),
+            [c.id]: {
+              state: "imported",
+              message:
+                importTargetGroupId === "none"
+                  ? "Already in library (but not ungrouped)"
+                  : "Already in library — will add to group",
+            },
+          }));
+        }
       } catch (e) {
         const msg = e?.message || "Import failed";
         setCandidateImportStatus((prev) => ({
@@ -634,9 +701,11 @@ export default function YourLibrary() {
       }
     }
 
-    if (importTargetGroupId !== "none" && importedDocIds.length > 0) {
+    // ✅ Add to selected group (includes existing-library games that were not already in that group)
+    if (importTargetGroupId !== "none" && toAddToGroupIds.length > 0) {
       try {
-        await addGameIdsToGroup(importTargetGroupId, importedDocIds);
+        const uniq = Array.from(new Set(toAddToGroupIds.map(String)));
+        await addGameIdsToGroup(importTargetGroupId, uniq);
       } catch (e) {
         console.error("Failed adding imports to group:", e);
       }
@@ -677,6 +746,47 @@ export default function YourLibrary() {
     const nextCandidates = sortCandidatesAlpha(nextCandidatesRaw);
 
     return { sortedTitles, nextCandidates };
+  }
+
+  // ✅ NEW: parse textarea lines -> unique titles
+  function parseTitlesFromTextarea(text) {
+    const lines = String(text || "")
+      .split(/\r?\n/g)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    const seen = new Set();
+    const uniq = [];
+    for (const t of lines) {
+      const key = t.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      uniq.push(t);
+    }
+    return uniq;
+  }
+
+  // ✅ NEW: regenerate candidates from what's currently in the textarea
+  function handleRegenerateCandidatesFromTextarea() {
+    const titles = parseTitlesFromTextarea(scanCleanText);
+
+    setCandidateImportStatus({});
+    setNotFoundCandidates([]);
+    setImportSummary({ imported: 0, notFound: 0, skipped: 0 });
+
+    if (titles.length === 0) {
+      setCandidates([]);
+      setSelectedCandidateIds(new Set());
+      return;
+    }
+
+    const { sortedTitles, nextCandidates } = titlesToCandidates(titles, "manual");
+
+    // normalize textarea to A–Z after regen
+    setScanCleanText(sortedTitles.join("\n"));
+
+    setCandidates(nextCandidates);
+    setSelectedCandidateIds(new Set(nextCandidates.map((c) => c.id)));
   }
 
   /* ===========================================================================
@@ -780,28 +890,19 @@ export default function YourLibrary() {
 
         if (!res.ok) {
           const msg =
-            payload?.error ||
-            payload?.message ||
-            `Scan failed (HTTP ${res.status}).`;
+            payload?.error || payload?.message || `Scan failed (HTTP ${res.status}).`;
           throw new Error(msg);
         }
 
         const raw =
-          payload?.rawText ||
-          payload?.text ||
-          payload?.result ||
-          payload?.ocrText ||
-          "";
-
+          payload?.rawText || payload?.text || payload?.result || payload?.ocrText || "";
         results.push(String(raw || "").trim());
       }
 
       const combined = results.filter(Boolean).join("\n\n---\n\n");
       setScanText(combined);
 
-      const { sortedTitles, nextCandidates } = await extractCandidatesWithLLM(
-        combined
-      );
+      const { sortedTitles, nextCandidates } = await extractCandidatesWithLLM(combined);
 
       setScanCleanText(sortedTitles.join("\n"));
       setCandidates(nextCandidates);
@@ -828,15 +929,50 @@ export default function YourLibrary() {
   }, [scanPreviewUrls]);
 
   /* ===========================================================================
-    STEAM: LOGIN + SYNC (✅ OPTION B SESSION-ONLY)
-============================================================================= */
+    STEAM: CHECK SESSION (Option B)
+  =========================================================================== */
+  async function refreshSteamLinkedState() {
+    try {
+      setSteamCheckLoading(true);
+
+      const res = await fetch(`${BACKEND_BASE}/api/me`, {
+        method: "GET",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const linked = !!data?.loggedIn;
+
+      setSteamLinked(linked);
+      return linked;
+    } catch (e) {
+      console.warn("Steam session check failed:", e);
+      setSteamLinked(false);
+      return false;
+    } finally {
+      setSteamCheckLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!authUser?.uid) {
+      setSteamLinked(null);
+      return;
+    }
+    refreshSteamLinkedState();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authUser?.uid]);
+
+  /* ===========================================================================
+    STEAM: LOGIN + SYNC (Option B session-only)
+  =========================================================================== */
   function handleSteamLogin() {
     if (!authUser?.uid) {
       alert("Please sign in first.");
       return;
     }
 
-    // ✅ Option B: no uid binding parameter anymore
     window.location.href = `${BACKEND_BASE}/auth/steam`;
   }
 
@@ -858,8 +994,8 @@ export default function YourLibrary() {
       console.log("✅ Steam /api/me:", meData);
 
       const loggedIn = !!meData?.loggedIn;
+      setSteamLinked(loggedIn);
 
-      // If not logged in to Steam, redirect to Steam login once (when allowed)
       if (!loggedIn) {
         if (!allowAutoRelink) {
           setScanError(
@@ -873,7 +1009,7 @@ export default function YourLibrary() {
         return;
       }
 
-      // 2) Fetch owned games (Option B: no x-firebase-uid header)
+      // 2) Fetch owned games
       const gamesRes = await fetch(`${BACKEND_BASE}/api/steam/owned-games`, {
         method: "GET",
         credentials: "include",
@@ -886,11 +1022,7 @@ export default function YourLibrary() {
       if (!gamesRes.ok) {
         const errMsg = String(gamesData?.error || gamesData?.message || "");
 
-        // If Steam session expired, optionally relink once
-        if (
-          allowAutoRelink &&
-          errMsg.toLowerCase().includes("not logged in with steam")
-        ) {
+        if (allowAutoRelink && errMsg.toLowerCase().includes("not logged in with steam")) {
           window.location.href = `${BACKEND_BASE}/auth/steam`;
           return;
         }
@@ -898,6 +1030,8 @@ export default function YourLibrary() {
         setScanError(errMsg || "Could not fetch Steam library.");
         return;
       }
+
+      setSteamLinked(true);
 
       const titles = Array.isArray(gamesData?.titles)
         ? gamesData.titles
@@ -907,7 +1041,7 @@ export default function YourLibrary() {
 
       setSteamTitles(titles);
 
-      // Reset the same candidate import UI state (like scan)
+      // Reset candidate import UI state (like scan)
       setScanError("");
       setScanText("");
       setScanCleanText("");
@@ -936,11 +1070,6 @@ export default function YourLibrary() {
 
   /* ===========================================================================
     EFFECT: AUTO-RUN STEAM SYNC AFTER REDIRECT (?steam=linked)
-    ✅ loop-proof:
-    - waits for authUser
-    - runs only once
-    - strips param immediately
-    - does NOT auto-relink inside the callback (prevents infinite redirect)
   =========================================================================== */
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -948,14 +1077,16 @@ export default function YourLibrary() {
 
     if (steamParam === "linked" && authUser?.uid && !hasAutoSyncedRef.current) {
       hasAutoSyncedRef.current = true;
-      stripSteamQueryParam();
 
-      // ✅ do one sync attempt; if still not logged in, show error (no redirect loop)
+      stripSteamQueryParam();
+      setSteamLinked(true);
+
       handleSteamSync({ allowAutoRelink: false });
     }
 
     if (steamParam === "fail") {
       stripSteamQueryParam();
+      setSteamLinked(false);
       setScanError("Steam login failed. Please try again.");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1035,9 +1166,7 @@ export default function YourLibrary() {
           return {
             id: docSnap.id,
             name: safeText(data.name, "Untitled Group") || "Untitled Group",
-            gameIds: Array.isArray(data.gameIds)
-              ? data.gameIds.map((id) => String(id))
-              : [],
+            gameIds: Array.isArray(data.gameIds) ? data.gameIds.map((id) => String(id)) : [],
             field: data.field || "platform",
             operator: data.operator || "eq",
             value: data.value || "",
@@ -1050,13 +1179,9 @@ export default function YourLibrary() {
           })
         );
 
-        const fullFilters = [
-          ALL_PLATFORMS_FILTER,
-          UNGROUPED_FILTER,
-          ...userGroups,
-        ];
+        const fullFilters = [ALL_PLATFORMS_FILTER, UNGROUPED_FILTER, ...userGroups];
 
-        // Default group restore (your existing logic)
+        // Default group restore
         let initialGroups = ["all-platforms"];
 
         if (typeof window !== "undefined") {
@@ -1093,9 +1218,7 @@ export default function YourLibrary() {
           const saved = readLibraryViewState(user.uid);
 
           if (saved) {
-            if (typeof saved.statusFilter === "string") {
-              restoredStatus = saved.statusFilter;
-            }
+            if (typeof saved.statusFilter === "string") restoredStatus = saved.statusFilter;
 
             if (Number.isFinite(Number(saved.currentPage))) {
               restoredPage = Math.max(1, Number(saved.currentPage));
@@ -1154,9 +1277,7 @@ export default function YourLibrary() {
   =========================================================================== */
   const { total, completed } = stats;
 
-  const safeActiveGroupIds = Array.isArray(activeGroupIds)
-    ? activeGroupIds
-    : ["all-platforms"];
+  const safeActiveGroupIds = Array.isArray(activeGroupIds) ? activeGroupIds : ["all-platforms"];
 
   const onlyUngroupedSelected =
     safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "ungrouped";
@@ -1177,13 +1298,9 @@ export default function YourLibrary() {
       }
     });
 
-    groupFilteredGames = libraryGames.filter(
-      (game) => !groupedIdSet.has(String(game.id))
-    );
+    groupFilteredGames = libraryGames.filter((game) => !groupedIdSet.has(String(game.id)));
   } else if (realSelectedGroupIds.length > 0) {
-    const selectedGroups = customFilters.filter((g) =>
-      realSelectedGroupIds.includes(g.id)
-    );
+    const selectedGroups = customFilters.filter((g) => realSelectedGroupIds.includes(g.id));
 
     const gameIdSet = new Set();
     selectedGroups.forEach((g) => {
@@ -1192,9 +1309,7 @@ export default function YourLibrary() {
       }
     });
 
-    groupFilteredGames = libraryGames.filter((game) =>
-      gameIdSet.has(String(game.id))
-    );
+    groupFilteredGames = libraryGames.filter((game) => gameIdSet.has(String(game.id)));
   }
 
   const groupStats = groupFilteredGames.reduce(
@@ -1219,10 +1334,17 @@ export default function YourLibrary() {
     });
   }
 
+  // ✅ Library search filter (applies after group+status filters)
+  const qSearch = searchTerm.trim().toLowerCase();
+  if (qSearch) {
+    filteredGames = filteredGames.filter((game) => {
+      const title = safeText(game.title, "").toLowerCase();
+      return title.includes(qSearch);
+    });
+  }
+
   const totalPages =
-    filteredGames.length === 0
-      ? 1
-      : Math.ceil(filteredGames.length / ITEMS_PER_PAGE);
+    filteredGames.length === 0 ? 1 : Math.ceil(filteredGames.length / ITEMS_PER_PAGE);
 
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
@@ -1233,6 +1355,9 @@ export default function YourLibrary() {
     (acc, v) => (v?.state === "imported" ? acc + 1 : acc),
     0
   );
+
+  // ✅ Used by Text Import UI:
+  const hasGeneratedCandidates = candidates.length > 0;
 
   /* ===========================================================================
     GROUP BUILDER: CREATE / UPDATE GROUP
@@ -1260,27 +1385,15 @@ export default function YourLibrary() {
 
     try {
       if (editingGroupId) {
-        const groupDocRef = doc(
-          db,
-          "users",
-          authUser.uid,
-          "groups",
-          editingGroupId
-        );
+        const groupDocRef = doc(db, "users", authUser.uid, "groups", editingGroupId);
         await setDoc(groupDocRef, newFilter, { merge: false });
 
         setCustomFilters((prev) => {
-          const permanent = prev.filter(
-            (g) => g.id === "all-platforms" || g.id === "ungrouped"
-          );
-          const rest = prev.filter(
-            (g) => g.id !== "all-platforms" && g.id !== "ungrouped"
-          );
+          const permanent = prev.filter((g) => g.id === "all-platforms" || g.id === "ungrouped");
+          const rest = prev.filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped");
 
           const updatedRest = rest
-            .map((g) =>
-              g.id === editingGroupId ? { id: editingGroupId, ...newFilter } : g
-            )
+            .map((g) => (g.id === editingGroupId ? { id: editingGroupId, ...newFilter } : g))
             .sort((a, b) =>
               String(a.name || "").localeCompare(String(b.name || ""), undefined, {
                 sensitivity: "base",
@@ -1292,9 +1405,7 @@ export default function YourLibrary() {
 
         setActiveGroups((prev) => {
           const arr = Array.isArray(prev) ? prev : ["all-platforms"];
-          const nonPermanent = arr.filter(
-            (id) => id !== "all-platforms" && id !== "ungrouped"
-          );
+          const nonPermanent = arr.filter((id) => id !== "all-platforms" && id !== "ungrouped");
           const merged = Array.from(new Set([...nonPermanent, editingGroupId]));
           return merged.length > 0 ? merged : ["all-platforms"];
         });
@@ -1305,12 +1416,8 @@ export default function YourLibrary() {
         const savedFilter = { id: docRef.id, ...newFilter };
 
         setCustomFilters((prev) => {
-          const permanent = prev.filter(
-            (g) => g.id === "all-platforms" || g.id === "ungrouped"
-          );
-          const rest = prev.filter(
-            (g) => g.id !== "all-platforms" && g.id !== "ungrouped"
-          );
+          const permanent = prev.filter((g) => g.id === "all-platforms" || g.id === "ungrouped");
+          const rest = prev.filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped");
 
           const updatedRest = [...rest, savedFilter].sort((a, b) =>
             String(a.name || "").localeCompare(String(b.name || ""), undefined, {
@@ -1350,19 +1457,11 @@ export default function YourLibrary() {
       return;
     }
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this group?"
-    );
+    const confirmed = window.confirm("Are you sure you want to delete this group?");
     if (!confirmed) return;
 
     try {
-      const groupDocRef = doc(
-        db,
-        "users",
-        authUser.uid,
-        "groups",
-        editingGroupId
-      );
+      const groupDocRef = doc(db, "users", authUser.uid, "groups", editingGroupId);
       await deleteDoc(groupDocRef);
 
       setCustomFilters((prev) => prev.filter((g) => g.id !== editingGroupId));
@@ -1371,10 +1470,7 @@ export default function YourLibrary() {
         const arr = Array.isArray(prev) ? prev : ["all-platforms"];
         const remaining = arr.filter((id) => id !== editingGroupId);
 
-        const nonPermanent = remaining.filter(
-          (id) => id !== "all-platforms" && id !== "ungrouped"
-        );
-
+        const nonPermanent = remaining.filter((id) => id !== "all-platforms" && id !== "ungrouped");
         return nonPermanent.length > 0 ? remaining : ["all-platforms"];
       });
 
@@ -1392,7 +1488,7 @@ export default function YourLibrary() {
       closeCustomFilterPanel();
     } catch (err) {
       console.error("Error deleting group:", err);
-      alert("There was a problem deleting this group. Please try again.");
+      alert("There was a problem deleting group. Please try again.");
     }
   }
 
@@ -1463,6 +1559,260 @@ export default function YourLibrary() {
   }
 
   /* ===========================================================================
+    SHARED RENDER: CANDIDATE IMPORT UI (used by Scan/Steam AND Text Import)
+    ✅ FIX: can hide textarea so Text Import doesn't show two textareas.
+    ✅ FIX: can hide Regenerate button so Text Import doesn't show two Regen buttons.
+    ✅ FIX: can hide inner "Candidates..." heading to prevent duplicates in Text Import.
+  =========================================================================== */
+  function renderCandidateImportUI(
+    {
+      title = "Game list (A–Z) — editable:",
+      showTextarea = true,
+      showRegenerateButton = true,
+      showCandidatesHeading = true, // ✅ NEW
+    } = {}
+  ) {
+    if (!scanCleanText) return null;
+
+    return (
+      <div className="scan-results" style={{ marginTop: "12px" }}>
+        <p className="scan-results-title" style={{ marginBottom: "6px" }}>
+          {title}
+        </p>
+
+        {showTextarea && (
+          <textarea
+            className="scan-detected-text"
+            value={scanCleanText}
+            onChange={(e) => setScanCleanText(e.target.value)}
+            rows={10}
+            style={{
+              width: "100%",
+              resize: "vertical",
+              padding: "10px",
+              borderRadius: "10px",
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(0,0,0,0.25)",
+              color: "white",
+            }}
+            placeholder="Paste or edit games here (one per line)..."
+          />
+        )}
+
+        {showRegenerateButton && (
+          <button
+            style={{ marginTop: "10px" }}
+            className="btn btn-primary"
+            type="button"
+            onClick={handleRegenerateCandidatesFromTextarea}
+          >
+            Regenerate Game Selection
+          </button>
+        )}
+
+        {candidates.length > 0 && (
+          <div className="candidate-section" style={{ marginTop: "14px" }}>
+            {showCandidatesHeading ? (
+              <p className="candidate-section-title" style={{ marginBottom: "8px" }}>
+                Candidates (A–Z) — edit + uncheck junk:
+                <span className="candidate-found" style={{ marginLeft: "10px", opacity: 0.9 }}>
+                  Imported: {scanImportedCount} / {selectedCandidateIds.size}
+                </span>
+              </p>
+            ) : (
+              <p className="candidate-section-title" style={{ marginBottom: "8px" }}>
+                <span className="candidate-found" style={{ opacity: 0.9 }}>
+                  Imported: {scanImportedCount} / {selectedCandidateIds.size}
+                </span>
+              </p>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                flexWrap: "wrap",
+                marginBottom: "10px",
+                alignItems: "center",
+              }}
+              className="group-import-drop"
+            >
+              <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ opacity: 0.9 }}>Add imports to group:</span>
+
+                <select
+                  value={importTargetGroupId}
+                  onChange={(e) => setImportTargetGroupId(e.target.value)}
+                  style={{
+                    padding: "8px 10px",
+                    borderRadius: "10px",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(0,0,0,0.25)",
+                    color: "white",
+                  }}
+                >
+                  <option value="none">None</option>
+                  {customFilters
+                    .filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped")
+                    .map((g) => (
+                      <option key={g.id} value={g.id}>
+                        {safeText(g.name, "Group")}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+
+            <div
+              className="candidate-actions"
+              style={{
+                display: "flex",
+                gap: "10px",
+                flexWrap: "wrap",
+                marginBottom: "10px",
+              }}
+            >
+              <button
+                className="btn btn-ghost candidate-btn candidate-btn-select-all"
+                type="button"
+                onClick={selectAllCandidates}
+              >
+                Select All
+              </button>
+
+              <button
+                className="btn btn-ghost candidate-btn candidate-btn-select-none"
+                type="button"
+                onClick={deselectAllCandidates}
+              >
+                Select None
+              </button>
+
+              <button
+                className="btn btn-primary candidate-btn candidate-btn-import"
+                type="button"
+                onClick={importSelectedCandidatesDirect}
+                disabled={candidates.length === 0 || selectedCandidateIds.size === 0}
+              >
+                Import Selected
+              </button>
+            </div>
+
+            <div className="candidate-grid scanned-text-grid" style={{ display: "grid", gap: "8px" }}>
+              {candidates.map((c) => {
+                const checked = selectedCandidateIds.has(c.id);
+                const state = candidateImportStatus?.[c.id]?.state;
+                const message = candidateImportStatus?.[c.id]?.message;
+
+                return (
+                  <div
+                    key={c.id}
+                    className={["candidate-card", checked ? "is-selected" : "", state ? `is-${state}` : ""]
+                      .filter(Boolean)
+                      .join(" ")}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "8px",
+                      padding: "10px",
+                      borderRadius: "10px",
+                      background: "rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    <div
+                      className="candidate-row"
+                      style={{
+                        display: "flex",
+                        gap: "10px",
+                        alignItems: "center",
+                      }}
+                    >
+                      <input
+                        className="candidate-checkbox"
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleCandidate(c.id)}
+                      />
+
+                      <input
+                        className="candidate-input"
+                        value={c.cleaned}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setCandidates((prev) =>
+                            prev.map((x) => (x.id === c.id ? { ...x, cleaned: val } : x))
+                          );
+                        }}
+                        style={{
+                          flex: 1,
+                          background: "rgba(0,0,0,0.25)",
+                          border: "1px solid rgba(255,255,255,0.15)",
+                          color: "white",
+                          padding: "8px 10px",
+                          borderRadius: "10px",
+                        }}
+                      />
+
+                      {state && (
+                        <span
+                          className={["candidate-status", state ? `is-${state}` : ""].filter(Boolean).join(" ")}
+                        >
+                          {state}
+                        </span>
+                      )}
+
+                      <button
+                        className="btn btn-ghost candidate-remove-btn"
+                        type="button"
+                        onClick={() => removeCandidate(c.id)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+
+                    {(state === "error" || state === "skipped") && message && (
+                      <p className="candidate-error" style={{ margin: 0 }}>
+                        {state === "error" ? "❌" : "ℹ️"} {message}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {(importSummary.imported > 0 || importSummary.notFound > 0 || importSummary.skipped > 0) && (
+              <div className="import-summary" style={{ marginTop: "12px" }}>
+                <p className="import-summary-text" style={{ margin: 0 }}>
+                  Imported: <strong>{importSummary.imported}</strong>
+                  {" — "}
+                  Skipped: <strong>{importSummary.skipped}</strong>
+                  {" — "}
+                  Not found: <strong>{importSummary.notFound}</strong>
+                </p>
+              </div>
+            )}
+
+            {notFoundCandidates.length > 0 && (
+              <div className="not-found-panel" style={{ marginTop: "10px" }}>
+                <p className="not-found-title" style={{ margin: "6px 0" }}>
+                  Couldn’t find these — add manually:
+                </p>
+                <ul className="not-found-list" style={{ margin: 0, paddingLeft: "18px" }}>
+                  {notFoundCandidates.map((x) => (
+                    <li key={x.id} className="not-found-item">
+                      {x.title}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ===========================================================================
     RENDER
   =========================================================================== */
   return (
@@ -1480,9 +1830,8 @@ export default function YourLibrary() {
           </div>
           <h1>All your games in one place.</h1>
           <p>
-            Track what you’re playing, what you’ve finished, and what’s still
-            living in the backlog. Filter by status, platform, or genre to
-            decide what to play next.
+            Track what you’re playing, what you’ve finished, and what’s still living in the backlog.
+            Import your games by text, image, or through steam, and group together in anyway you want!
           </p>
 
           <div className="library-header-actions">
@@ -1490,13 +1839,16 @@ export default function YourLibrary() {
               Search For Game
             </Link>
 
+            {/* ✅ Two entry points: Import (Images/Steam) vs Import (Text) */}
             <a href="#filter-settings">
-              <button
-                className="btn btn-ghost"
-                type="button"
-                onClick={openImportPanel}
-              >
-                Import Games To Library
+              <button className="btn btn-ghost" type="button" onClick={openImportPanel}>
+                Import Games (Images / Steam Sync)
+              </button>
+            </a>
+
+            <a href="#filter-settings">
+              <button className="btn btn-ghost" type="button" onClick={openTextImportPanel}>
+                Import Games (Paste Titles)
               </button>
             </a>
           </div>
@@ -1506,9 +1858,7 @@ export default function YourLibrary() {
           <div className="library-stat total-game-stat">
             <div className="library-stat-label">Total games</div>
             <div className="library-stat-value">{loadingStats ? "…" : total}</div>
-            <div className="library-stat-sub">
-              {loadingStats ? "Loading…" : `${completed} completed`}
-            </div>
+            <div className="library-stat-sub">{loadingStats ? "Loading…" : `${completed} completed`}</div>
           </div>
         </div>
       </section>
@@ -1524,33 +1874,23 @@ export default function YourLibrary() {
               onClick={() => handleStatusFilterChange("all")}
             >
               <span>All</span>
-              <span className="filter-count">
-                {loadingStats ? "…" : groupStats.total}
-              </span>
+              <span className="filter-count">{loadingStats ? "…" : groupStats.total}</span>
             </button>
 
             <button
-              className={`filter-pill ${
-                statusFilter === "backlog" ? "is-active" : ""
-              }`}
+              className={`filter-pill ${statusFilter === "backlog" ? "is-active" : ""}`}
               onClick={() => handleStatusFilterChange("backlog")}
             >
               <span>Backlog</span>
-              <span className="filter-count">
-                {loadingStats ? "…" : groupStats.backlog}
-              </span>
+              <span className="filter-count">{loadingStats ? "…" : groupStats.backlog}</span>
             </button>
 
             <button
-              className={`filter-pill ${
-                statusFilter === "completed" ? "is-active" : ""
-              }`}
+              className={`filter-pill ${statusFilter === "completed" ? "is-active" : ""}`}
               onClick={() => handleStatusFilterChange("completed")}
             >
               <span>Completed</span>
-              <span className="filter-count">
-                {loadingStats ? "…" : groupStats.completed}
-              </span>
+              <span className="filter-count">{loadingStats ? "…" : groupStats.completed}</span>
             </button>
           </div>
 
@@ -1567,9 +1907,7 @@ export default function YourLibrary() {
             {customFilters.map((f) => (
               <button
                 key={f.id}
-                className={`filter-pill ${
-                  safeActiveGroupIds.includes(f.id) ? "is-active" : ""
-                }`}
+                className={`filter-pill ${safeActiveGroupIds.includes(f.id) ? "is-active" : ""}`}
                 onClick={() => handleToggleGroup(f.id)}
               >
                 {safeText(f.name, "Group")}
@@ -1578,11 +1916,7 @@ export default function YourLibrary() {
 
             {realSelectedGroupIds.length === 1 && (
               <a href="#filter-settings" className="add-to-group-con">
-                <button
-                  type="button"
-                  className="add-to-group btn btn-primary"
-                  onClick={handleHeaderAddToGroup}
-                >
+                <button type="button" className="add-to-group btn btn-primary" onClick={handleHeaderAddToGroup}>
                   Manage Group
                 </button>
               </a>
@@ -1591,10 +1925,57 @@ export default function YourLibrary() {
         </div>
       </section>
 
+      {/* ✅ RESTORED: LIBRARY SEARCH BAR */}
+      <section className="library-search-bar" style={{ marginTop: "16px" }}>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+              setIsPageDropdownOpen(false);
+            }}
+            placeholder="Search your library..."
+            style={{
+              flex: 1,
+              minWidth: "240px",
+              padding: "10px 12px",
+              borderRadius: "12px",
+              border: "1px solid rgba(255,255,255,0.15)",
+              background: "rgba(0,0,0,0.25)",
+              color: "white",
+            }}
+          />
+
+          {searchTerm.trim() && (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                setSearchTerm("");
+                setCurrentPage(1);
+                setIsPageDropdownOpen(false);
+              }}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </section>
+
       {/* ===========================
           MAIN LIBRARY GRID
       ============================ */}
       <section className="library-grid">
+        {searchTerm.trim() ? (
+          <h3 className="search-query-text">
+            Searching for “{searchTerm.trim()}” ({filteredGames.length} result{filteredGames.length === 1 ? "" : "s"})
+          </h3>
+        ) : (
+          <h3 className="search-query-text"></h3>
+        )}
+
         <div className="game-grid">
           {loadingStats ? (
             <p>Loading your library…</p>
@@ -1611,11 +1992,8 @@ export default function YourLibrary() {
 
               const primaryGenre = getPrimaryGenreFromGame(game);
 
-              const metacriticScore =
-                game.metacritic ?? game.metacriticScore ?? game.metaScore ?? null;
-
-              const hasScore =
-                metacriticScore !== null && metacriticScore !== undefined;
+              const metacriticScore = game.metacritic ?? game.metacriticScore ?? game.metaScore ?? null;
+              const hasScore = metacriticScore !== null && metacriticScore !== undefined;
 
               const groupTags = Array.from(
                 new Set(
@@ -1630,9 +2008,7 @@ export default function YourLibrary() {
                     .map((g) => safeText(g.name, ""))
                     .filter(Boolean)
                 )
-              ).sort((a, b) =>
-                a.localeCompare(b, undefined, { sensitivity: "base" })
-              );
+              ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 
               const gameHash = game.rawgId || game.slug || game.id;
 
@@ -1640,34 +2016,20 @@ export default function YourLibrary() {
                 <div className="game-wrapper" key={String(game.id)}>
                   <Link className="game-link" to={`/game#${gameHash}`}>
                     <div className="game-card">
-                      <div
-                        className="game-img"
-                        style={
-                          imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}
-                        }
-                      ></div>
+                      <div className="game-img" style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}} />
 
                       <div className="game-info">
-                        <p className="game-title">
-                          {safeText(game.title, "Untitled game")}
-                        </p>
+                        <p className="game-title">{safeText(game.title, "Untitled game")}</p>
                         <div className="game-sub-info">
-                          {primaryGenre && (
-                            <p className="game-genre">{primaryGenre}</p>
-                          )}
-                          <p className="game-meta">
-                            {hasScore ? `${metacriticScore} Metacritic` : "Unrated"}
-                          </p>
+                          {primaryGenre && <p className="game-genre">{primaryGenre}</p>}
+                          <p className="game-meta">{hasScore ? `${metacriticScore} Metacritic` : "Unrated"}</p>
                         </div>
                       </div>
 
                       {groupTags.length > 0 && (
                         <div className="game-group-tags">
                           {groupTags.map((name) => (
-                            <span
-                              key={`${game.id}-${name}`}
-                              className="game-group-tag"
-                            >
+                            <span key={`${game.id}-${name}`} className="game-group-tag">
                               {name}
                             </span>
                           ))}
@@ -1677,11 +2039,7 @@ export default function YourLibrary() {
                   </Link>
 
                   <div className="add-button-con">
-                    <button
-                      className="add-button"
-                      type="button"
-                      onClick={() => handleAddToGroupFromGame(game.id)}
-                    >
+                    <button className="add-button" type="button" onClick={() => handleAddToGroupFromGame(game.id)}>
                       <img src={plusIcon} alt="Add to group" />
                     </button>
                   </div>
@@ -1715,15 +2073,13 @@ export default function YourLibrary() {
 
               {isPageDropdownOpen && (
                 <div className="dropdown-menu">
-                  {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => {
+                  {Array.from({ length: totalPages }, (_, i) => {
                     const pageNumber = i + 1;
                     return (
                       <button
                         key={pageNumber}
                         type="button"
-                        className={`dropdown-item ${
-                          pageNumber === safeCurrentPage ? "current-page" : ""
-                        }`}
+                        className={`dropdown-item ${pageNumber === safeCurrentPage ? "current-page" : ""}`}
                         onClick={() => {
                           setCurrentPage(pageNumber);
                           setIsPageDropdownOpen(false);
@@ -1758,11 +2114,90 @@ export default function YourLibrary() {
         <div id="filter-settings" className="custom-filter-settings">
           <h2>
             {panelMode === "import"
-              ? "Select Import Method"
+              ? "Import Games"
+              : panelMode === "text"
+              ? "Text Import"
               : editingGroupId
               ? "Edit Group"
               : "Create Custom Group"}
           </h2>
+
+          {/* ===========================
+              TEXT IMPORT MODE
+          ============================ */}
+          {panelMode === "text" && (
+            <div className="import-settings">
+              <div className="text-import" style={{ marginBottom: "18px" }}>
+                <p>Paste a Game List (one title per line)</p>
+
+                {/* ✅ Text mode textarea always visible (the ONLY textarea in text mode) */}
+                <textarea
+                  className="scan-detected-text"
+                  value={scanCleanText}
+                  onChange={(e) => setScanCleanText(e.target.value)}
+                  rows={10}
+                  style={{
+                    width: "100%",
+                    resize: "vertical",
+                    padding: "10px",
+                    borderRadius: "10px",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    background: "rgba(0,0,0,0.25)",
+                    color: "white",
+                  }}
+                  placeholder={`Example:\nHalo 3\nDead Space\nFinal Fantasy VII`}
+                />
+
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+                  <button
+                    className="btn btn-primary"
+                    type="button"
+                    onClick={handleRegenerateCandidatesFromTextarea}
+                    disabled={!scanCleanText.trim()}
+                    title={!scanCleanText.trim() ? "Paste at least one title first" : ""}
+                  >
+                    {hasGeneratedCandidates ? "Regenerate Game Selection" : "Generate Game Selection"}
+                  </button>
+
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    onClick={() => {
+                      setScanText("");
+                      setScanCleanText("");
+                      setCandidates([]);
+                      setSelectedCandidateIds(new Set());
+                      setCandidateImportStatus({});
+                      setNotFoundCandidates([]);
+                      setImportSummary({ imported: 0, notFound: 0, skipped: 0 });
+                      setImportTargetGroupId("none");
+                    }}
+                  >
+                    Clear
+                  </button>
+
+                  <button className="btn btn-ghost" type="button" onClick={openImportPanel}>
+                    Switch to Images / Steam
+                  </button>
+                </div>
+
+                {/* ✅ Do NOT flip to candidate UI just because textarea has text.
+                    Only show candidate UI once candidates exist. */}
+                {!hasGeneratedCandidates ? (
+                  <p style={{ opacity: 0.85, marginTop: "10px" }}>
+                    Paste titles above, then click <strong>Generate</strong> to build candidates.
+                  </p>
+                ) : (
+                  renderCandidateImportUI({
+                    title: "Candidates (A–Z) — edit + uncheck junk:",
+                    showTextarea: false,
+                    showRegenerateButton: false,
+                    showCandidatesHeading: false, // ✅ FIX: prevents duplicate heading in text mode
+                  })
+                )}
+              </div>
+            </div>
+          )}
 
           {/* ===========================
               GROUP MODE
@@ -1799,9 +2234,7 @@ export default function YourLibrary() {
                       <p>No games found.</p>
                     ) : (
                       libraryGames.map((game) => {
-                        const checked = selectedGroupGameIds
-                          .map(String)
-                          .includes(String(game.id));
+                        const checked = selectedGroupGameIds.map(String).includes(String(game.id));
 
                         return (
                           <div
@@ -1826,11 +2259,7 @@ export default function YourLibrary() {
 
               <div className="cfs-actions">
                 {editingGroupId && (
-                  <button
-                    type="button"
-                    className="btn btn-primary delete-group-btn"
-                    onClick={handleDeleteGroup}
-                  >
+                  <button type="button" className="btn btn-primary delete-group-btn" onClick={handleDeleteGroup}>
                     Delete Group
                   </button>
                 )}
@@ -1842,7 +2271,7 @@ export default function YourLibrary() {
           )}
 
           {/* ===========================
-              IMPORT MODE
+              IMPORT MODE (IMAGES + STEAM)
           ============================ */}
           {panelMode === "import" && (
             <div className="import-settings">
@@ -1856,14 +2285,9 @@ export default function YourLibrary() {
               />
 
               <div className="image-scan">
-                <p>Scan Images For Game Names</p>
+                <p>Scan Images For Game Titles</p>
 
-                <button
-                  className="btn btn-primary"
-                  type="button"
-                  onClick={openScanFilePicker}
-                  disabled={scanLoading}
-                >
+                <button className="btn btn-primary" type="button" onClick={openScanFilePicker} disabled={scanLoading}>
                   {scanLoading ? "Scanning..." : "Upload"}
                 </button>
 
@@ -1883,271 +2307,69 @@ export default function YourLibrary() {
                   </p>
                 )}
 
-                {!scanLoading && scanCleanText && (
-                  <div className="scan-results" style={{ marginTop: "12px" }}>
-                    <p className="scan-results-title" style={{ marginBottom: "6px" }}>
-                      Detected games (A–Z) — uneditable:
-                    </p>
-
-                    <textarea
-                      className="scan-detected-text"
-                      value={scanCleanText}
-                      readOnly
-                      rows={10}
-                      style={{
-                        width: "100%",
-                        resize: "vertical",
-                        padding: "10px",
-                        borderRadius: "10px",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        background: "rgba(0,0,0,0.25)",
-                        color: "white",
-                      }}
-                      placeholder="Detected games will appear here..."
-                    />
-
-                    {candidates.length > 0 && (
-                      <div className="candidate-section" style={{ marginTop: "14px" }}>
-                        <p className="candidate-section-title" style={{ marginBottom: "8px" }}>
-                          Candidates (A–Z) — edit + uncheck junk:
-                          <span
-                            className="candidate-found"
-                            style={{ marginLeft: "10px", opacity: 0.9 }}
-                          >
-                            Imported: {scanImportedCount} / {selectedCandidateIds.size}
-                          </span>
-                        </p>
-
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "10px",
-                            flexWrap: "wrap",
-                            marginBottom: "10px",
-                            alignItems: "center",
-                          }}
-                          className="group-import-drop"
-                        >
-                          <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                            <span style={{ opacity: 0.9 }}>Add imports to group:</span>
-
-                            <select
-                              value={importTargetGroupId}
-                              onChange={(e) => setImportTargetGroupId(e.target.value)}
-                              style={{
-                                padding: "8px 10px",
-                                borderRadius: "10px",
-                                border: "1px solid rgba(255,255,255,0.15)",
-                                background: "rgba(0,0,0,0.25)",
-                                color: "white",
-                              }}
-                            >
-                              <option value="none">None</option>
-                              {customFilters
-                                .filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped")
-                                .map((g) => (
-                                  <option key={g.id} value={g.id}>
-                                    {safeText(g.name, "Group")}
-                                  </option>
-                                ))}
-                            </select>
-                          </label>
-                        </div>
-
-                        <div
-                          className="candidate-actions"
-                          style={{
-                            display: "flex",
-                            gap: "10px",
-                            flexWrap: "wrap",
-                            marginBottom: "10px",
-                          }}
-                        >
-                          <button
-                            className="btn btn-ghost candidate-btn candidate-btn-select-all"
-                            type="button"
-                            onClick={selectAllCandidates}
-                          >
-                            Select All
-                          </button>
-
-                          <button
-                            className="btn btn-ghost candidate-btn candidate-btn-select-none"
-                            type="button"
-                            onClick={deselectAllCandidates}
-                          >
-                            Select None
-                          </button>
-
-                          <button
-                            className="btn btn-primary candidate-btn candidate-btn-import"
-                            type="button"
-                            onClick={importSelectedCandidatesDirect}
-                            disabled={candidates.length === 0 || selectedCandidateIds.size === 0}
-                          >
-                            Import Selected
-                          </button>
-                        </div>
-
-                        <div
-                          className="candidate-grid scanned-text-grid"
-                          style={{ display: "grid", gap: "8px" }}
-                        >
-                          {candidates.map((c) => {
-                            const checked = selectedCandidateIds.has(c.id);
-                            const state = candidateImportStatus?.[c.id]?.state;
-                            const message = candidateImportStatus?.[c.id]?.message;
-
-                            return (
-                              <div
-                                key={c.id}
-                                className={[
-                                  "candidate-card",
-                                  checked ? "is-selected" : "",
-                                  state ? `is-${state}` : "",
-                                ]
-                                  .filter(Boolean)
-                                  .join(" ")}
-                                style={{
-                                  display: "flex",
-                                  flexDirection: "column",
-                                  gap: "8px",
-                                  padding: "10px",
-                                  borderRadius: "10px",
-                                  background: "rgba(255,255,255,0.06)",
-                                }}
-                              >
-                                <div
-                                  className="candidate-row"
-                                  style={{
-                                    display: "flex",
-                                    gap: "10px",
-                                    alignItems: "center",
-                                    flexWrap: "wrap",
-                                  }}
-                                >
-                                  <input
-                                    className="candidate-checkbox"
-                                    type="checkbox"
-                                    checked={checked}
-                                    onChange={() => toggleCandidate(c.id)}
-                                  />
-
-                                  <input
-                                    className="candidate-input"
-                                    value={c.cleaned}
-                                    onChange={(e) => {
-                                      const val = e.target.value;
-                                      setCandidates((prev) =>
-                                        prev.map((x) =>
-                                          x.id === c.id ? { ...x, cleaned: val } : x
-                                        )
-                                      );
-                                    }}
-                                    style={{
-                                      flex: 1,
-                                      minWidth: "220px",
-                                      background: "rgba(0,0,0,0.25)",
-                                      border: "1px solid rgba(255,255,255,0.15)",
-                                      color: "white",
-                                      padding: "8px 10px",
-                                      borderRadius: "10px",
-                                    }}
-                                  />
-
-                                  {state && (
-                                    <span
-                                      className={[
-                                        "candidate-status",
-                                        state ? `is-${state}` : "",
-                                      ]
-                                        .filter(Boolean)
-                                        .join(" ")}
-                                    >
-                                      {state}
-                                    </span>
-                                  )}
-
-                                  <button
-                                    className="btn btn-ghost candidate-remove-btn"
-                                    type="button"
-                                    onClick={() => removeCandidate(c.id)}
-                                  >
-                                    Remove
-                                  </button>
-                                </div>
-
-                                {(state === "error" || state === "skipped") &&
-                                  message && (
-                                    <p className="candidate-error" style={{ margin: 0 }}>
-                                      {state === "error" ? "❌" : "ℹ️"} {message}
-                                    </p>
-                                  )}
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {(importSummary.imported > 0 ||
-                          importSummary.notFound > 0 ||
-                          importSummary.skipped > 0) && (
-                          <div className="import-summary" style={{ marginTop: "12px" }}>
-                            <p className="import-summary-text" style={{ margin: 0 }}>
-                              Imported: <strong>{importSummary.imported}</strong>
-                              {" — "}
-                              Skipped: <strong>{importSummary.skipped}</strong>
-                              {" — "}
-                              Not found: <strong>{importSummary.notFound}</strong>
-                            </p>
-                          </div>
-                        )}
-
-                        {notFoundCandidates.length > 0 && (
-                          <div className="not-found-panel" style={{ marginTop: "10px" }}>
-                            <p className="not-found-title" style={{ margin: "6px 0" }}>
-                              Couldn’t find these — add manually:
-                            </p>
-                            <ul
-                              className="not-found-list"
-                              style={{ margin: 0, paddingLeft: "18px" }}
-                            >
-                              {notFoundCandidates.map((x) => (
-                                <li key={x.id} className="not-found-item">
-                                  {x.title}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {!scanLoading &&
+                  scanCleanText &&
+                  renderCandidateImportUI({ title: "Detected games (A–Z) — editable:" })}
               </div>
 
+              {/* ✅ Steam UI toggle: show Link if NOT linked, show Sync if linked */}
               {!scanLoading && scanPreviewUrls.length === 0 && !scanCleanText && (
                 <div className="steam-sync">
                   <p>Import Steam Library</p>
 
-                  <button
-                    className="btn btn-primary"
-                    type="button"
-                    onClick={() => handleSteamSync({ allowAutoRelink: true })}
-                    disabled={!authUser?.uid}
-                    title={!authUser?.uid ? "Sign in first" : ""}
-                  >
-                    Sync Steam Library
-                  </button>
+                  {steamCheckLoading || steamLinked === null ? (
+                    <p style={{ opacity: 0.85 }}>Checking Steam link…</p>
+                  ) : steamLinked ? (
+                    <button
+                      className="btn btn-primary"
+                      type="button"
+                      onClick={() => handleSteamSync({ allowAutoRelink: false })}
+                      disabled={!authUser?.uid}
+                      title={!authUser?.uid ? "Sign in first" : ""}
+                    >
+                      Sync Steam Library
+                    </button>
+                  ) : (
+                    <button
+                      className="btn btn-primary"
+                      type="button"
+                      onClick={handleSteamLogin}
+                      disabled={!authUser?.uid}
+                      title={!authUser?.uid ? "Sign in first" : ""}
+                    >
+                      Link Steam For Library Sync
+                    </button>
+                  )}
 
-                  <button
-                    className="btn btn-ghost"
-                    type="button"
-                    onClick={handleSteamLogin}
-                    disabled={!authUser?.uid}
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Link Steam
-                  </button>
+                  {steamLinked && (
+                    <button
+                      className="btn btn-ghost"
+                      type="button"
+                      style={{ marginTop: "10px" }}
+                      onClick={async () => {
+                        try {
+                          await fetch(`${BACKEND_BASE}/api/logout`, {
+                            method: "POST",
+                            credentials: "include",
+                          });
+                        } catch {
+                          // ignore
+                        } finally {
+                          setSteamLinked(false);
+                          setSteamTitles([]);
+                          setScanError("Steam unlinked in this browser. Link again to sync.");
+                        }
+                      }}
+                    >
+                      Unlink Steam
+                    </button>
+                  )}
+
+                  <div style={{ marginTop: "12px" }}>
+                    <button className="btn btn-ghost" type="button" onClick={openTextImportPanel}>
+                      Switch to Paste Text
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -2163,5 +2385,3 @@ export default function YourLibrary() {
     </main>
   );
 }
-
-

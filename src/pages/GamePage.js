@@ -12,7 +12,16 @@ import { useNavigate } from "react-router-dom";
 
 // 🔐 Firebase imports
 import { auth, db } from "../firebase/firebase";
-import { doc, setDoc, getDoc, deleteDoc, collection, getDocs } from "firebase/firestore";
+import {
+  doc,
+  setDoc,
+  getDoc,
+  deleteDoc,
+  collection,
+  getDocs,
+  updateDoc,
+  arrayRemove,
+} from "firebase/firestore";
 
 export default function GamePage() {
   const navigate = useNavigate();
@@ -76,6 +85,30 @@ export default function GamePage() {
   function getLibraryDocId(rawgId) {
     if (rawgId === null || rawgId === undefined) return null;
     return String(rawgId);
+  }
+
+  // ✅ NEW: remove a gameId from ALL groups when deleting from library
+  async function removeGameFromAllGroups(userId, gameIdStr) {
+    try {
+      const groupsRef = collection(db, "users", userId, "groups");
+      const snap = await getDocs(groupsRef);
+
+      const updates = snap.docs.map(async (groupSnap) => {
+        const data = groupSnap.data();
+        const ids = Array.isArray(data.gameIds) ? data.gameIds.map(String) : [];
+
+        if (!ids.includes(String(gameIdStr))) return;
+
+        // Atomic remove
+        await updateDoc(groupSnap.ref, {
+          gameIds: arrayRemove(String(gameIdStr)),
+        });
+      });
+
+      await Promise.all(updates);
+    } catch (err) {
+      console.error("Error removing game from all groups:", err);
+    }
   }
 
   function createGameLink() {
@@ -207,7 +240,9 @@ export default function GamePage() {
           };
         });
 
-        groups.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+        groups.sort((a, b) =>
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+        );
         setUserGroups(groups);
       } catch (err) {
         console.error("Error loading user groups:", err);
@@ -238,7 +273,8 @@ export default function GamePage() {
       rating: gameData.rating ?? null,
 
       // store strings only (not objects)
-      platforms: gameData.platforms?.map((p) => p?.platform?.name).filter(Boolean) || [],
+      platforms:
+        gameData.platforms?.map((p) => p?.platform?.name).filter(Boolean) || [],
       genres: gameData.genres?.map((g) => g?.name).filter(Boolean) || [],
 
       addedAt: new Date().toISOString(),
@@ -263,10 +299,26 @@ export default function GamePage() {
       setSavingLibrary(true);
 
       if (isInLibrary) {
+        // 1) delete from library
         await deleteDoc(docRef);
+
+        // 2) remove from all groups
+        await removeGameFromAllGroups(user.uid, String(docId));
+
+        // 3) update UI state
         setIsInLibrary(false);
         setIsCompleted(false);
         setIsFavorite(false);
+
+        // 4) update local groups state so dropdown updates instantly
+        setUserGroups((prev) =>
+          prev.map((g) => ({
+            ...g,
+            gameIds: Array.isArray(g.gameIds)
+              ? g.gameIds.filter((id) => String(id) !== String(docId))
+              : [],
+          }))
+        );
       } else {
         await setDoc(
           docRef,
@@ -329,7 +381,9 @@ export default function GamePage() {
       }
     } catch (error) {
       console.error("Error updating completed status:", error);
-      alert("There was a problem updating your completed games. Please try again.");
+      alert(
+        "There was a problem updating your completed games. Please try again."
+      );
     } finally {
       setSavingCompleted(false);
     }
@@ -408,7 +462,9 @@ export default function GamePage() {
       }
 
       const data = snap.data();
-      const currentIds = Array.isArray(data.gameIds) ? data.gameIds.map(String) : [];
+      const currentIds = Array.isArray(data.gameIds)
+        ? data.gameIds.map(String)
+        : [];
 
       if (!currentIds.includes(String(libraryDocId))) {
         const updatedIds = [...currentIds, String(libraryDocId)];
@@ -441,17 +497,25 @@ export default function GamePage() {
 
   function showPrevScreenshot() {
     if (!gameScreenshots.length || activeScreenshotIndex === null) return;
-    setActiveScreenshotIndex((prevIndex) => (prevIndex - 1 + gameScreenshots.length) % gameScreenshots.length);
+    setActiveScreenshotIndex(
+      (prevIndex) =>
+        (prevIndex - 1 + gameScreenshots.length) % gameScreenshots.length
+    );
   }
 
   function showNextScreenshot() {
     if (!gameScreenshots.length || activeScreenshotIndex === null) return;
-    setActiveScreenshotIndex((prevIndex) => (prevIndex + 1) % gameScreenshots.length);
+    setActiveScreenshotIndex(
+      (prevIndex) => (prevIndex + 1) % gameScreenshots.length
+    );
   }
 
   useEffect(() => {
     if (isFullScreenshotOpen && fullscreenRef.current) {
-      fullscreenRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      fullscreenRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }, [isFullScreenshotOpen]);
 
@@ -505,7 +569,9 @@ export default function GamePage() {
 
   // Normalize genres/platforms for rendering (avoids rendering objects)
   const genreNames = Array.isArray(gameData?.genres)
-    ? gameData.genres.map((g) => (typeof g === "string" ? g : g?.name)).filter(Boolean)
+    ? gameData.genres
+        .map((g) => (typeof g === "string" ? g : g?.name))
+        .filter(Boolean)
     : [];
 
   const platformNames = Array.isArray(gameData?.platforms)
@@ -529,7 +595,9 @@ export default function GamePage() {
               <div
                 className="game-cover-img"
                 style={{
-                  backgroundImage: `url(${gameData.background_image || defaultBackground})`,
+                  backgroundImage: `url(${
+                    gameData.background_image || defaultBackground
+                  })`,
                 }}
               ></div>
             </div>
@@ -546,7 +614,9 @@ export default function GamePage() {
             <div className="game-meta-row">
               <div>
                 <span className="meta-label">Metascore</span>
-                <span className="metascore-pill">{gameData.metacritic ?? "N/A"}</span>
+                <span className="metascore-pill">
+                  {gameData.metacritic ?? "N/A"}
+                </span>
               </div>
               <div className="meta-divider"></div>
               <div>
@@ -559,7 +629,11 @@ export default function GamePage() {
               <span className="meta-label">Genres</span>
               <br />
               <div className="genres">
-                {genreNames.length ? genreNames.map((name) => <p key={name}>{name}</p>) : <p>Unlisted</p>}
+                {genreNames.length ? (
+                  genreNames.map((name) => <p key={name}>{name}</p>)
+                ) : (
+                  <p>Unlisted</p>
+                )}
               </div>
             </div>
 
@@ -567,43 +641,74 @@ export default function GamePage() {
               <span className="meta-label">Platforms</span>
               <br />
               <div className="platforms">
-                {platformNames.length ? platformNames.map((name) => <p key={name}>{name}</p>) : <p>Unlisted</p>}
+                {platformNames.length ? (
+                  platformNames.map((name) => <p key={name}>{name}</p>)
+                ) : (
+                  <p>Unlisted</p>
+                )}
               </div>
             </div>
 
-            <p className="game-short-info">{gameData.description_raw || "No description available."}</p>
+            <p className="game-short-info">
+              {gameData.description_raw || "No description available."}
+            </p>
 
             <div className="game-hero-actions">
               {/* Library toggle */}
               <button
-                className={"btn btn-primary in-library" + (isInLibrary ? " successfully-favorited" : "")}
+                className={
+                  "btn btn-primary in-library" +
+                  (isInLibrary ? " successfully-favorited" : "")
+                }
                 onClick={handleToggleLibrary}
                 disabled={savingLibrary || savingFavorite || savingCompleted}
               >
-                {savingLibrary ? "Updating..." : isInLibrary ? "Remove from Library" : "Add to Library"}
+                {savingLibrary
+                  ? "Updating..."
+                  : isInLibrary
+                  ? "Remove from Library"
+                  : "Add to Library"}
               </button>
 
               {/* Completed toggle */}
               <button
-                className={"btn btn-ghost completed-button" + (isCompleted ? " completed-button--active" : "")}
+                className={
+                  "btn btn-ghost completed-button" +
+                  (isCompleted ? " completed-button--active" : "")
+                }
                 onClick={handleToggleCompleted}
                 disabled={savingCompleted || savingLibrary || savingFavorite}
               >
-                {savingCompleted ? "Updating..." : isCompleted ? "Unmark Completed" : "Mark as Completed"}
+                {savingCompleted
+                  ? "Updating..."
+                  : isCompleted
+                  ? "Unmark Completed"
+                  : "Mark as Completed"}
               </button>
 
               {/* Favorite toggle */}
               <button
-                className={"btn btn-ghost favorite-button" + (isFavorite ? " favorite-button--active" : "")}
+                className={
+                  "btn btn-ghost favorite-button" +
+                  (isFavorite ? " favorite-button--active" : "")
+                }
                 onClick={handleToggleFavorite}
                 disabled={savingFavorite || savingLibrary || savingCompleted}
               >
-                {savingFavorite ? "Updating..." : isFavorite ? "Unfavorite game" : "Favorite game"}
+                {savingFavorite
+                  ? "Updating..."
+                  : isFavorite
+                  ? "Unfavorite game"
+                  : "Favorite game"}
               </button>
 
               {/* Group dropdown */}
               {auth.currentUser && userGroups.length > 0 && (
-                <div className={"dropdown group-dropdown" + (groupDropdownOpen ? " open" : "")}>
+                <div
+                  className={
+                    "dropdown group-dropdown" + (groupDropdownOpen ? " open" : "")
+                  }
+                >
                   <button
                     type="button"
                     className="btn btn-ghost dropdown-trigger"
@@ -618,19 +723,29 @@ export default function GamePage() {
                         const libraryDocId = getLibraryDocId(gameData.id);
 
                         const inGroup = Array.isArray(group.gameIds)
-                          ? group.gameIds.some((id) => String(id) === String(libraryDocId))
+                          ? group.gameIds.some(
+                              (id) => String(id) === String(libraryDocId)
+                            )
                           : false;
 
                         return (
                           <button
                             key={group.id}
                             type="button"
-                            className={"dropdown-item" + (inGroup ? " in-group" : "")}
+                            className={
+                              "dropdown-item" + (inGroup ? " in-group" : "")
+                            }
                             disabled={inGroup || savingGroupId === group.id}
                             onClick={() => handleAddToGroup(group.id)}
                           >
-                            <span className="dropdown-item-label">{group.name}</span>
-                            {inGroup && <span className="dropdown-item-status">✓ Already in this group</span>}
+                            <span className="dropdown-item-label">
+                              {group.name}
+                            </span>
+                            {inGroup && (
+                              <span className="dropdown-item-status">
+                                ✓ Already in this group
+                              </span>
+                            )}
                           </button>
                         );
                       })}
@@ -680,22 +795,30 @@ export default function GamePage() {
               <div className="stat-grid">
                 <div className="stat-item">
                   <span className="stat-label">Release date</span>
-                  <span className="stat-value">{gameData.released || "Unknown"}</span>
+                  <span className="stat-value">
+                    {gameData.released || "Unknown"}
+                  </span>
                 </div>
 
                 <div className="stat-item">
                   <span className="stat-label">Developer</span>
-                  <span className="stat-value">{gameData.developers?.[0]?.name || "Unknown"}</span>
+                  <span className="stat-value">
+                    {gameData.developers?.[0]?.name || "Unknown"}
+                  </span>
                 </div>
 
                 <div className="stat-item">
                   <span className="stat-label">Publisher</span>
-                  <span className="stat-value">{gameData.publishers?.[0]?.name || "Unknown"}</span>
+                  <span className="stat-value">
+                    {gameData.publishers?.[0]?.name || "Unknown"}
+                  </span>
                 </div>
 
                 <div className="stat-item">
                   <span className="stat-label">Age rating</span>
-                  <span className="stat-value">{gameData.esrb_rating?.name || "Unrated"}</span>
+                  <span className="stat-value">
+                    {gameData.esrb_rating?.name || "Unrated"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -703,7 +826,11 @@ export default function GamePage() {
             <div className="game-panel">
               <h2 className="panel-title">Tags</h2>
               <div className="game-tags-cloud">
-                {gameData.tags?.length ? gameData.tags.map((tag) => <span key={tag.id}>{tag.name}</span>) : <span>No tags</span>}
+                {gameData.tags?.length ? (
+                  gameData.tags.map((tag) => <span key={tag.id}>{tag.name}</span>)
+                ) : (
+                  <span>No tags</span>
+                )}
               </div>
             </div>
           </aside>
@@ -735,7 +862,10 @@ export default function GamePage() {
                   key={shot.id}
                   onClick={() => openScreenshot(index)}
                 >
-                  <div className="screenshot-img" style={{ backgroundImage: `url(${shot.image})` }}></div>
+                  <div
+                    className="screenshot-img"
+                    style={{ backgroundImage: `url(${shot.image})` }}
+                  ></div>
                 </button>
               ))
             ) : (
@@ -755,7 +885,8 @@ export default function GamePage() {
           </button>
           <img
             src={
-              activeScreenshotIndex !== null && gameScreenshots[activeScreenshotIndex]
+              activeScreenshotIndex !== null &&
+              gameScreenshots[activeScreenshotIndex]
                 ? gameScreenshots[activeScreenshotIndex].image
                 : defaultBackground
             }
