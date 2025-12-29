@@ -1,3 +1,4 @@
+// GamePage.jsx
 import React, { useState, useEffect, useRef } from "react";
 import parse from "html-react-parser";
 import loadingCircle from "../assets/images/loading.gif";
@@ -23,6 +24,11 @@ import {
   arrayRemove,
 } from "firebase/firestore";
 
+// ✅ Backend base (Render in prod, override for local if you want)
+const BACKEND_BASE =
+  process.env.REACT_APP_BACKEND_BASE ||
+  "https://game-database-backend.onrender.com";
+
 export default function GamePage() {
   const navigate = useNavigate();
 
@@ -32,6 +38,18 @@ export default function GamePage() {
 
   // videos (kept even if you don't render yet)
   const [gameVideos, setGameVideos] = useState([]);
+
+  // ✅ ITAD cover (boxart) (kept)
+  const [itadCoverUrl, setItadCoverUrl] = useState(null);
+  const [itadChecked, setItadChecked] = useState(false);
+
+  // ✅ RAWG store links
+  const [rawgStores, setRawgStores] = useState([]);
+  const [rawgStoresChecked, setRawgStoresChecked] = useState(false);
+
+  // ✅ ITAD store links (from AnyDeal API via your backend /api/itad/stores)
+  const [itadStores, setItadStores] = useState([]);
+  const [itadStoresChecked, setItadStoresChecked] = useState(false);
 
   // fullscreen state
   const [isFullScreenshotOpen, setIsFullScreenshotOpen] = useState(false);
@@ -87,7 +105,86 @@ export default function GamePage() {
     return String(rawgId);
   }
 
-  // ✅ NEW: remove a gameId from ALL groups when deleting from library
+  // ✅ Frontend helper: infer store name from URL when RAWG returns "Store"
+  function inferStoreNameFromUrl(url) {
+    if (!url) return "Store";
+    const u = String(url).toLowerCase();
+
+    if (u.includes("store.steampowered.com")) return "Steam";
+    if (u.includes("gog.com")) return "GOG";
+    if (u.includes("epicgames.com/store")) return "Epic Games Store";
+    if (u.includes("store.playstation.com")) return "PlayStation Store";
+    if (u.includes("xbox.com") || u.includes("microsoft.com/store"))
+      return "Microsoft Store";
+    if (u.includes("nintendo.com")) return "Nintendo eShop";
+    if (u.includes("humblebundle.com")) return "Humble Bundle";
+    if (u.includes("itch.io")) return "itch.io";
+    if (u.includes("greenmangaming.com")) return "Green Man Gaming";
+    if (u.includes("ea.com") || u.includes("origin.com")) return "EA";
+    if (u.includes("store.ubi.com") || u.includes("ubisoft.com"))
+      return "Ubisoft Store";
+    if (u.includes("battle.net")) return "Battle.net";
+
+    // Fallback: use hostname
+    try {
+      const host = new URL(url).hostname.replace(/^www\./, "");
+      const parts = host.split(".");
+      const base = parts[0] === "store" ? parts[1] : parts[0];
+      return base ? base.charAt(0).toUpperCase() + base.slice(1) : "Store";
+    } catch {
+      return "Store";
+    }
+  }
+
+  // ✅ RAWG-only: nice ordering + dedupe by url
+  function normalizeAndSortStores(list) {
+    const seen = new Set();
+    const deduped = (Array.isArray(list) ? list : [])
+      .filter((x) => x?.url)
+      .filter((x) => {
+        const url = String(x.url);
+        if (seen.has(url)) return false;
+        seen.add(url);
+        return true;
+      });
+
+    const priority = {
+      Steam: 1,
+      GOG: 2,
+      "Epic Games Store": 3,
+      "PlayStation Store": 4,
+      "Microsoft Store": 5,
+      "Nintendo eShop": 6,
+      "Humble Bundle": 7,
+      "Green Man Gaming": 8,
+      "itch.io": 9,
+      EA: 10,
+      "Ubisoft Store": 11,
+      "Battle.net": 12,
+    };
+
+    return deduped.sort((a, b) => {
+      const pa = priority[a.storeName] ?? 999;
+      const pb = priority[b.storeName] ?? 999;
+      if (pa !== pb) return pa - pb;
+      return String(a.storeName || "").localeCompare(String(b.storeName || ""));
+    });
+  }
+
+  // ✅ Dedupe ITAD offers by URL (keeps first occurrence)
+  function dedupeByUrl(list) {
+    const seen = new Set();
+    return (Array.isArray(list) ? list : [])
+      .filter((x) => x?.url)
+      .filter((x) => {
+        const u = String(x.url);
+        if (seen.has(u)) return false;
+        seen.add(u);
+        return true;
+      });
+  }
+
+  // ✅ remove a gameId from ALL groups when deleting from library
   async function removeGameFromAllGroups(userId, gameIdStr) {
     try {
       const groupsRef = collection(db, "users", userId, "groups");
@@ -99,7 +196,6 @@ export default function GamePage() {
 
         if (!ids.includes(String(gameIdStr))) return;
 
-        // Atomic remove
         await updateDoc(groupSnap.ref, {
           gameIds: arrayRemove(String(gameIdStr)),
         });
@@ -181,6 +277,144 @@ export default function GamePage() {
     // eslint-disable-next-line
   }, []);
 
+  /* =============================================================================
+    ✅ ITAD LOOKUP (cover) + ✅ ITAD STORES (AnyDeal offers via /api/itad/stores)
+    - lookup returns { found, itadId, game }
+    - stores returns { offers: [...] } (per your server logs)
+  ============================================================================= */
+  useEffect(() => {
+    const fetchItad = async () => {
+      try {
+        if (!gameData?.name) return;
+
+        // reset per game
+        setItadChecked(false);
+        setItadCoverUrl(null);
+        setItadStoresChecked(false);
+        setItadStores([]);
+
+        // 1) Lookup by title (gets itadId + cover assets)
+        const lookupUrl =
+          `${BACKEND_BASE}/api/itad/lookup?title=` +
+          encodeURIComponent(gameData.name) +
+          `&t=${Date.now()}`;
+
+        console.log("🟦 ITAD lookup:", lookupUrl);
+
+        const r = await fetch(lookupUrl, { credentials: "include" });
+        const data = await r.json().catch(() => ({}));
+
+        console.log("🟩 ITAD lookup result:", data);
+
+        // cover
+        const boxart =
+          data?.game?.assets?.boxart ||
+          data?.game?.assets?.banner400 ||
+          data?.game?.assets?.banner300 ||
+          data?.game?.assets?.banner145 ||
+          null;
+
+        if (data?.found && boxart) {
+          setItadCoverUrl(boxart);
+        } else {
+          setItadCoverUrl(null);
+        }
+
+        // 2) Stores by itadId (this is where your AnyDeal offers come from)
+        if (data?.found && data?.itadId) {
+          const storesUrl =
+            `${BACKEND_BASE}/api/itad/stores?itadId=` +
+            encodeURIComponent(data.itadId) +
+            `&country=US&t=${Date.now()}`;
+
+          console.log("🟦 ITAD stores:", storesUrl);
+
+          const r2 = await fetch(storesUrl, { credentials: "include" });
+          const data2 = await r2.json().catch(() => ({}));
+
+          console.log("🟩 ITAD stores result:", data2);
+
+          const offers = Array.isArray(data2?.offers) ? data2.offers : [];
+
+          // Normalize to { url, ... } and keep RAW beyond that
+          const rawOffers = dedupeByUrl(
+            offers
+              .map((x) => ({
+                ...x,
+                url: x?.url || x?.link || x?.href || null,
+              }))
+              .filter((x) => !!x.url)
+          );
+
+          setItadStores(rawOffers);
+        } else {
+          setItadStores([]);
+        }
+      } catch (err) {
+        console.error("ITAD fetch failed:", err);
+        setItadCoverUrl(null);
+        setItadStores([]);
+      } finally {
+        setItadChecked(true);
+        setItadStoresChecked(true);
+      }
+    };
+
+    if (gameData?.name) fetchItad();
+  }, [gameData?.name]);
+
+  /* =============================================================================
+    ✅ RAWG STORE LINKS
+    - Normalized/sorted (YOUR existing behavior)
+  ============================================================================= */
+  useEffect(() => {
+    const fetchRawgStores = async () => {
+      try {
+        if (!gameData?.id) return;
+
+        setRawgStoresChecked(false);
+        setRawgStores([]);
+
+        const storesUrl =
+          `https://api.rawg.io/api/games/${gameData.id}/stores` + key;
+
+        console.log("🟪 RAWG stores request:", storesUrl);
+
+        const r = await fetch(storesUrl);
+        const data = await r.json().catch(() => ({}));
+
+        const results = Array.isArray(data?.results) ? data.results : [];
+
+        const normalized = results
+          .map((s) => {
+            const url = s?.url || s?.url_en || s?.url_ru || null;
+
+            const rawName = s?.store?.name || "Store";
+            const storeName =
+              rawName && rawName !== "Store"
+                ? rawName
+                : inferStoreNameFromUrl(url);
+
+            return { storeName, url };
+          })
+          .filter((s) => !!s.url);
+
+        const finalList = normalizeAndSortStores(normalized);
+
+        setRawgStores(finalList);
+
+        console.log("🟪 RAWG store links (frontend):", finalList);
+      } catch (err) {
+        console.error("RAWG stores fetch failed:", err);
+        setRawgStores([]);
+      } finally {
+        setRawgStoresChecked(true);
+      }
+    };
+
+    if (gameData?.id) fetchRawgStores();
+  }, [gameData?.id]);
+
   // 🔍 After game data loads, check current state in user's library
   useEffect(() => {
     const checkLibraryState = async () => {
@@ -235,7 +469,6 @@ export default function GamePage() {
             id: docSnap.id,
             name: data.name || "Untitled Group",
             pinned: data.pinned ?? true,
-            // normalize ids to strings for safe compare
             gameIds: Array.isArray(data.gameIds) ? data.gameIds.map(String) : [],
           };
         });
@@ -257,12 +490,11 @@ export default function GamePage() {
     if (!gameData) return {};
 
     return {
-      // keep both for consistency with other pages
       id: gameData.id,
       rawgId: gameData.id,
 
       name: gameData.name,
-      title: gameData.name, // YourLibrary often uses title
+      title: gameData.name,
       slug: gameData.slug || "",
 
       background_image: gameData.background_image || null,
@@ -272,7 +504,6 @@ export default function GamePage() {
       metacritic: gameData.metacritic ?? null,
       rating: gameData.rating ?? null,
 
-      // store strings only (not objects)
       platforms:
         gameData.platforms?.map((p) => p?.platform?.name).filter(Boolean) || [],
       genres: gameData.genres?.map((g) => g?.name).filter(Boolean) || [],
@@ -299,18 +530,13 @@ export default function GamePage() {
       setSavingLibrary(true);
 
       if (isInLibrary) {
-        // 1) delete from library
         await deleteDoc(docRef);
-
-        // 2) remove from all groups
         await removeGameFromAllGroups(user.uid, String(docId));
 
-        // 3) update UI state
         setIsInLibrary(false);
         setIsCompleted(false);
         setIsFavorite(false);
 
-        // 4) update local groups state so dropdown updates instantly
         setUserGroups((prev) =>
           prev.map((g) => ({
             ...g,
@@ -359,10 +585,7 @@ export default function GamePage() {
       if (isCompleted) {
         await setDoc(
           docRef,
-          {
-            ...buildBaseGamePayload(),
-            status: "backlog",
-          },
+          { ...buildBaseGamePayload(), status: "backlog" },
           { merge: true }
         );
         setIsCompleted(false);
@@ -370,10 +593,7 @@ export default function GamePage() {
       } else {
         await setDoc(
           docRef,
-          {
-            ...buildBaseGamePayload(),
-            status: "completed",
-          },
+          { ...buildBaseGamePayload(), status: "completed" },
           { merge: true }
         );
         setIsCompleted(true);
@@ -411,14 +631,13 @@ export default function GamePage() {
         {
           ...buildBaseGamePayload(),
           isFavorite: !isFavorite,
-          // don't blow away completion
           status: isCompleted ? "completed" : "backlog",
         },
         { merge: true }
       );
 
       setIsFavorite(!isFavorite);
-      setIsInLibrary(true); // favorite implies doc exists
+      setIsInLibrary(true);
     } catch (error) {
       console.error("Error updating favorite:", error);
       alert("There was a problem updating favorites. Please try again.");
@@ -427,14 +646,13 @@ export default function GamePage() {
     }
   }
 
-  // ➕ Add game to a custom group from dropdown
-  async function handleAddToGroup(groupId) {
+  // ✅ Toggle a game in/out of a group (click again to remove)
+  async function handleToggleGroup(groupId) {
     if (!gameData) return;
     if (!requireAuth("manage groups")) return;
 
     const user = auth.currentUser;
-
-    const libraryDocId = getLibraryDocId(gameData.id); // OLD docId: "3498"
+    const libraryDocId = getLibraryDocId(gameData.id);
     if (!libraryDocId) return;
 
     const libraryRef = doc(db, "users", user.uid, "library", libraryDocId);
@@ -443,7 +661,7 @@ export default function GamePage() {
     try {
       setSavingGroupId(groupId);
 
-      // Ensure game exists in library
+      // Ensure the library doc exists so the group can reference it
       await setDoc(
         libraryRef,
         {
@@ -455,6 +673,7 @@ export default function GamePage() {
       );
       setIsInLibrary(true);
 
+      // Read group + compute new list
       const snap = await getDoc(groupRef);
       if (!snap.exists()) {
         console.error("Group not found:", groupId);
@@ -465,19 +684,40 @@ export default function GamePage() {
       const currentIds = Array.isArray(data.gameIds)
         ? data.gameIds.map(String)
         : [];
+      const idStr = String(libraryDocId);
 
-      if (!currentIds.includes(String(libraryDocId))) {
-        const updatedIds = [...currentIds, String(libraryDocId)];
+      const isAlreadyInGroup = currentIds.includes(idStr);
 
+      if (isAlreadyInGroup) {
+        // ✅ remove from group
+        await updateDoc(groupRef, {
+          gameIds: arrayRemove(idStr),
+        });
+
+        // Optimistic UI update
+        setUserGroups((prev) =>
+          prev.map((g) =>
+            g.id === groupId
+              ? {
+                  ...g,
+                  gameIds: (g.gameIds || []).filter((x) => String(x) !== idStr),
+                }
+              : g
+          )
+        );
+      } else {
+        // ✅ add to group (merge without duplicates)
+        const updatedIds = [...currentIds, idStr];
         await setDoc(groupRef, { gameIds: updatedIds }, { merge: true });
 
+        // Optimistic UI update
         setUserGroups((prev) =>
           prev.map((g) => (g.id === groupId ? { ...g, gameIds: updatedIds } : g))
         );
       }
     } catch (err) {
-      console.error("Error adding game to group:", err);
-      alert("There was a problem adding this game to the group.");
+      console.error("Error toggling game in group:", err);
+      alert("There was a problem updating this group.");
     } finally {
       setSavingGroupId(null);
       setGroupDropdownOpen(false);
@@ -556,6 +796,10 @@ export default function GamePage() {
     screenshotsRowRef.current.scrollLeft = scrollStartX.current - walk;
   }
 
+  function stopDraggingTouch() {
+    setIsDragging(false);
+  }
+
   if (!gameData) {
     return (
       <div className="game-page-shell">
@@ -567,6 +811,13 @@ export default function GamePage() {
     );
   }
 
+  // ✅ Final hero cover URL (prevents RAWG flash while ITAD is pending)
+  const heroCoverUrl = itadCoverUrl
+    ? itadCoverUrl
+    : !itadChecked
+    ? defaultBackground
+    : gameData.background_image || defaultBackground;
+
   // Normalize genres/platforms for rendering (avoids rendering objects)
   const genreNames = Array.isArray(gameData?.genres)
     ? gameData.genres
@@ -576,12 +827,68 @@ export default function GamePage() {
 
   const platformNames = Array.isArray(gameData?.platforms)
     ? gameData.platforms
-        .map((p) => {
-          if (typeof p === "string") return p;
-          return p?.platform?.name || p?.name || null;
-        })
+        .map((p) =>
+          typeof p === "string" ? p : p?.platform?.name || p?.name || null
+        )
         .filter(Boolean)
     : [];
+
+  // ✅ combine store lists (ITAD offers first, RAWG normalized after)
+  const storesChecked = rawgStoresChecked && itadStoresChecked;
+  const combinedStores = [
+    ...(Array.isArray(itadStores) ? itadStores : []),
+    ...(Array.isArray(rawgStores) ? rawgStores : []),
+  ];
+
+  function getStoreLabel(item) {
+    // RAWG
+    if (item?.storeName) return item.storeName;
+
+    // ITAD offers: most common is item.shop.name
+    return (
+      item?.shop?.name ||
+      item?.shopName ||
+      item?.shop ||
+      item?.store ||
+      item?.name ||
+      item?.title ||
+      "Store"
+    );
+  }
+
+  // ✅ Helper: pill buttons for store links (ITAD + RAWG)
+  function renderStorePills() {
+    if (storesChecked && combinedStores.length === 0) {
+      return <p>No store links found.</p>;
+    }
+    if (!storesChecked || !combinedStores.length) {
+      return <p>Loading store links…</p>;
+    }
+
+    return (
+      <div className="store-pills">
+        {combinedStores.map((s, idx) => {
+          const label = getStoreLabel(s);
+          const url = s?.url;
+
+          if (!url) return null;
+
+          return (
+            <a
+              key={`${label}-${idx}-${url}`}
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="store-pill"
+              title={label}
+            >
+              <span className="store-pill__name">{label}</span>
+            </a>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div className="game-page-shell">
@@ -594,11 +901,14 @@ export default function GamePage() {
             <div className="game-cover">
               <div
                 className="game-cover-img"
-                style={{
-                  backgroundImage: `url(${
-                    gameData.background_image || defaultBackground
-                  })`,
-                }}
+                style={{ backgroundImage: `url(${heroCoverUrl})` }}
+                title={
+                  itadCoverUrl
+                    ? "Cover source: IsThereAnyDeal"
+                    : itadChecked && gameData.background_image
+                    ? "Cover source: RAWG"
+                    : "Cover source: placeholder"
+                }
               ></div>
             </div>
           </div>
@@ -721,12 +1031,13 @@ export default function GamePage() {
                     <div className="dropdown-menu">
                       {userGroups.map((group) => {
                         const libraryDocId = getLibraryDocId(gameData.id);
-
                         const inGroup = Array.isArray(group.gameIds)
                           ? group.gameIds.some(
                               (id) => String(id) === String(libraryDocId)
                             )
                           : false;
+
+                        const isBusy = savingGroupId === group.id;
 
                         return (
                           <button
@@ -735,17 +1046,24 @@ export default function GamePage() {
                             className={
                               "dropdown-item" + (inGroup ? " in-group" : "")
                             }
-                            disabled={inGroup || savingGroupId === group.id}
-                            onClick={() => handleAddToGroup(group.id)}
+                            disabled={isBusy}
+                            onClick={() => handleToggleGroup(group.id)}
+                            title={
+                              inGroup
+                                ? "Click to remove from this group"
+                                : "Click to add to this group"
+                            }
                           >
                             <span className="dropdown-item-label">
                               {group.name}
                             </span>
-                            {inGroup && (
-                              <span className="dropdown-item-status">
-                                ✓ Already in this group
-                              </span>
-                            )}
+                            <span className="dropdown-item-status">
+                              {isBusy
+                                ? "Updating..."
+                                : inGroup
+                                ? "✓ In group (click to remove)"
+                                : "＋ Add"}
+                            </span>
                           </button>
                         );
                       })}
@@ -763,27 +1081,15 @@ export default function GamePage() {
             <h2 className="panel-title">About this game</h2>
             <p>{gameData.description_raw}</p>
 
+            {/* ✅ ITAD (AnyDeal) + RAWG store pills */}
             <div className="digital-stores">
-              {gameData.stores?.length ? (
-                gameData.stores.map((entry, index) => {
-                  const store = entry.store;
-                  if (!store || !store.domain) return null;
-
-                  return (
-                    <a
-                      key={store.id || index}
-                      href={"https://" + store.domain}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="store-link"
-                    >
-                      {store.name}
-                    </a>
-                  );
-                })
-              ) : (
-                <p>No store listed</p>
-              )}
+              <h3 style={{ marginTop: 16 }}>Digital Stores</h3>
+              <p className="digital-store-dis">
+                Store links come from IsThereAnyDeal (when available) and RAWG as
+                a fallback, and may be incomplete. This game may be available on
+                other stores/platforms not listed here.
+              </p>
+              {renderStorePills()}
             </div>
           </article>
 
@@ -827,7 +1133,9 @@ export default function GamePage() {
               <h2 className="panel-title">Tags</h2>
               <div className="game-tags-cloud">
                 {gameData.tags?.length ? (
-                  gameData.tags.map((tag) => <span key={tag.id}>{tag.name}</span>)
+                  gameData.tags.map((tag) => (
+                    <span key={tag.id}>{tag.name}</span>
+                  ))
                 ) : (
                   <span>No tags</span>
                 )}
@@ -852,7 +1160,7 @@ export default function GamePage() {
             onMouseLeave={stopDragging}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
-            onTouchEnd={stopDragging}
+            onTouchEnd={stopDraggingTouch}
           >
             {gameScreenshots.length > 0 ? (
               gameScreenshots.map((shot, index) => (
@@ -879,7 +1187,11 @@ export default function GamePage() {
 
       {/* FULLSCREEN VIEW */}
       {isFullScreenshotOpen && (
-        <div id="full-screenshot" className="full-screenshot" ref={fullscreenRef}>
+        <div
+          id="full-screenshot"
+          className="full-screenshot"
+          ref={fullscreenRef}
+        >
           <button className="screenshot-close-btn" onClick={closeScreenshot}>
             X
           </button>

@@ -1,14 +1,7 @@
 // YourLibrary.jsx  (FULL FILE)
-// Option B (session-only Steam) + UI toggle (Link vs Sync) + restored Library Search bar
-// ✅ FIXED: "search query text" reflects the real searchTerm + result count
-// ✅ UPDATED: pagination dropdown-menu now renders ALL pages (use CSS overflow-y scroll)
-// ✅ UPDATED: scan detected textarea is editable + Regenerate button rebuilds candidates from textarea
-// ✅ UPDATED: Text Import panelMode ("text") with same textarea/candidates UI + Regenerate
-// ✅ FIXED (NEW): Text Import no longer duplicates the textarea (renderCandidateImportUI can hide its textarea)
-// ✅ FIXED (NEW): Text Import no longer duplicates the Regenerate button (renderCandidateImportUI can hide it)
-// ✅ FIXED (NEW): Text Import button says "Generate" until candidates exist
-// ✅ FIXED (NEW): Text Import helper text stays until candidates exist (typing alone won't flip the UI)
-// ✅ FIXED (NEW): Text Import no longer duplicates the "Candidates..." heading
+// ✅ FIXED for new backend:
+// - /api/steam/owned-games now sends the required "x-firebase-uid" header
+// - still uses credentials: "include" so the Steam session cookie is sent
 
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -74,6 +67,11 @@ export default function YourLibrary() {
   =========================================================================== */
   const [statusFilter, setStatusFilter] = useState("all");
   const [activeGroupIds, setActiveGroupIds] = useState(["all-platforms"]);
+
+  /* ===========================================================================
+    ✅ SORTING
+  =========================================================================== */
+  const [sortBy, setSortBy] = useState("name_asc"); // name_asc | name_desc | meta_desc | meta_asc
 
   /* ===========================================================================
     STATE: PAGINATION
@@ -164,7 +162,14 @@ export default function YourLibrary() {
   ]);
 
   /* ===========================================================================
-    HELPERS: SORTING
+    ✅ HELPERS: STEAM AUTH URL (FIXES "Missing ?uid=...")
+  =========================================================================== */
+  function steamAuthUrl(uid) {
+    return `${BACKEND_BASE}/auth/steam?uid=${encodeURIComponent(uid)}`;
+  }
+
+  /* ===========================================================================
+    HELPERS: SORTING (strings/candidates)
   =========================================================================== */
   function sortStringsAlpha(list) {
     return [...(list || [])].sort((a, b) =>
@@ -185,6 +190,47 @@ export default function YourLibrary() {
   }
 
   /* ===========================================================================
+    ✅ HELPERS: GAME SORTING (Name + Metacritic)
+  =========================================================================== */
+  function getMetacriticNumber(game) {
+    const v =
+      game?.metacritic ?? game?.metacriticScore ?? game?.metaScore ?? null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null; // null = unrated
+  }
+
+  function safeText(v, fallback = "") {
+    if (typeof v === "string") return v;
+    if (v && typeof v === "object")
+      return v.name || v.title || v.slug || fallback;
+    if (typeof v === "number") return String(v);
+    return fallback;
+  }
+
+  function compareByTitle(a, b, dir = "asc") {
+    const ta = safeText(a?.title, "").trim();
+    const tb = safeText(b?.title, "").trim();
+    const cmp = ta.localeCompare(tb, undefined, { sensitivity: "base" });
+    return dir === "asc" ? cmp : -cmp;
+  }
+
+  function compareByMetacritic(a, b, dir = "desc") {
+    const ma = getMetacriticNumber(a);
+    const mb = getMetacriticNumber(b);
+
+    // Unrated always goes to bottom, regardless of direction
+    const aMissing = ma === null;
+    const bMissing = mb === null;
+    if (aMissing && bMissing) return compareByTitle(a, b, "asc");
+    if (aMissing) return 1;
+    if (bMissing) return -1;
+
+    const diff = ma - mb;
+    if (diff === 0) return compareByTitle(a, b, "asc");
+    return dir === "asc" ? diff : -diff;
+  }
+
+  /* ===========================================================================
     HELPERS: SAFE RENDERING (FIXES OBJECT-RENDER CRASHES)
   =========================================================================== */
   function normalizeGenre(g) {
@@ -201,15 +247,8 @@ export default function YourLibrary() {
     return normalizeGenre(genresArray);
   }
 
-  function safeText(v, fallback = "") {
-    if (typeof v === "string") return v;
-    if (v && typeof v === "object") return v.name || v.title || v.slug || fallback;
-    if (typeof v === "number") return String(v);
-    return fallback;
-  }
-
   /* ===========================================================================
-    ✅ NEW HELPERS: GROUP / UNGROUPED MEMBERSHIP CHECKS
+    ✅ HELPERS: GROUP / UNGROUPED MEMBERSHIP CHECKS
   =========================================================================== */
   function getGroupedIdSetFromCustomFilters(filters) {
     const set = new Set();
@@ -259,7 +298,7 @@ export default function YourLibrary() {
   }
 
   /* ===========================================================================
-    NEW: VIEW STATE PERSISTENCE (group + status + page)
+    NEW: VIEW STATE PERSISTENCE (group + status + page + sort + search)
   =========================================================================== */
   function getLibraryViewStateKey(uid) {
     return uid ? `vgdb_libraryViewState_${uid}` : "vgdb_libraryViewState_guest";
@@ -276,7 +315,10 @@ export default function YourLibrary() {
 
   function writeLibraryViewState(uid, state) {
     try {
-      window.localStorage.setItem(getLibraryViewStateKey(uid), JSON.stringify(state));
+      window.localStorage.setItem(
+        getLibraryViewStateKey(uid),
+        JSON.stringify(state)
+      );
     } catch {
       // ignore
     }
@@ -456,14 +498,27 @@ export default function YourLibrary() {
     IMPORT HELPERS
   =========================================================================== */
   function getResultId(r) {
-    return r?.rawgId || r?.id || r?.gameId || r?.slug || r?.name || r?.title || null;
+    return (
+      r?.rawgId ||
+      r?.id ||
+      r?.gameId ||
+      r?.slug ||
+      r?.name ||
+      r?.title ||
+      null
+    );
   }
 
   function normalizeResultToLibraryDoc(r) {
-    const title = r?.name || r?.title || r?.gameTitle || r?.slug || "Untitled game";
+    const title =
+      r?.name || r?.title || r?.gameTitle || r?.slug || "Untitled game";
 
     const backgroundImage =
-      r?.background_image || r?.backgroundImage || r?.image || r?.coverImage || "";
+      r?.background_image ||
+      r?.backgroundImage ||
+      r?.image ||
+      r?.coverImage ||
+      "";
 
     const genres =
       r?.genres ||
@@ -471,10 +526,15 @@ export default function YourLibrary() {
       r?.genre_names ||
       (Array.isArray(r?.tags) ? r.tags : []);
 
-    const metacritic = r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
+    const metacritic =
+      r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
 
     const platforms =
-      r?.platforms || r?.parent_platforms || r?.platform || r?.platformName || "";
+      r?.platforms ||
+      r?.parent_platforms ||
+      r?.platform ||
+      r?.platformName ||
+      "";
 
     return {
       title,
@@ -559,7 +619,7 @@ export default function YourLibrary() {
     let importedCount = 0;
     let skippedCount = 0;
     const notFound = [];
-    const toAddToGroupIds = []; // ✅ add-to-group list (includes already-in-library games)
+    const toAddToGroupIds = [];
 
     for (const c of selected) {
       const q = String(c.cleaned || "").trim();
@@ -616,44 +676,40 @@ export default function YourLibrary() {
 
         const docIdStr = String(resultId);
 
-        // Does it exist in the library?
         const existsInLocalLibrary = (libraryGames || []).some(
           (g) => String(g.id) === docIdStr
         );
 
-        // Determine target bucket:
-        // - "none" means "Ungrouped" bucket
         const targetIsNone = importTargetGroupId === "none";
         const targetGroupId = targetIsNone ? null : importTargetGroupId;
 
-        // Is it already in the selected bucket?
         let alreadyInTarget = false;
 
         if (targetIsNone) {
-          alreadyInTarget = existsInLocalLibrary && isGameUngrouped(customFilters, docIdStr);
+          alreadyInTarget =
+            existsInLocalLibrary && isGameUngrouped(customFilters, docIdStr);
         } else if (targetGroupId) {
           alreadyInTarget = isGameInGroup(customFilters, targetGroupId, docIdStr);
         }
 
-        // Skip only if already in target bucket
         if (alreadyInTarget) {
           skippedCount += 1;
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: {
               state: "skipped",
-              message: targetIsNone ? "Already ungrouped" : "Already in selected group",
+              message: targetIsNone
+                ? "Already ungrouped"
+                : "Already in selected group",
             },
           }));
           continue;
         }
 
-        // If group selected (not none), queue it to be added to group (even if already in library)
         if (importTargetGroupId !== "none") {
           toAddToGroupIds.push(docIdStr);
         }
 
-        // If it doesn't exist in library, create it
         if (!existsInLocalLibrary) {
           const gameDocRef = doc(db, "users", authUser.uid, "library", docIdStr);
           const payload = normalizeResultToLibraryDoc(chosen);
@@ -680,7 +736,6 @@ export default function YourLibrary() {
             [c.id]: { state: "imported" },
           }));
         } else {
-          // Already in library, but not in target bucket => don't skip
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: {
@@ -701,7 +756,6 @@ export default function YourLibrary() {
       }
     }
 
-    // ✅ Add to selected group (includes existing-library games that were not already in that group)
     if (importTargetGroupId !== "none" && toAddToGroupIds.length > 0) {
       try {
         const uniq = Array.from(new Set(toAddToGroupIds.map(String)));
@@ -748,7 +802,6 @@ export default function YourLibrary() {
     return { sortedTitles, nextCandidates };
   }
 
-  // ✅ NEW: parse textarea lines -> unique titles
   function parseTitlesFromTextarea(text) {
     const lines = String(text || "")
       .split(/\r?\n/g)
@@ -766,7 +819,6 @@ export default function YourLibrary() {
     return uniq;
   }
 
-  // ✅ NEW: regenerate candidates from what's currently in the textarea
   function handleRegenerateCandidatesFromTextarea() {
     const titles = parseTitlesFromTextarea(scanCleanText);
 
@@ -782,7 +834,6 @@ export default function YourLibrary() {
 
     const { sortedTitles, nextCandidates } = titlesToCandidates(titles, "manual");
 
-    // normalize textarea to A–Z after regen
     setScanCleanText(sortedTitles.join("\n"));
 
     setCandidates(nextCandidates);
@@ -890,19 +941,27 @@ export default function YourLibrary() {
 
         if (!res.ok) {
           const msg =
-            payload?.error || payload?.message || `Scan failed (HTTP ${res.status}).`;
+            payload?.error ||
+            payload?.message ||
+            `Scan failed (HTTP ${res.status}).`;
           throw new Error(msg);
         }
 
         const raw =
-          payload?.rawText || payload?.text || payload?.result || payload?.ocrText || "";
+          payload?.rawText ||
+          payload?.text ||
+          payload?.result ||
+          payload?.ocrText ||
+          "";
         results.push(String(raw || "").trim());
       }
 
       const combined = results.filter(Boolean).join("\n\n---\n\n");
       setScanText(combined);
 
-      const { sortedTitles, nextCandidates } = await extractCandidatesWithLLM(combined);
+      const { sortedTitles, nextCandidates } = await extractCandidatesWithLLM(
+        combined
+      );
 
       setScanCleanText(sortedTitles.join("\n"));
       setCandidates(nextCandidates);
@@ -973,7 +1032,8 @@ export default function YourLibrary() {
       return;
     }
 
-    window.location.href = `${BACKEND_BASE}/auth/steam`;
+    // ✅ backend requires ?uid=...
+    window.location.href = steamAuthUrl(authUser.uid);
   }
 
   async function handleSteamSync({ allowAutoRelink = true } = {}) {
@@ -983,7 +1043,6 @@ export default function YourLibrary() {
         return;
       }
 
-      // 1) Check Steam session state
       const meRes = await fetch(`${BACKEND_BASE}/api/me`, {
         method: "GET",
         credentials: "include",
@@ -1005,15 +1064,18 @@ export default function YourLibrary() {
           return;
         }
 
-        window.location.href = `${BACKEND_BASE}/auth/steam`;
+        window.location.href = steamAuthUrl(authUser.uid);
         return;
       }
 
-      // 2) Fetch owned games
+      // ✅ FIX: backend now requires x-firebase-uid on this route
       const gamesRes = await fetch(`${BACKEND_BASE}/api/steam/owned-games`, {
         method: "GET",
         credentials: "include",
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          "x-firebase-uid": authUser.uid,
+        },
       });
 
       const gamesData = await gamesRes.json().catch(() => ({}));
@@ -1022,8 +1084,11 @@ export default function YourLibrary() {
       if (!gamesRes.ok) {
         const errMsg = String(gamesData?.error || gamesData?.message || "");
 
-        if (allowAutoRelink && errMsg.toLowerCase().includes("not logged in with steam")) {
-          window.location.href = `${BACKEND_BASE}/auth/steam`;
+        if (
+          allowAutoRelink &&
+          errMsg.toLowerCase().includes("not logged in with steam")
+        ) {
+          window.location.href = steamAuthUrl(authUser.uid);
           return;
         }
 
@@ -1041,7 +1106,6 @@ export default function YourLibrary() {
 
       setSteamTitles(titles);
 
-      // Reset candidate import UI state (like scan)
       setScanError("");
       setScanText("");
       setScanCleanText("");
@@ -1059,7 +1123,6 @@ export default function YourLibrary() {
       setCandidates(nextCandidates);
       setSelectedCandidateIds(new Set(nextCandidates.map((c) => c.id)));
 
-      // Open import modal automatically
       setPanelMode("import");
       openCustomFilterPanel();
     } catch (err) {
@@ -1093,7 +1156,7 @@ export default function YourLibrary() {
   }, [authUser?.uid]);
 
   /* ===========================================================================
-    EFFECT: AUTH LISTENER -> LOAD LIBRARY + GROUPS
+    EFFECT: AUTH LISTENER -> LOAD LIBRARY + GROUPS (RESTORES VIEW STATE)
   =========================================================================== */
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -1106,6 +1169,8 @@ export default function YourLibrary() {
         setActiveGroupIds(["all-platforms"]);
         setStatusFilter("all");
         setCurrentPage(1);
+        setSortBy("name_asc");
+        setSearchTerm("");
         setLoadingStats(false);
         return;
       }
@@ -1149,14 +1214,14 @@ export default function YourLibrary() {
           }
         });
 
-        const sortedGames = games.sort((a, b) =>
+        const sortedGamesByName = games.sort((a, b) =>
           String(a.title || "").localeCompare(String(b.title || ""), undefined, {
             sensitivity: "base",
           })
         );
 
         setStats({ total, completed, backlog, playing });
-        setLibraryGames(sortedGames);
+        setLibraryGames(sortedGamesByName);
 
         const groupsRef = collection(db, "users", user.uid, "groups");
         const groupsSnap = await getDocs(groupsRef);
@@ -1166,7 +1231,9 @@ export default function YourLibrary() {
           return {
             id: docSnap.id,
             name: safeText(data.name, "Untitled Group") || "Untitled Group",
-            gameIds: Array.isArray(data.gameIds) ? data.gameIds.map((id) => String(id)) : [],
+            gameIds: Array.isArray(data.gameIds)
+              ? data.gameIds.map((id) => String(id))
+              : [],
             field: data.field || "platform",
             operator: data.operator || "eq",
             value: data.value || "",
@@ -1181,7 +1248,6 @@ export default function YourLibrary() {
 
         const fullFilters = [ALL_PLATFORMS_FILTER, UNGROUPED_FILTER, ...userGroups];
 
-        // Default group restore
         let initialGroups = ["all-platforms"];
 
         if (typeof window !== "undefined") {
@@ -1209,19 +1275,33 @@ export default function YourLibrary() {
           }
         }
 
-        // ✅ Restore last view state (group + status + page)
+        // ✅ RESTORE VIEW STATE (status + group + page + sort + search)
         let restoredGroups = initialGroups;
         let restoredStatus = "all";
         let restoredPage = 1;
+        let restoredSortBy = "name_asc";
+        let restoredSearchTerm = "";
 
         if (typeof window !== "undefined") {
           const saved = readLibraryViewState(user.uid);
 
           if (saved) {
-            if (typeof saved.statusFilter === "string") restoredStatus = saved.statusFilter;
+            if (typeof saved.statusFilter === "string")
+              restoredStatus = saved.statusFilter;
 
             if (Number.isFinite(Number(saved.currentPage))) {
               restoredPage = Math.max(1, Number(saved.currentPage));
+            }
+
+            if (
+              typeof saved.sortBy === "string" &&
+              ["name_asc", "name_desc", "meta_desc", "meta_asc"].includes(saved.sortBy)
+            ) {
+              restoredSortBy = saved.sortBy;
+            }
+
+            if (typeof saved.searchTerm === "string") {
+              restoredSearchTerm = saved.searchTerm;
             }
 
             const savedGroupsRaw = saved.activeGroupIds;
@@ -1247,6 +1327,8 @@ export default function YourLibrary() {
         setStatusFilter(restoredStatus);
         setActiveGroupIds(restoredGroups);
         setCurrentPage(restoredPage);
+        setSortBy(restoredSortBy);
+        setSearchTerm(restoredSearchTerm);
         setIsPageDropdownOpen(false);
       } catch (err) {
         console.error("Error loading library or groups:", err);
@@ -1260,7 +1342,7 @@ export default function YourLibrary() {
   }, []);
 
   /* ===========================================================================
-    EFFECT: PERSIST VIEW STATE (status + group + page)
+    EFFECT: PERSIST VIEW STATE (status + group + page + sort + search)
   =========================================================================== */
   useEffect(() => {
     if (loadingStats) return;
@@ -1269,15 +1351,27 @@ export default function YourLibrary() {
       statusFilter,
       currentPage,
       activeGroupIds,
+      sortBy,
+      searchTerm,
     });
-  }, [authUser?.uid, statusFilter, currentPage, activeGroupIds, loadingStats]);
+  }, [
+    authUser?.uid,
+    statusFilter,
+    currentPage,
+    activeGroupIds,
+    sortBy,
+    searchTerm,
+    loadingStats,
+  ]);
 
   /* ===========================================================================
-    DERIVED VALUES: GROUP SELECTION + FILTERED LISTS + PAGINATION
+    DERIVED VALUES: GROUP SELECTION + FILTERED LISTS + SORT + PAGINATION
   =========================================================================== */
   const { total, completed } = stats;
 
-  const safeActiveGroupIds = Array.isArray(activeGroupIds) ? activeGroupIds : ["all-platforms"];
+  const safeActiveGroupIds = Array.isArray(activeGroupIds)
+    ? activeGroupIds
+    : ["all-platforms"];
 
   const onlyUngroupedSelected =
     safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "ungrouped";
@@ -1298,9 +1392,13 @@ export default function YourLibrary() {
       }
     });
 
-    groupFilteredGames = libraryGames.filter((game) => !groupedIdSet.has(String(game.id)));
+    groupFilteredGames = libraryGames.filter(
+      (game) => !groupedIdSet.has(String(game.id))
+    );
   } else if (realSelectedGroupIds.length > 0) {
-    const selectedGroups = customFilters.filter((g) => realSelectedGroupIds.includes(g.id));
+    const selectedGroups = customFilters.filter((g) =>
+      realSelectedGroupIds.includes(g.id)
+    );
 
     const gameIdSet = new Set();
     selectedGroups.forEach((g) => {
@@ -1309,7 +1407,9 @@ export default function YourLibrary() {
       }
     });
 
-    groupFilteredGames = libraryGames.filter((game) => gameIdSet.has(String(game.id)));
+    groupFilteredGames = libraryGames.filter((game) =>
+      gameIdSet.has(String(game.id))
+    );
   }
 
   const groupStats = groupFilteredGames.reduce(
@@ -1334,7 +1434,6 @@ export default function YourLibrary() {
     });
   }
 
-  // ✅ Library search filter (applies after group+status filters)
   const qSearch = searchTerm.trim().toLowerCase();
   if (qSearch) {
     filteredGames = filteredGames.filter((game) => {
@@ -1343,20 +1442,36 @@ export default function YourLibrary() {
     });
   }
 
+  // ✅ APPLY SORT (before pagination)
+  const sortedGames = [...filteredGames].sort((a, b) => {
+    switch (sortBy) {
+      case "name_desc":
+        return compareByTitle(a, b, "desc");
+      case "meta_desc":
+        return compareByMetacritic(a, b, "desc");
+      case "meta_asc":
+        return compareByMetacritic(a, b, "asc");
+      case "name_asc":
+      default:
+        return compareByTitle(a, b, "asc");
+    }
+  });
+
   const totalPages =
-    filteredGames.length === 0 ? 1 : Math.ceil(filteredGames.length / ITEMS_PER_PAGE);
+    sortedGames.length === 0 ? 1 : Math.ceil(sortedGames.length / ITEMS_PER_PAGE);
 
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
-  const pageGames = filteredGames.slice(startIndex, endIndex);
+
+  // ✅ paginate the sorted list (NOT the unsorted list)
+  const pageGames = sortedGames.slice(startIndex, endIndex);
 
   const scanImportedCount = Object.values(candidateImportStatus || {}).reduce(
     (acc, v) => (v?.state === "imported" ? acc + 1 : acc),
     0
   );
 
-  // ✅ Used by Text Import UI:
   const hasGeneratedCandidates = candidates.length > 0;
 
   /* ===========================================================================
@@ -1389,11 +1504,17 @@ export default function YourLibrary() {
         await setDoc(groupDocRef, newFilter, { merge: false });
 
         setCustomFilters((prev) => {
-          const permanent = prev.filter((g) => g.id === "all-platforms" || g.id === "ungrouped");
-          const rest = prev.filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped");
+          const permanent = prev.filter(
+            (g) => g.id === "all-platforms" || g.id === "ungrouped"
+          );
+          const rest = prev.filter(
+            (g) => g.id !== "all-platforms" && g.id !== "ungrouped"
+          );
 
           const updatedRest = rest
-            .map((g) => (g.id === editingGroupId ? { id: editingGroupId, ...newFilter } : g))
+            .map((g) =>
+              g.id === editingGroupId ? { id: editingGroupId, ...newFilter } : g
+            )
             .sort((a, b) =>
               String(a.name || "").localeCompare(String(b.name || ""), undefined, {
                 sensitivity: "base",
@@ -1405,7 +1526,9 @@ export default function YourLibrary() {
 
         setActiveGroups((prev) => {
           const arr = Array.isArray(prev) ? prev : ["all-platforms"];
-          const nonPermanent = arr.filter((id) => id !== "all-platforms" && id !== "ungrouped");
+          const nonPermanent = arr.filter(
+            (id) => id !== "all-platforms" && id !== "ungrouped"
+          );
           const merged = Array.from(new Set([...nonPermanent, editingGroupId]));
           return merged.length > 0 ? merged : ["all-platforms"];
         });
@@ -1416,8 +1539,12 @@ export default function YourLibrary() {
         const savedFilter = { id: docRef.id, ...newFilter };
 
         setCustomFilters((prev) => {
-          const permanent = prev.filter((g) => g.id === "all-platforms" || g.id === "ungrouped");
-          const rest = prev.filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped");
+          const permanent = prev.filter(
+            (g) => g.id === "all-platforms" || g.id === "ungrouped"
+          );
+          const rest = prev.filter(
+            (g) => g.id !== "all-platforms" && g.id !== "ungrouped"
+          );
 
           const updatedRest = [...rest, savedFilter].sort((a, b) =>
             String(a.name || "").localeCompare(String(b.name || ""), undefined, {
@@ -1470,7 +1597,9 @@ export default function YourLibrary() {
         const arr = Array.isArray(prev) ? prev : ["all-platforms"];
         const remaining = arr.filter((id) => id !== editingGroupId);
 
-        const nonPermanent = remaining.filter((id) => id !== "all-platforms" && id !== "ungrouped");
+        const nonPermanent = remaining.filter(
+          (id) => id !== "all-platforms" && id !== "ungrouped"
+        );
         return nonPermanent.length > 0 ? remaining : ["all-platforms"];
       });
 
@@ -1559,17 +1688,14 @@ export default function YourLibrary() {
   }
 
   /* ===========================================================================
-    SHARED RENDER: CANDIDATE IMPORT UI (used by Scan/Steam AND Text Import)
-    ✅ FIX: can hide textarea so Text Import doesn't show two textareas.
-    ✅ FIX: can hide Regenerate button so Text Import doesn't show two Regen buttons.
-    ✅ FIX: can hide inner "Candidates..." heading to prevent duplicates in Text Import.
+    SHARED RENDER: CANDIDATE IMPORT UI
   =========================================================================== */
   function renderCandidateImportUI(
     {
       title = "Game list (A–Z) — editable:",
       showTextarea = true,
       showRegenerateButton = true,
-      showCandidatesHeading = true, // ✅ NEW
+      showCandidatesHeading = true,
     } = {}
   ) {
     if (!scanCleanText) return null;
@@ -1707,7 +1833,11 @@ export default function YourLibrary() {
                 return (
                   <div
                     key={c.id}
-                    className={["candidate-card", checked ? "is-selected" : "", state ? `is-${state}` : ""]
+                    className={[
+                      "candidate-card",
+                      checked ? "is-selected" : "",
+                      state ? `is-${state}` : "",
+                    ]
                       .filter(Boolean)
                       .join(" ")}
                     style={{
@@ -1755,7 +1885,9 @@ export default function YourLibrary() {
 
                       {state && (
                         <span
-                          className={["candidate-status", state ? `is-${state}` : ""].filter(Boolean).join(" ")}
+                          className={["candidate-status", state ? `is-${state}` : ""]
+                            .filter(Boolean)
+                            .join(" ")}
                         >
                           {state}
                         </span>
@@ -1780,7 +1912,9 @@ export default function YourLibrary() {
               })}
             </div>
 
-            {(importSummary.imported > 0 || importSummary.notFound > 0 || importSummary.skipped > 0) && (
+            {(importSummary.imported > 0 ||
+              importSummary.notFound > 0 ||
+              importSummary.skipped > 0) && (
               <div className="import-summary" style={{ marginTop: "12px" }}>
                 <p className="import-summary-text" style={{ margin: 0 }}>
                   Imported: <strong>{importSummary.imported}</strong>
@@ -1819,9 +1953,6 @@ export default function YourLibrary() {
     <main className="library-page">
       <Header />
 
-      {/* ===========================
-          HEADER CARD
-      ============================ */}
       <section className="library-header-card">
         <div className="library-header-main">
           <div className="library-kicker">
@@ -1839,7 +1970,6 @@ export default function YourLibrary() {
               Search For Game
             </Link>
 
-            {/* ✅ Two entry points: Import (Images/Steam) vs Import (Text) */}
             <a href="#filter-settings">
               <button className="btn btn-ghost" type="button" onClick={openImportPanel}>
                 Import Games (Images / Steam Sync)
@@ -1863,9 +1993,6 @@ export default function YourLibrary() {
         </div>
       </section>
 
-      {/* ===========================
-          FILTERS (STATUS + GROUPS)
-      ============================ */}
       <section>
         <div className="library-filters">
           <div>
@@ -1925,7 +2052,6 @@ export default function YourLibrary() {
         </div>
       </section>
 
-      {/* ✅ RESTORED: LIBRARY SEARCH BAR */}
       <section className="library-search-bar" style={{ marginTop: "16px" }}>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <input
@@ -1964,17 +2090,31 @@ export default function YourLibrary() {
         </div>
       </section>
 
-      {/* ===========================
-          MAIN LIBRARY GRID
-      ============================ */}
       <section className="library-grid">
         {searchTerm.trim() ? (
           <h3 className="search-query-text">
-            Searching for “{searchTerm.trim()}” ({filteredGames.length} result{filteredGames.length === 1 ? "" : "s"})
+            Searching for “{searchTerm.trim()}” ({sortedGames.length} result{sortedGames.length === 1 ? "" : "s"})
           </h3>
         ) : (
           <h3 className="search-query-text"></h3>
         )}
+
+        <div className="sort-by-con">
+          <p>Sort by</p>
+          <select
+            value={sortBy}
+            onChange={(e) => {
+              setSortBy(e.target.value);
+              setCurrentPage(1);
+              setIsPageDropdownOpen(false);
+            }}
+          >
+            <option value="name_asc">Name (A–Z)</option>
+            <option value="name_desc">Name (Z–A)</option>
+            <option value="meta_desc">Metacritic (High–Low)</option>
+            <option value="meta_asc">Metacritic (Low–High)</option>
+          </select>
+        </div>
 
         <div className="game-grid">
           {loadingStats ? (
@@ -1992,7 +2132,8 @@ export default function YourLibrary() {
 
               const primaryGenre = getPrimaryGenreFromGame(game);
 
-              const metacriticScore = game.metacritic ?? game.metacriticScore ?? game.metaScore ?? null;
+              const metacriticScore =
+                game.metacritic ?? game.metacriticScore ?? game.metaScore ?? null;
               const hasScore = metacriticScore !== null && metacriticScore !== undefined;
 
               const groupTags = Array.from(
@@ -2049,7 +2190,7 @@ export default function YourLibrary() {
           )}
         </div>
 
-        {!loadingStats && filteredGames.length > 0 && (
+        {!loadingStats && sortedGames.length > 0 && (
           <div className="pagination">
             <button
               className="page-btn"
@@ -2130,7 +2271,6 @@ export default function YourLibrary() {
               <div className="text-import" style={{ marginBottom: "18px" }}>
                 <p>Paste a Game List (one title per line)</p>
 
-                {/* ✅ Text mode textarea always visible (the ONLY textarea in text mode) */}
                 <textarea
                   className="scan-detected-text"
                   value={scanCleanText}
@@ -2181,8 +2321,6 @@ export default function YourLibrary() {
                   </button>
                 </div>
 
-                {/* ✅ Do NOT flip to candidate UI just because textarea has text.
-                    Only show candidate UI once candidates exist. */}
                 {!hasGeneratedCandidates ? (
                   <p style={{ opacity: 0.85, marginTop: "10px" }}>
                     Paste titles above, then click <strong>Generate</strong> to build candidates.
@@ -2192,7 +2330,7 @@ export default function YourLibrary() {
                     title: "Candidates (A–Z) — edit + uncheck junk:",
                     showTextarea: false,
                     showRegenerateButton: false,
-                    showCandidatesHeading: false, // ✅ FIX: prevents duplicate heading in text mode
+                    showCandidatesHeading: false,
                   })
                 )}
               </div>
@@ -2227,7 +2365,11 @@ export default function YourLibrary() {
                     alt="Toggle game selection"
                   />
                 </div>
-
+                <div>
+          
+                  {/* <input type="checkbox">Remove From Group</input>
+                  <input type="checkbox">Remove From Library</input> */}
+                </div>
                 {showGameSelection && (
                   <div className="game-selection-list">
                     {libraryGames.length === 0 ? (
@@ -2312,7 +2454,6 @@ export default function YourLibrary() {
                   renderCandidateImportUI({ title: "Detected games (A–Z) — editable:" })}
               </div>
 
-              {/* ✅ Steam UI toggle: show Link if NOT linked, show Sync if linked */}
               {!scanLoading && scanPreviewUrls.length === 0 && !scanCleanText && (
                 <div className="steam-sync">
                   <p>Import Steam Library</p>

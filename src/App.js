@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import GamePage from "./pages/GamePage";
@@ -13,11 +13,27 @@ import UserProfileCustomizer from "./pages/UserProfileCustomize";
 import { auth } from "./firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
-/* 🔒 Simple protected wrapper */
-function ProtectedRoute({ user, children }) {
+/* ============================================================================
+  Helpers
+============================================================================ */
+function hasStoredFirebaseUser() {
+  try {
+    return Object.keys(localStorage).some((k) => k.startsWith("firebase:authUser:"));
+  } catch {
+    return false;
+  }
+}
+
+/* 🔒 Protected wrapper that respects auth loading */
+function ProtectedRoute({ user, authLoading, children }) {
+  if (authLoading) {
+    return <div>Loading...</div>;
+  }
+
   if (!user) {
     return <Navigate to="/signin" replace />;
   }
+
   return children;
 }
 
@@ -25,14 +41,53 @@ function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  // Snapshot once at startup: do we have a stored Firebase auth user?
+  const storedUserLikely = useMemo(() => hasStoredFirebaseUser(), []);
+
   useEffect(() => {
+    let graceTimer = null;
+
+    // If we have stored auth data, give Firebase more time to restore
+    // before we declare loading "done" (prevents false redirects).
+    if (storedUserLikely) {
+      graceTimer = setTimeout(() => {
+        setAuthLoading(false);
+      }, 2000);
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser); // null if logged out
-      setAuthLoading(false);
+      console.log("[AUTH STATE]", firebaseUser ? firebaseUser.uid : null);
+
+      setUser(firebaseUser || null);
+
+      // If a real user is present, end loading immediately.
+      if (firebaseUser) {
+        if (graceTimer) {
+          clearTimeout(graceTimer);
+          graceTimer = null;
+        }
+        setAuthLoading(false);
+        return;
+      }
+
+      // If we DON'T expect a stored user, we can end loading immediately.
+      if (!storedUserLikely) {
+        if (graceTimer) {
+          clearTimeout(graceTimer);
+          graceTimer = null;
+        }
+        setAuthLoading(false);
+      }
+
+      // If storedUserLikely === true and firebaseUser is null,
+      // we keep loading until the graceTimer ends.
     });
 
-    return () => unsubscribe();
-  }, []);
+    return () => {
+      if (graceTimer) clearTimeout(graceTimer);
+      unsubscribe();
+    };
+  }, [storedUserLikely]);
 
   if (authLoading) {
     return <div>Loading...</div>;
@@ -52,7 +107,7 @@ function App() {
         <Route
           path="/profile"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute user={user} authLoading={authLoading}>
               <UserProfile />
             </ProtectedRoute>
           }
@@ -61,7 +116,7 @@ function App() {
         <Route
           path="/profile/customize"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute user={user} authLoading={authLoading}>
               <UserProfileCustomizer />
             </ProtectedRoute>
           }
@@ -70,7 +125,7 @@ function App() {
         <Route
           path="/library"
           element={
-            <ProtectedRoute user={user}>
+            <ProtectedRoute user={user} authLoading={authLoading}>
               <YourLibrary />
             </ProtectedRoute>
           }

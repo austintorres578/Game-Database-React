@@ -737,6 +737,20 @@
   width: 152px;
 }
 
+.library-page .sort-by-con{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.library-page .sort-by-con p{
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-right: 5px;
+  font-size: 14px;
+  line-height: 14px;
+}
+
 .library-page .candidate-input{
   pointer-events: none;
 }
@@ -744,6 +758,20 @@
 .library-page .candidate-card .btn{
   padding: 10px;
   font-size: 12px;
+}
+
+.library-page .removal-options{
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.library-page .removal-options div{
+  display: flex;
+  align-items: center;
+}
+
+.library-page .removal-options div p{
+  padding-left: 3px;
 }
 
 .library-page .group-import-drop{

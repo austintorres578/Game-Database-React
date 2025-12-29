@@ -1,10 +1,16 @@
 // firebase.js
-import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getAnalytics } from "firebase/analytics";
+import { initializeApp, getApps } from "firebase/app";
+import {
+  getAuth,
+  initializeAuth,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getAnalytics, isSupported } from "firebase/analytics";
 
-// Your Firebase config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCFviA96inC7S5_oqXmR-bjbB0f_Nl52Kg",
   authDomain: "game-database-799bd.firebaseapp.com",
@@ -15,14 +21,39 @@ const firebaseConfig = {
   measurementId: "G-E8EBHKCQZ4",
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// ✅ Prevent accidental double-init (can cause auth weirdness in dev/HMR)
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
-// Auth (for login / currentUser)
-export const auth = getAuth(app);
+/**
+ * ✅ Auth (fixed)
+ * - Use a persistence *fallback list* so Firebase can restore in more environments.
+ * - indexedDBLocalPersistence is best; if it fails, localStorage/session are fallbacks.
+ * - Your SignIn page can still call setPersistence(...) to override per user choice.
+ */
+export const auth = (() => {
+  try {
+    return initializeAuth(app, {
+      persistence: [
+        indexedDBLocalPersistence,
+        browserLocalPersistence,
+        browserSessionPersistence,
+      ],
+    });
+  } catch (e) {
+    // If auth was already initialized (common with hot reload), reuse it.
+    return getAuth(app);
+  }
+})();
 
-// Firestore (for storing profiles, etc.)
+// Firestore
 export const db = getFirestore(app);
 
-// Analytics (optional – only works in browser/production HTTPS)
-export const analytics = getAnalytics(app);
+// Analytics (guarded so it doesn’t crash locally / non-HTTPS)
+export let analytics = null;
+isSupported()
+  .then((supported) => {
+    if (supported) analytics = getAnalytics(app);
+  })
+  .catch(() => {
+    analytics = null;
+  });

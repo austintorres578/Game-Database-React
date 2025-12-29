@@ -4,10 +4,8 @@ import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   setPersistence,
-  browserLocalPersistence,
+  indexedDBLocalPersistence,
   browserSessionPersistence,
-  // If you ever want "no persistence even on refresh", also:
-  // inMemoryPersistence,
 } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 
@@ -18,32 +16,31 @@ import "../styles/signIn.css";
 import loadingGif from "../assets/images/loading.gif";
 
 export default function SignInPage(props) {
-  const [email, setEmail]         = useState("");
-  const [password, setPassword]   = useState("");
-  const [error, setError]         = useState("");
-  const [loading, setLoading]     = useState(false);
-  const [signedIn, setSignedIn]   = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const [user, setUser] = useState(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
-  // Load rememberMe from localStorage (default = false / unchecked)
   const [rememberMe, setRememberMe] = useState(() => {
     const stored = localStorage.getItem("rememberMe");
-    if (stored === null) return false;
     return stored === "true";
   });
 
-  // Check if user is already signed in on mount
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setSignedIn(!!user);
+    const unsubscribe = onAuthStateChanged(auth, (u) => {
+      console.log("[SIGNIN AUTH STATE]", u ? u.uid : null);
+      setUser(u || null);
       setCheckingAuth(false);
     });
-
     return () => unsubscribe();
   }, []);
 
   const handleLogin = async (e) => {
-    if (e) e.preventDefault();
+    e.preventDefault();
     setError("");
 
     if (!email || !password) {
@@ -54,12 +51,16 @@ export default function SignInPage(props) {
     try {
       setLoading(true);
 
-      // Set persistence based on "Remember me"
-      await setPersistence(
-        auth,
-        rememberMe ? browserLocalPersistence : browserSessionPersistence
-        // If you want NO persistence when unchecked, use:
-        // rememberMe ? browserLocalPersistence : inMemoryPersistence
+      // ✅ Always set persistence right before signing in
+      const persistence = rememberMe
+        ? indexedDBLocalPersistence
+        : browserSessionPersistence;
+
+      await setPersistence(auth, persistence);
+
+      console.log(
+        "[AUTH PERSISTENCE SET]",
+        rememberMe ? "REMEMBER (IndexedDB)" : "SESSION (until browser closes)"
       );
 
       const userCredential = await signInWithEmailAndPassword(
@@ -68,8 +69,6 @@ export default function SignInPage(props) {
         password
       );
 
-      setSignedIn(true);
-
       if (props.onSignedIn) {
         props.onSignedIn(userCredential.user);
       }
@@ -77,20 +76,46 @@ export default function SignInPage(props) {
       setEmail("");
       setPassword("");
     } catch (err) {
-      console.error(err);
-      setError("Invalid email or password.");
+      console.error("Login error:", err);
+
+      if (
+        err?.code === "auth/unsupported-persistence-type" ||
+        (typeof err?.code === "string" && err.code.includes("persistence"))
+      ) {
+        setError(
+          "Your browser is blocking storage needed to stay signed in. Try disabling privacy extensions or allowing site data for this site."
+        );
+      } else if (
+        err?.code === "auth/wrong-password" ||
+        err?.code === "auth/user-not-found" ||
+        err?.code === "auth/invalid-credential"
+      ) {
+        setError("Invalid email or password.");
+      } else if (err?.code === "auth/invalid-email") {
+        setError("Please enter a valid email address.");
+      } else if (err?.code === "auth/too-many-requests") {
+        setError("Too many attempts. Please wait a bit and try again.");
+      } else {
+        setError(err?.message || "Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // While Firebase is figuring out if user is logged in
   if (checkingAuth) {
     return (
       <main className="auth-shell">
         <Header />
         <section className="auth-card">
-          <p>Loading...</p>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <img
+              src={loadingGif}
+              alt="Loading"
+              style={{ width: 24, height: 24 }}
+            />
+            <p style={{ margin: 0 }}>Loading...</p>
+          </div>
         </section>
         <Footer />
       </main>
@@ -101,8 +126,7 @@ export default function SignInPage(props) {
     <main className="auth-shell">
       <Header />
 
-      {signedIn ? (
-        // Show this if Firebase says user is already signed in
+      {user ? (
         <section className="sucessful-signin-block">
           <h2>You’re signed in!</h2>
           <Link to="/profile" className="auth-submit-btn">
@@ -110,7 +134,6 @@ export default function SignInPage(props) {
           </Link>
         </section>
       ) : (
-        // Otherwise show sign-in form
         <section className="auth-card">
           <div className="auth-logo">
             <div className="auth-logo-circle">GD</div>
@@ -135,6 +158,7 @@ export default function SignInPage(props) {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
               />
             </div>
 
@@ -150,6 +174,7 @@ export default function SignInPage(props) {
                 placeholder="Enter Your Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
               />
             </div>
 
@@ -180,8 +205,7 @@ export default function SignInPage(props) {
           </form>
 
           <div className="auth-footer">
-            Don’t have an account?
-            <Link to="/signup"> Create one</Link>
+            Don’t have an account? <Link to="/signup">Create one</Link>
           </div>
         </section>
       )}
@@ -190,3 +214,4 @@ export default function SignInPage(props) {
     </main>
   );
 }
+

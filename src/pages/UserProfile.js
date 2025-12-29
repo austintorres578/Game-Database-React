@@ -2,12 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { auth, db } from "../firebase/firebase";
-import {
-  doc,
-  getDoc,
-  collection,
-  getDocs,
-} from "firebase/firestore";
+import { doc, getDoc, collection, getDocs } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 import "../styles/profile.css";
@@ -31,7 +26,6 @@ export default function UserProfile() {
   const COMPLETED_PER_PAGE = 12;
 
   useEffect(() => {
-    // Watch auth state
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setAuthUser(user);
 
@@ -53,7 +47,7 @@ export default function UserProfile() {
           setProfile(null);
         }
 
-        // 🔹 Load user's library from subcollection
+        // Load user's library
         const libraryRef = collection(db, "users", user.uid, "library");
         const librarySnap = await getDocs(libraryRef);
 
@@ -73,7 +67,7 @@ export default function UserProfile() {
     return () => unsubscribe();
   }, []);
 
-  // Derived values with fallbacks
+  // Derived values
   const displayName =
     profile?.displayName || authUser?.displayName || "NewPlayer";
 
@@ -90,51 +84,48 @@ export default function UserProfile() {
   const selectedGenres = profile?.selectedGenres || [];
   const profileTags = profile?.profileTags || [];
 
-  // Avatar
   const avatarSrc = profile?.avatarPreview || userDefaultProfileImage;
 
   // 🔹 Stats
   const totalTracked = libraryGames.length;
+
   const completedGames = libraryGames.filter(
     (g) => g.status === "completed"
   );
   const completedCount = completedGames.length;
 
-  const playingCount = libraryGames.filter(
-    (g) => g.status === "playing"
-  ).length;
-
-  // 🧾 Define "in backlog" as: in library but not completed
-  const backlogGames = libraryGames.filter((g) => g.status !== "completed");
+  // 🧾 Backlog = everything not completed
+  const backlogGames = libraryGames.filter(
+    (g) => g.status !== "completed"
+  );
   const backlogCount = backlogGames.length;
 
   // ⭐ Favorites
   const favoriteGames = libraryGames.filter((g) => g.isFavorite);
 
-  // Primary genre
   const getPrimaryGenre = (game) =>
     Array.isArray(game.genres) && game.genres.length > 0
       ? game.genres[0]
       : "Unknown genre";
 
-  // 🔹 Completed pagination logic
+  // Pagination
   const totalCompletedPages =
     completedCount > 0
       ? Math.ceil(completedCount / COMPLETED_PER_PAGE)
       : 1;
 
-  // Clamp current page if completed list shrinks
   const safeCompletedPage = Math.min(completedPage, totalCompletedPages);
-  const completedStartIndex = (safeCompletedPage - 1) * COMPLETED_PER_PAGE;
-  const completedEndIndex = completedStartIndex + COMPLETED_PER_PAGE;
+  const completedStartIndex =
+    (safeCompletedPage - 1) * COMPLETED_PER_PAGE;
+  const completedEndIndex =
+    completedStartIndex + COMPLETED_PER_PAGE;
+
   const paginatedCompletedGames = completedGames.slice(
     completedStartIndex,
     completedEndIndex
   );
 
   useEffect(() => {
-    // If completed games change drastically (e.g. user clears some),
-    // make sure we don't sit on an empty high page.
     if (completedPage > totalCompletedPages) {
       setCompletedPage(1);
     }
@@ -216,18 +207,15 @@ export default function UserProfile() {
               <div className="profile-stat-pill">
                 <strong>{completedCount}</strong> Completed
               </div>
-              <div className="profile-stat-pill">
-                <strong>{playingCount}</strong> Currently playing
-              </div>
             </div>
           </div>
         </section>
 
         <section className="profile-main-grid">
-          {/* ⭐ FAVORITE GAMES SECTION */}
+          {/* ⭐ FAVORITE GAMES */}
           <article className="profile-panel">
             <div className="profile-panel-header">
-              <h2>Top 5 Games</h2>
+              <h2>Top Games</h2>
               <span>Click a game to view details.</span>
             </div>
 
@@ -235,7 +223,6 @@ export default function UserProfile() {
               {favoriteGames.length === 0 ? (
                 <p className="profile-empty-state">
                   You haven’t favorited any games yet.
-                  Go to a game page and click “Favorite game.”
                 </p>
               ) : (
                 favoriteGames.slice(0, 12).map((game) => (
@@ -302,10 +289,6 @@ export default function UserProfile() {
                   Completed
                 </div>
                 <div className="backlog-stat-item">
-                  <strong>{playingCount}</strong>
-                  Playing
-                </div>
-                <div className="backlog-stat-item">
                   <strong>{backlogCount}</strong>
                   In backlog
                 </div>
@@ -314,7 +297,7 @@ export default function UserProfile() {
           </aside>
         </section>
 
-        {/* ✅ COMPLETED SECTION WITH PAGINATION */}
+        {/* COMPLETED */}
         <section className="completed-section">
           <h2>Completed</h2>
           <div className="completed-container">
@@ -356,17 +339,13 @@ export default function UserProfile() {
             )}
           </div>
 
-          {/* Pagination controls */}
           {completedGames.length > COMPLETED_PER_PAGE && (
             <div className="pagination">
               <button
-                type="button"
                 className="page-btn"
                 disabled={safeCompletedPage === 1}
                 onClick={() =>
-                  setCompletedPage((prev) =>
-                    Math.max(1, prev - 1)
-                  )
+                  setCompletedPage((p) => Math.max(1, p - 1))
                 }
               >
                 ‹ Prev
@@ -377,12 +356,11 @@ export default function UserProfile() {
               </span>
 
               <button
-                type="button"
                 className="page-btn"
                 disabled={safeCompletedPage === totalCompletedPages}
                 onClick={() =>
-                  setCompletedPage((prev) =>
-                    Math.min(totalCompletedPages, prev + 1)
+                  setCompletedPage((p) =>
+                    Math.min(totalCompletedPages, p + 1)
                   )
                 }
               >
@@ -397,3 +375,4 @@ export default function UserProfile() {
     </div>
   );
 }
+
