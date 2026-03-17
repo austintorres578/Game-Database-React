@@ -1139,7 +1139,7 @@ export default function YourLibrary() {
     const steamParam = params.get("steam");
 
     console.log(params);
-    console.log(steamParams);
+    console.log(steamParam);
 
     if (steamParam === "linked" && authUser?.uid && !hasAutoSyncedRef.current) {
       hasAutoSyncedRef.current = true;
