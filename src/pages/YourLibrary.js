@@ -11,6 +11,7 @@ import Footer from "../components/Footer";
 
 import downChevron from "../assets/images/down_chevron.png";
 import plusIcon from "../assets/images/plus-icon.png";
+import loadingIcon from "../assets/images/loading.gif"
 
 import { auth, db } from "../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -1467,6 +1468,27 @@ export default function YourLibrary() {
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
 
+  const MAX_DROPDOWN_PAGES = 10;
+
+  let dropdownStartPage = safeCurrentPage - 4;
+  let dropdownEndPage = safeCurrentPage + 5;
+
+  // clamp to bounds
+  if (dropdownStartPage < 1) {
+    dropdownStartPage = 1;
+    dropdownEndPage = Math.min(MAX_DROPDOWN_PAGES, totalPages);
+  }
+
+  if (dropdownEndPage > totalPages) {
+    dropdownEndPage = totalPages;
+    dropdownStartPage = Math.max(1, totalPages - MAX_DROPDOWN_PAGES + 1);
+  }
+
+  const dropdownPages = Array.from(
+    { length: dropdownEndPage - dropdownStartPage + 1 },
+    (_, i) => dropdownStartPage + i
+  );
+
   // ✅ paginate the sorted list (NOT the unsorted list)
   const pageGames = sortedGames.slice(startIndex, endIndex);
 
@@ -1689,6 +1711,48 @@ export default function YourLibrary() {
     }
     openGroupModalForGroup(realSelectedGroupIds[0], String(gameId));
   }
+
+  function getSortLabel(sortValue) {
+  switch (sortValue) {
+    case "name_desc":
+      return "Name (Z-A)";
+    case "meta_desc":
+      return "Metacritic (High-Low)";
+    case "meta_asc":
+      return "Metacritic (Low-High)";
+    case "name_asc":
+    default:
+      return "Name (A-Z)";
+  }
+}
+
+function handleSortChange(nextSort) {
+  setSortBy(nextSort);
+  setCurrentPage(1);
+  setIsPageDropdownOpen(false);
+}
+
+function revealSortingDrop(event) {
+  event.stopPropagation();
+
+  const sorting = event.currentTarget.parentNode;
+  const menu = sorting.querySelector("div");
+
+  if (!menu) return;
+
+  menu.classList.toggle("invisible");
+}
+
+function handleSortingOptionClick(nextSort) {
+  handleSortChange(nextSort);
+
+  const sorting = document.querySelector(".sorting");
+  const menu = sorting?.querySelector("div");
+
+  if (menu) {
+    menu.classList.add("invisible");
+  }
+}
 
   /* ===========================================================================
     SHARED RENDER: CANDIDATE IMPORT UI
@@ -1981,7 +2045,7 @@ export default function YourLibrary() {
 
             <a href="#filter-settings">
               <button className="btn btn-ghost" type="button" onClick={openTextImportPanel}>
-                Import Games (Paste Titles)
+                Import Games (Game Titles)
               </button>
             </a>
           </div>
@@ -2104,24 +2168,53 @@ export default function YourLibrary() {
 
         <div className="sort-by-con">
           <p>Sort by</p>
-          <select
-            value={sortBy}
-            onChange={(e) => {
-              setSortBy(e.target.value);
-              setCurrentPage(1);
-              setIsPageDropdownOpen(false);
-            }}
-          >
-            <option value="name_asc">Name (A–Z)</option>
-            <option value="name_desc">Name (Z–A)</option>
-            <option value="meta_desc">Metacritic (High–Low)</option>
-            <option value="meta_asc">Metacritic (Low–High)</option>
-          </select>
+          <div className="sorting">
+            <button type="button" onClick={revealSortingDrop}>
+              {getSortLabel(sortBy)}
+            </button>
+
+            <div className="invisible">
+              <button
+                type="button"
+                className={sortBy === "name_asc" ? "active" : ""}
+                onClick={() => handleSortingOptionClick("name_asc")}
+              >
+                Name (A-Z)
+              </button>
+
+              <button
+                type="button"
+                className={sortBy === "name_desc" ? "active" : ""}
+                onClick={() => handleSortingOptionClick("name_desc")}
+              >
+                Name (Z-A)
+              </button>
+
+              <button
+                type="button"
+                className={sortBy === "meta_desc" ? "active" : ""}
+                onClick={() => handleSortingOptionClick("meta_desc")}
+              >
+                Metacritic (High-Low)
+              </button>
+
+              <button
+                type="button"
+                className={sortBy === "meta_asc" ? "active" : ""}
+                onClick={() => handleSortingOptionClick("meta_asc")}
+              >
+                Metacritic (Low-High)
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="game-grid">
           {loadingStats ? (
-            <p>Loading your library…</p>
+            <div className="loading-con">
+              <img src={loadingIcon} alt="Loading" />
+              <p>Loading your library…</p>
+            </div>
           ) : pageGames.length === 0 ? (
             <p>No games match this filter yet.</p>
           ) : (
@@ -2217,22 +2310,21 @@ export default function YourLibrary() {
 
               {isPageDropdownOpen && (
                 <div className="dropdown-menu">
-                  {Array.from({ length: totalPages }, (_, i) => {
-                    const pageNumber = i + 1;
-                    return (
-                      <button
-                        key={pageNumber}
-                        type="button"
-                        className={`dropdown-item ${pageNumber === safeCurrentPage ? "current-page" : ""}`}
-                        onClick={() => {
-                          setCurrentPage(pageNumber);
-                          setIsPageDropdownOpen(false);
-                        }}
-                      >
-                        Page {pageNumber}
-                      </button>
-                    );
-                  })}
+                  {dropdownPages.map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      className={`dropdown-item ${
+                        pageNumber === safeCurrentPage ? "current-page" : ""
+                      }`}
+                      onClick={() => {
+                        setCurrentPage(pageNumber);
+                        setIsPageDropdownOpen(false);
+                      }}
+                    >
+                      Page {pageNumber}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
@@ -2320,7 +2412,7 @@ export default function YourLibrary() {
                   </button>
 
                   <button className="btn btn-ghost" type="button" onClick={openImportPanel}>
-                    Switch to Images / Steam
+                    Import from Images / Steam
                   </button>
                 </div>
 
@@ -2430,7 +2522,7 @@ export default function YourLibrary() {
               />
 
               <div className="image-scan">
-                <p>Scan Images For Game Titles</p>
+                <p>Import from Image</p>
 
                 <button className="btn btn-primary" type="button" onClick={openScanFilePicker} disabled={scanLoading}>
                   {scanLoading ? "Scanning..." : "Upload"}
@@ -2459,7 +2551,7 @@ export default function YourLibrary() {
 
               {!scanLoading && scanPreviewUrls.length === 0 && !scanCleanText && (
                 <div className="steam-sync">
-                  <p>Import Steam Library</p>
+                  <p>Import from Steam Library</p>
 
                   {steamCheckLoading || steamLinked === null ? (
                     <p style={{ opacity: 0.85 }}>Checking Steam link…</p>
@@ -2510,8 +2602,9 @@ export default function YourLibrary() {
                   )}
 
                   <div style={{ marginTop: "12px" }}>
+                    <p>Import Games By Title</p>
                     <button className="btn btn-ghost" type="button" onClick={openTextImportPanel}>
-                      Switch to Paste Text
+                      Enter Games Manually
                     </button>
                   </div>
                 </div>

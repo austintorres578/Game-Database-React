@@ -806,6 +806,7 @@ export default function GamePage() {
         <Header />
         <div className="game-page-container loading-state">
           <img src={loadingCircle} alt="Loading..." />
+          <p>Loading Game...</p>
         </div>
       </div>
     );

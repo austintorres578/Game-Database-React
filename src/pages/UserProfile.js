@@ -125,6 +125,7 @@ export default function UserProfile() {
     completedEndIndex
   );
 
+
   useEffect(() => {
     if (completedPage > totalCompletedPages) {
       setCompletedPage(1);

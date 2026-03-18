@@ -146,19 +146,20 @@ export default function SignInPage(props) {
 
           {error && <div className="auth-error">{error}</div>}
 
-          <form className="auth-form" onSubmit={handleLogin}>
+          <form className="auth-form" onSubmit={handleLogin} method="post">
             <div className="auth-field">
               <div className="auth-label-row">
                 <label htmlFor="email">Email</label>
               </div>
               <input
                 id="email"
+                name="username"
                 type="email"
                 className="auth-input"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
+                autoComplete="username"
               />
             </div>
 
@@ -169,6 +170,7 @@ export default function SignInPage(props) {
               </div>
               <input
                 id="password"
+                name="password"
                 type="password"
                 className="auth-input"
                 placeholder="Enter Your Password"
@@ -182,6 +184,7 @@ export default function SignInPage(props) {
               <div className="auth-remember-left">
                 <input
                   id="remember"
+                  name="remember"
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => {
@@ -195,11 +198,7 @@ export default function SignInPage(props) {
               <span>Secure sign-in</span>
             </div>
 
-            <button
-              type="submit"
-              className="auth-submit-btn"
-              disabled={loading}
-            >
+            <button type="submit" className="auth-submit-btn" disabled={loading}>
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>

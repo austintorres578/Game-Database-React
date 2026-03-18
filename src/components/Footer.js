@@ -45,9 +45,9 @@ export default function Footer() {
               <button
                 type="button"
                 className="footer-tag"
-                onClick={() => handleTagClick("First Person")}
+                onClick={() => handleTagClick("Action")}
               >
-                First Person
+                Action
               </button>
               <button
                 type="button"
@@ -59,16 +59,44 @@ export default function Footer() {
               <button
                 type="button"
                 className="footer-tag"
-                onClick={() => handleTagClick("Horror")}
+                onClick={() => handleTagClick("Shooter")}
               >
-                Horror
+                Shooter
               </button>
               <button
                 type="button"
                 className="footer-tag"
-                onClick={() => handleTagClick("Survival")}
+                onClick={() => handleTagClick("Adventure")}
               >
-                Survival
+                Adventure
+              </button>
+              <button
+                type="button"
+                className="footer-tag"
+                onClick={() => handleTagClick("Indie")}
+              >
+                Indie
+              </button>
+              <button
+                type="button"
+                className="footer-tag"
+                onClick={() => handleTagClick("Platformer")}
+              >
+                Platformer
+              </button>
+              <button
+                type="button"
+                className="footer-tag"
+                onClick={() => handleTagClick("Strategy")}
+              >
+                Strategy
+              </button>
+               <button
+                type="button"
+                className="footer-tag"
+                onClick={() => handleTagClick("Racing")}
+              >
+                Racing
               </button>
               <button
                 type="button"
@@ -77,18 +105,13 @@ export default function Footer() {
               >
                 Co-op
               </button>
-              <button
-                type="button"
-                className="footer-tag"
-                onClick={() => handleTagClick("Free to Play")}
-              >
-                Free to Play
-              </button>
             </div>
           </div>
         </div>
 
-        <div className="footer-bottom">© 2025 GameDB. All rights reserved.</div>
+        <div className="footer-bottom">
+          © {new Date().getFullYear()} GameDB. All rights reserved.
+        </div>
       </div>
     </footer>
   );

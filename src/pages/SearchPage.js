@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import loadingCircle from "../assets/images/loading.gif";
 
 import Games from "../components/Games";
@@ -9,6 +10,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 export default function SearchPage({ user }) {
+  const location = useLocation();
   const origin = "https://rawg-video-games-database.p.rapidapi.com/";
   const apiKey = "99cd09f6c33b42b5a24a9b447ee04a81";
   const pageSize = 12;
@@ -70,6 +72,9 @@ export default function SearchPage({ user }) {
 
   // runs the request + stores "last search" meta in localStorage
   function runSearch(link, isFreshSearch = false, metaState) {
+
+    console.log("🔍 RAWG REQUEST URL:", link);
+
     if (metaState) {
       const { term, platforms = [], genres = [], tags = [], page } = metaState;
 
@@ -214,6 +219,7 @@ export default function SearchPage({ user }) {
       .catch((err) => {
         console.error("Error fetching tags:", err);
       });
+
   }, []);
 
   // close page dropdown when clicking outside
@@ -248,6 +254,67 @@ export default function SearchPage({ user }) {
       }
     }
   }, []);
+
+ useEffect(() => {
+  const quickTag = location.state?.quickTag;
+
+  if (!quickTag) return;
+  if (genreFilters.length <= 1 && tagFilters.length <= 1) return;
+
+  const matchedGenre = genreFilters.find(
+    (genre) => genre.label.toLowerCase() === quickTag.toLowerCase()
+  );
+
+  const matchedTag = tagFilters.find(
+    (tag) => tag.label.toLowerCase() === quickTag.toLowerCase()
+  );
+
+  const page = 1;
+
+  setSearchTerm("");
+  setSelectedPlatforms([]);
+  setPageNumber(page);
+  setIsPageDropdownOpen(false);
+
+  if (matchedGenre?.slug) {
+    const nextGenres = [matchedGenre.slug];
+
+    setSelectedGenres(nextGenres);
+    setSelectedTags([]);
+
+    const link = buildLink("", [], nextGenres, [], page);
+
+    runSearch(link, true, {
+      term: "",
+      platforms: [],
+      genres: nextGenres,
+      tags: [],
+      page,
+    });
+
+    scrollToTop();
+    return;
+  }
+
+  if (matchedTag?.slug) {
+    const nextTags = [matchedTag.slug];
+
+    setSelectedGenres([]);
+    setSelectedTags(nextTags);
+
+    const link = buildLink("", [], [], nextTags, page);
+
+    runSearch(link, true, {
+      term: "",
+      platforms: [],
+      genres: [],
+      tags: nextTags,
+      page,
+    });
+
+    scrollToTop();
+  }
+}, [location.state, genreFilters, tagFilters]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -553,6 +620,7 @@ export default function SearchPage({ user }) {
         {loading && (
           <div className="loading-wrapper">
             <img src={loadingCircle} alt="Loading..." />
+            <p>Searching For Games...</p>
           </div>
         )}
 
