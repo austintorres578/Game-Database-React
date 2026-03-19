@@ -12,7 +12,7 @@ In addition to organization, the platform provides advanced search and filtering
 With features like persistent search state, highlighted top results, and smooth pagination, the app delivers a seamless and immersive experience for discovering, tracking, and managing games across both physical and digital collections.
 </p>
 
-<h3>🚀 Features</h3>
+<h2>Features</h2>
 <ul>
   <li><strong>Secure User Authentication</strong> – Account creation and login powered by Firebase Authentication</li>
 
@@ -79,7 +79,7 @@ Sorts games by metacritic score to get the best games first, with game 1-3 being
 <br />
 Each game in the sorted list has its own individual page. Each game page has its own unqique details like game description, platforms, game genre, release date, and developer/publisher. The game page also has its own dynamic gmae background to represent the selected game
 
-<h2>🛠️ Tech Stack</h2>
+<h2>Tech Stack</h2>
 <ul>
   <li><strong>Frontend:</strong> HTML, CSS, JavaScript, React</li>
   
@@ -93,7 +93,6 @@ Each game in the sorted list has its own individual page. Each game page has its
       <li>Google Cloud Vision API – Image-to-text (OCR) scanning</li>
       <li>OpenAI API – AI-powered text processing and game title extraction</li>
       <li>Steam Web API – User game library synchronization</li>
-      <li>IsThereAnyDeal API – Game pricing and store data</li>
     </ul>
   </li>
   
