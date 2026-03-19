@@ -59,25 +59,7 @@ This project integrates multiple APIs to power game discovery, scanning, and lib
 - **Steam Web API**  
   Allows users to connect their Steam account and import owned games.
 
-<h2>Deployed On Netlify – <a href="https://jade-begonia-31d074.netlify.app/">Video Game Database</a></h2>
-
 <a href="https://jade-begonia-31d074.netlify.app/">Visit the Site</a>
-
-<img src="public/search-bar.png" />
-<p>Search by name, genre, or console using the search bar fixed to the top of every page.</p>
-<br />
-
-<img src="public/vgdbBanner.png" />
-<br />
-<img src="public/pagnitation.png">
-<br />
-
-Sorts games by metacritic score to get the best games first, with game 1-3 being bordered in a gold, silver, or bronze border. You can go deeper down the list using the pagnitation at the bottom of the page.
-
-<br />
-<img src="public/single-game-page.png">
-<br />
-Each game in the sorted list has its own individual page. Each game page has its own unqique details like game description, platforms, game genre, release date, and developer/publisher. The game page also has its own dynamic gmae background to represent the selected game
 
 <h2>Tech Stack</h2>
 <ul>
