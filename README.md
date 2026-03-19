@@ -1,4 +1,4 @@
-<h1>Video Game Library Oragnizer/ Database</h1>
+<h1>Video Game Library Organizer/Database</h1>
 
 <img src="public/logo192.png"  height="200" width="200" />
 
