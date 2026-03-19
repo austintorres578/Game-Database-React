@@ -59,9 +59,9 @@ This project integrates multiple APIs to power game discovery, scanning, and lib
 - **Steam Web API**  
   Allows users to connect their Steam account and import owned games.
 
-<h2>Deployed On Netlify – <a href="[https://your-live-link-here.com/](https://poetic-rabanadas-1d8116.netlify.app/)">Video Game Database</a></h2>
+<h2>Deployed On Netlify – <a href="https://jade-begonia-31d074.netlify.app/">Video Game Database</a></h2>
 
-<a href="https://poetic-rabanadas-1d8116.netlify.app/">Visit the Site</a>
+<a href="https://jade-begonia-31d074.netlify.app/">Visit the Site</a>
 
 <img src="public/search-bar.png" />
 <p>Search by name, genre, or console using the search bar fixed to the top of every page.</p>
