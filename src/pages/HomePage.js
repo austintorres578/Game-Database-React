@@ -9,8 +9,8 @@ import redDeadImage from '../assets/images/redDeadPreview.jpg'
 
 import '../styles/home.css'
 
-import Header from '../components/Header'
-import Footer from '../components/Footer'
+import Header from '../components/Header.tsx'
+import Footer from '../components/Footer.tsx'
 
 import { auth } from '../firebase/firebase';
 import { onAuthStateChanged } from 'firebase/auth';

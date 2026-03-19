@@ -10,8 +10,8 @@ import "../styles/profile.css";
 import userDefaultProfileImage from "../assets/images/defaultUser.png";
 import checkIcon from "../assets/images/check-icon.png";
 
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/Header.tsx";
+import Footer from "../components/Footer.tsx";
 
 export default function UserProfile() {
   const [profile, setProfile] = useState(null);
@@ -124,7 +124,6 @@ export default function UserProfile() {
     completedStartIndex,
     completedEndIndex
   );
-
 
   useEffect(() => {
     if (completedPage > totalCompletedPages) {

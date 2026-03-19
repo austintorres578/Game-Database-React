@@ -505,21 +505,9 @@ ease-out;
      }
 
      .loading-wrapper{
-        display: flex;
-        justify-content: center;
-        flex-direction: column;
-        margin-top: 15px;
-    }
-
-    .loading-wrapper p{
-        text-align: center;
-    }
-
-    .loading-wrapper img{
-        height:75px;
-        width: auto;
-        object-fit: contain;    
-    }
+    display: flex;
+    justify-content: center;
+}
 
 .no-results-message{
     display: flex;

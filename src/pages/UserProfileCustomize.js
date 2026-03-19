@@ -9,8 +9,8 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
 
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import Header from "../components/Header.tsx";
+import Footer from "../components/Footer.tsx";
 
 import userDefaultProfile from "../assets/images/defaultUser.png";
 import "../styles/userProfileCustomize.css";
