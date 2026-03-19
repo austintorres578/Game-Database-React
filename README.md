@@ -79,14 +79,27 @@ Sorts games by metacritic score to get the best games first, with game 1-3 being
 <br />
 Each game in the sorted list has its own individual page. Each game page has its own unqique details like game description, platforms, game genre, release date, and developer/publisher. The game page also has its own dynamic gmae background to represent the selected game
 
-<h2>Tech Used</h2>
+<h2>🛠️ Tech Stack</h2>
 <ul>
-  <li>HTML</li>
-  <li>CSS</li>
-  <li>JavaScript</li>
-  <li>React</li>
-  <li>RAWG API</li>
-  <li>Local Storage</li>
+  <li><strong>Frontend:</strong> HTML, CSS, JavaScript, React</li>
+  
+  <li><strong>Backend:</strong> Node.js, Express</li>
+  
+  <li><strong>Database & Auth:</strong> Firebase (Authentication & Firestore)</li>
+  
+  <li><strong>APIs & Integrations:</strong>
+    <ul>
+      <li>RAWG API – Game data and metadata</li>
+      <li>Google Cloud Vision API – Image-to-text (OCR) scanning</li>
+      <li>OpenAI API – AI-powered text processing and game title extraction</li>
+      <li>Steam Web API – User game library synchronization</li>
+      <li>IsThereAnyDeal API – Game pricing and store data</li>
+    </ul>
+  </li>
+  
+  <li><strong>Storage & State:</strong> Local Storage (persisting user search state)</li>
+  
+  <li><strong>Other Tools:</strong> Git, GitHub</li>
 </ul>
 
 <h2>About Me</h2>
