@@ -179,6 +179,17 @@ body {
     .loading-state{
       display: flex;
       justify-content: center;
+      flex-direction: column;
+    }
+
+    .loading-state p{
+      text-align: center;
+    }
+
+    .loading-state img{
+      height: 75px;
+      width: auto;
+      object-fit: contain;
     }
 
     .meta-label {

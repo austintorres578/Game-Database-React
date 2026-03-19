@@ -9,8 +9,8 @@ import {
 } from "firebase/auth";
 import { auth } from "../firebase/firebase";
 
-import Header from "../components/Header.tsx";
-import Footer from "../components/Footer.tsx";
+import Header from "../components/Header";
+import Footer from "../components/Footer";
 
 import "../styles/signIn.css";
 import loadingGif from "../assets/images/loading.gif";

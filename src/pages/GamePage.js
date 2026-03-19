@@ -3,8 +3,8 @@ import React, { useState, useEffect, useRef } from "react";
 import parse from "html-react-parser";
 import loadingCircle from "../assets/images/loading.gif";
 
-import Footer from "../components/Footer.tsx";
-import Header from "../components/Header.tsx";
+import Footer from "../components/Footer.js";
+import Header from "../components/Header";
 
 import defaultBackground from "../assets/images/background.png";
 import "../styles/gamePage.css";
@@ -806,6 +806,7 @@ export default function GamePage() {
         <Header />
         <div className="game-page-container loading-state">
           <img src={loadingCircle} alt="Loading..." />
+          <p>Loading Game...</p>
         </div>
       </div>
     );

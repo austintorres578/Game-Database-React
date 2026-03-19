@@ -8,11 +8,7 @@
     display: block;
   }
 
-  body .header-wrapper .header-nav > a{
-    display: none;
-  }
-
-  body .header-wrapper .header-nav > .logout-link{
+  body .header-wrapper nav a{
     display: none;
   }
 
@@ -51,21 +47,6 @@
 
 .site-header .is-active{
   color: #22c55e;
-}
-
-.site-header nav button{
-  color: #e5e7eb;
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.95rem;
-    transition: opacity 0.2s ease, color 0.2s ease;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-.site-header nav button:hover{
-    color: #22c55e;
 }
 
 .header-wrapper {
@@ -177,16 +158,6 @@
   text-decoration: none;
   font-size: 20px;
   border-bottom: solid .5px lightgray;
-}
-
-.mobile-nav-wrapper nav button{
-  padding: 5px 0px;
-  color: white;
-  font-weight: bold;
-  text-decoration: none;
-  font-size: 20px;
-  border-bottom: solid .5px lightgray;
-  text-align: left;
 }
 
 .mobile-nav-wrapper .close-mobile-nav-button{
