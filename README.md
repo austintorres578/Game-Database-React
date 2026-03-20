@@ -1,50 +1,86 @@
-<h1>Video Game Database (RAWG API)</h1>
+<h1>Video Game Library Organizer/Database</h1>
 
 <img src="public/logo192.png"  height="200" width="200" />
 
-A video game discovery platform built in <strong>React</strong> using the <strong>RAWG Video Game Database API</strong>. This app allows users to search, filter, and explore games across multiple consoles and genres, displaying detailed game pages with dynamic visuals and ranking them by Metacritic score.  
-All searches and preferences are saved using <strong>Local Storage</strong> for a seamless return experience.
+<p>
+A full-stack video game discovery and library management platform built with <strong>React</strong>, powered by the <strong>RAWG Video Game Database API</strong>, and backed by <strong>Firebase</strong> for authentication and data storage. 
 
+The application enables users to organize their game collections across multiple platforms using custom groups, while offering powerful tools such as image-based scanning with OCR, AI-assisted text processing, manual text importing, and Steam account synchronization to quickly build and manage their library.
+
+In addition to organization, the platform provides advanced search and filtering by title, genre, platform, and tags, along with intelligent game ranking based on Metacritic scores to highlight top-rated titles. Users can explore detailed game pages with rich metadata, dynamic backgrounds, and real-time data, while also viewing current pricing and store availability through integrated third-party APIs.
+
+With features like persistent search state, highlighted top results, and smooth pagination, the app delivers a seamless and immersive experience for discovering, tracking, and managing games across both physical and digital collections.
+</p>
+
+<h2>Features</h2>
 <ul>
-  <li>Built with React</li>
-  <li>Connected to RAWG API for real-time game data</li>
-  <li>Search by title, console, or genre</li>
-  <li>Games ranked by Metacritic score for best-first browsing</li>
-  <li>Dynamic page backgrounds based on selected game</li>
-  <li>Local Storage used to save last search on reload</li>
-  <li>Clickable game pages with detailed stats, genres, platforms, and release info</li>
-  <li>Ranks Top 3 games by using Gold, Silver, Bronze borders on searches first page</li>
-  <li>Built in pagnitation</li>
+  <li><strong>Secure User Authentication</strong> – Account creation and login powered by Firebase Authentication</li>
+
+  <li><strong>Custom Game Organization</strong> – Create and manage personalized groups to organize your game library your way</li>
+
+  <li><strong>Fast Game Importing</strong> – Add games instantly through:
+    <ul>
+      <li>Image scanning (physical collections)</li>
+      <li>Text input</li>
+      <li>Steam account synchronization</li>
+    </ul>
+  </li>
+
+  <li><strong>Real-Time Game Data</strong> – Integrated with the RAWG API to fetch up-to-date game details, images, and metadata</li>
+
+  <li><strong>Advanced Search & Filtering</strong> – Search games by title, platform, genre, or tags for quick discovery</li>
+
+  <li><strong>Smart Game Ranking</strong> – Games are automatically sorted by Metacritic score to highlight top-rated titles first</li>
+
+  <li><strong>Interactive Game Pages</strong> – Detailed pages for each game including stats, genres, platforms, and release information</li>
+
+  <li><strong>Dynamic Visual Experience</strong> – Backgrounds adapt based on the selected game for a more immersive UI</li>
+
+  <li><strong>Top Picks Highlighting</strong> – Top 3 results are visually ranked with Gold, Silver, and Bronze indicators</li>
+
+  <li><strong>Persistent Search State</strong> – Last search is saved using local storage for a seamless user experience</li>
+
+  <li><strong>Efficient Pagination</strong> – Built-in pagination for smooth browsing through large game libraries</li>
 </ul>
 
-<h2>Deployed On Netlify – <a href="[https://your-live-link-here.com/](https://poetic-rabanadas-1d8116.netlify.app/)">Video Game Database</a></h2>
+<h3>API's / Services Used</h3>
 
-<a href="https://poetic-rabanadas-1d8116.netlify.app/">Visit the Site</a>
+This project integrates multiple APIs to power game discovery, scanning, and library management:
 
-<img src="public/search-bar.png" />
-<p>Search by name, genre, or console using the search bar fixed to the top of every page.</p>
-<br />
+- **RAWG API**  
+  Used to search and retrieve video game data including titles, images, and metadata.
 
-<img src="public/vgdbBanner.png" />
-<br />
-<img src="public/pagnitation.png">
-<br />
+- **Google Cloud Vision API**  
+  Extracts text from uploaded images (e.g., scanning physical game collections).
 
-Sorts games by metacritic score to get the best games first, with game 1-3 being bordered in a gold, silver, or bronze border. You can go deeper down the list using the pagnitation at the bottom of the page.
+- **OpenAI (GPT-4o-mini)**  
+  Processes OCR results to intelligently extract and clean video game titles from raw text.
 
-<br />
-<img src="public/single-game-page.png">
-<br />
-Each game in the sorted list has its own individual page. Each game page has its own unqique details like game description, platforms, game genre, release date, and developer/publisher. The game page also has its own dynamic gmae background to represent the selected game
+- **Steam Web API**  
+  Allows users to connect their Steam account and import owned games.
 
-<h2>Tech Used</h2>
+<a href="https://jade-begonia-31d074.netlify.app/">Visit the Site</a>
+
+<h2>Tech Stack</h2>
 <ul>
-  <li>HTML</li>
-  <li>CSS</li>
-  <li>JavaScript</li>
-  <li>React</li>
-  <li>RAWG API</li>
-  <li>Local Storage</li>
+  <li><strong>Frontend:</strong> HTML, CSS, JavaScript, React</li>
+  
+  <li><strong>Backend:</strong> Node.js, Express</li>
+  
+  <li><strong>Database & Auth:</strong> Firebase (Authentication & Firestore)</li>
+  
+  <li><strong>APIs & Integrations:</strong>
+    <ul>
+      <li>RAWG API – Game data and metadata</li>
+      <li>Google Cloud Vision API – Image-to-text (OCR) scanning</li>
+      <li>OpenAI API – AI-powered text processing and game title extraction</li>
+      <li>Steam Web API – User game library synchronization</li>
+    </ul>
+  </li>
+  
+  <li><strong>Storage & State:</strong> Local Storage (persisting user search state)</li>
+  
+  <li><strong>Other Tools:</strong> Git, GitHub</li>
 </ul>
 
 <h2>About Me</h2>

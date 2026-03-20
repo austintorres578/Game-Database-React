@@ -1,0 +1,6 @@
+Seperate Completed Games From Library
+- Firestore has the completed games merged with library, if i want to be able to mark games as completed without adding to library i need to change firestore structure
+
+- if i log out from an account where i recently synced steam and log into a new one. itll sync the last steam account from the previous site account 
+- doesnt remove game from groups when the game is removed from library
+- when i write in text import textarea i get a dubplicate box
