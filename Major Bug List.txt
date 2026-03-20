@@ -1,2 +1,0 @@
-Seperate Completed Games From Library
-- Firestore has the completed games merged with library, if i want to be able to mark games as completed without adding to library i need to change firestore structure
