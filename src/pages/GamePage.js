@@ -3,8 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import parse from "html-react-parser";
 import loadingCircle from "../assets/images/loading.gif";
 
-import Footer from "../components/Footer.js";
-import Header from "../components/Header";
 
 import defaultBackground from "../assets/images/background.png";
 import "../styles/gamePage.css";
@@ -12,7 +10,8 @@ import "../styles/gamePage.css";
 import { useNavigate } from "react-router-dom";
 
 // 🔐 Firebase imports
-import { auth, db } from "../firebase/firebase";
+import { db } from "../firebase/firestore";
+
 import {
   doc,
   setDoc,
@@ -22,14 +21,14 @@ import {
   getDocs,
   updateDoc,
   arrayRemove,
-} from "firebase/firestore";
+} from "../firebase/firestore";
 
 // ✅ Backend base (Render in prod, override for local if you want)
 const BACKEND_BASE =
   process.env.REACT_APP_BACKEND_BASE ||
   "https://game-database-backend.onrender.com";
 
-export default function GamePage() {
+export default function GamePage({auth}) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -82,9 +81,6 @@ export default function GamePage() {
   const addressBarLink = window.location.href;
   const key = "?key=99cd09f6c33b42b5a24a9b447ee04a81";
 
-  function htmlParser(html) {
-    return parse(html);
-  }
 
   function requireAuth(actionLabel) {
     const user = auth.currentUser;
@@ -803,7 +799,7 @@ export default function GamePage() {
   if (!gameData) {
     return (
       <div className="game-page-shell">
-        <Header />
+
         <div className="game-page-container loading-state">
           <img src={loadingCircle} alt="Loading..." />
           <p>Loading Game...</p>
@@ -893,7 +889,6 @@ export default function GamePage() {
 
   return (
     <div className="game-page-shell">
-      <Header />
 
       <div className="game-page-container">
         {/* HERO SECTION */}
@@ -1212,7 +1207,6 @@ export default function GamePage() {
         </div>
       )}
 
-      <Footer />
     </div>
   );
 }

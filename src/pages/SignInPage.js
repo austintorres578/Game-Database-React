@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
@@ -6,11 +6,8 @@ import {
   setPersistence,
   indexedDBLocalPersistence,
   browserSessionPersistence,
-} from "firebase/auth";
-import { auth } from "../firebase/firebase";
-
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+  auth
+} from "../firebase/fireAuth";
 
 import "../styles/signIn.css";
 import loadingGif from "../assets/images/loading.gif";
@@ -60,13 +57,13 @@ export default function SignInPage(props) {
 
       console.log(
         "[AUTH PERSISTENCE SET]",
-        rememberMe ? "REMEMBER (IndexedDB)" : "SESSION (until browser closes)"
+        rememberMe ? "REMEMBER (IndexedDB)" : "SESSION (until browser closes)",
       );
 
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
-        password
+        password,
       );
 
       if (props.onSignedIn) {
@@ -83,7 +80,7 @@ export default function SignInPage(props) {
         (typeof err?.code === "string" && err.code.includes("persistence"))
       ) {
         setError(
-          "Your browser is blocking storage needed to stay signed in. Try disabling privacy extensions or allowing site data for this site."
+          "Your browser is blocking storage needed to stay signed in. Try disabling privacy extensions or allowing site data for this site.",
         );
       } else if (
         err?.code === "auth/wrong-password" ||
@@ -106,7 +103,6 @@ export default function SignInPage(props) {
   if (checkingAuth) {
     return (
       <main className="auth-shell">
-        <Header />
         <section className="auth-card">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <img
@@ -117,14 +113,13 @@ export default function SignInPage(props) {
             <p style={{ margin: 0 }}>Loading...</p>
           </div>
         </section>
-        <Footer />
+        {/* <Footer /> */}
       </main>
     );
   }
 
   return (
     <main className="auth-shell">
-      <Header />
 
       {user ? (
         <section className="sucessful-signin-block">
@@ -198,7 +193,11 @@ export default function SignInPage(props) {
               <span>Secure sign-in</span>
             </div>
 
-            <button type="submit" className="auth-submit-btn" disabled={loading}>
+            <button
+              type="submit"
+              className="auth-submit-btn"
+              disabled={loading}
+            >
               {loading ? "Signing in..." : "Sign in"}
             </button>
           </form>
@@ -209,8 +208,6 @@ export default function SignInPage(props) {
         </section>
       )}
 
-      <Footer />
     </main>
   );
 }
-

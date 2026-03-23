@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import GamePage from "./pages/GamePage";
@@ -9,16 +9,19 @@ import UserProfile from "./pages/UserProfile";
 import SearchPage from "./pages/SearchPage";
 import YourLibrary from "./pages/YourLibrary";
 import UserProfileCustomizer from "./pages/UserProfileCustomize";
+import Header from './components/Header'
+import Footer from './components/Footer'
 
-import { auth } from "./firebase/firebase";
-import { onAuthStateChanged } from "firebase/auth";
+import { auth, onAuthStateChanged } from "./firebase/fireAuth";
 
 /* ============================================================================
   Helpers
 ============================================================================ */
 function hasStoredFirebaseUser() {
   try {
-    return Object.keys(localStorage).some((k) => k.startsWith("firebase:authUser:"));
+    return Object.keys(localStorage).some((k) =>
+      k.startsWith("firebase:authUser:"),
+    );
   } catch {
     return false;
   }
@@ -95,45 +98,47 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        {/* ✅ Public routes */}
-        <Route path="/" element={<HomePage user={user} />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/game" element={<GamePage />} />
-        <Route path="/signup" element={<SignUpPage />} />
-        <Route path="/signin" element={<SignInPage />} />
+      <Header />
+        <Routes>
+          {/* ✅ Public routes */}
+          <Route path="/" element={<HomePage user={user} />} />
+          <Route path="/search" element={<SearchPage />} />
+          <Route path="/game" element={<GamePage auth={auth} />} />
+          <Route path="/signup" element={<SignUpPage auth={auth} />} />
+          <Route path="/signin" element={<SignInPage auth={auth}/>} />
 
-        {/* 🔒 Protected routes */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute user={user} authLoading={authLoading}>
-              <UserProfile />
-            </ProtectedRoute>
-          }
-        />
+          {/* 🔒 Protected routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute user={user} authLoading={authLoading}>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/profile/customize"
-          element={
-            <ProtectedRoute user={user} authLoading={authLoading}>
-              <UserProfileCustomizer />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/profile/customize"
+            element={
+              <ProtectedRoute user={user} authLoading={authLoading}>
+                <UserProfileCustomizer />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route
-          path="/library"
-          element={
-            <ProtectedRoute user={user} authLoading={authLoading}>
-              <YourLibrary />
-            </ProtectedRoute>
-          }
-        />
+          <Route
+            path="/library"
+            element={
+              <ProtectedRoute user={user} authLoading={authLoading}>
+                <YourLibrary />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Optional catch-all */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Optional catch-all */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }

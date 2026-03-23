@@ -1,11 +1,7 @@
 import React, { useState } from "react";
 
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-
 import { Link, useNavigate } from "react-router-dom";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth } from "../firebase/firebase";
+import { auth, createUserWithEmailAndPassword, updateProfile} from "../firebase/fireAuth";
 
 export default function SignUpPage(props) {
   const navigate = useNavigate();
@@ -21,11 +17,16 @@ export default function SignUpPage(props) {
 
   const getPasswordIssues = (pwd) => {
     const issues = [];
-    if (pwd.length < 8) issues.push("Password must be at least 8 characters long.");
-    if (!/[A-Z]/.test(pwd)) issues.push("Password must include at least one uppercase letter.");
-    if (!/[0-9]/.test(pwd)) issues.push("Password must include at least one number.");
+    if (pwd.length < 8)
+      issues.push("Password must be at least 8 characters long.");
+    if (!/[A-Z]/.test(pwd))
+      issues.push("Password must include at least one uppercase letter.");
+    if (!/[0-9]/.test(pwd))
+      issues.push("Password must include at least one number.");
     if (!/[!@#$%^&*]/.test(pwd)) {
-      issues.push("Password must include at least one special character (!@#$%^&*).");
+      issues.push(
+        "Password must include at least one special character (!@#$%^&*).",
+      );
     }
     return issues;
   };
@@ -55,7 +56,11 @@ export default function SignUpPage(props) {
     try {
       setLoading(true);
 
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
 
       await updateProfile(userCredential.user, {
         displayName: username,
@@ -90,7 +95,7 @@ export default function SignUpPage(props) {
 
   return (
     <main className="auth-shell">
-      <Header />
+      {/* <Header /> */}
       <section className="auth-card">
         <div className="auth-logo">
           <div className="auth-logo-circle">GD</div>
@@ -202,7 +207,7 @@ export default function SignUpPage(props) {
           Already have an account? <Link to="/signin">Sign in</Link>
         </div>
       </section>
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 }

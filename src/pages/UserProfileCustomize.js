@@ -1,16 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import {
-  doc,
-  setDoc,
-  getDoc,
-  collection,
-  getDocs,          // 🔹 NEW
-} from "firebase/firestore";
-import { auth, db } from "../firebase/firebase";
-
-import Header from "../components/Header";
-import Footer from "../components/Footer";
+import {doc,setDoc,getDoc,collection,getDocs,db} from "../firebase/firestore";
+import { auth } from "../firebase/fireAuth";
 
 import userDefaultProfile from "../assets/images/defaultUser.png";
 import "../styles/userProfileCustomize.css";
@@ -43,7 +34,7 @@ export default function UserProfileCustomizer() {
   const [error, setError] = useState("");
 
   // 🔹 Stats for preview (from library)
-  const [gamesLogged, setGamesLogged] = useState(0);     // 🔹 NEW
+  const [gamesLogged, setGamesLogged] = useState(0); // 🔹 NEW
   const [gamesCompleted, setGamesCompleted] = useState(0); // 🔹 NEW
 
   // 🔹 Load existing profile from Firestore on mount
@@ -76,15 +67,15 @@ export default function UserProfileCustomizer() {
           setUsername(data.username || fallbackUsername);
 
           setSelectedPlatforms(
-            Array.isArray(data.selectedPlatforms) ? data.selectedPlatforms : []
+            Array.isArray(data.selectedPlatforms) ? data.selectedPlatforms : [],
           );
           setSelectedGenres(
-            Array.isArray(data.selectedGenres) ? data.selectedGenres : []
+            Array.isArray(data.selectedGenres) ? data.selectedGenres : [],
           );
           setProfileTags(
             Array.isArray(data.profileTags)
               ? data.profileTags.slice(0, 5) // enforce max 5 on load too
-              : []
+              : [],
           );
 
           // ✅ Restore avatar if saved
@@ -101,9 +92,7 @@ export default function UserProfileCustomizer() {
         const games = librarySnap.docs.map((docSnap) => docSnap.data());
 
         setGamesLogged(games.length);
-        setGamesCompleted(
-          games.filter((g) => g.status === "completed").length
-        );
+        setGamesCompleted(games.filter((g) => g.status === "completed").length);
       } catch (err) {
         console.error("Error loading profile or library stats:", err);
       }
@@ -128,13 +117,13 @@ export default function UserProfileCustomizer() {
     setSelectedPlatforms((prev) =>
       prev.includes(platform)
         ? prev.filter((p) => p !== platform)
-        : [...prev, platform]
+        : [...prev, platform],
     );
   };
 
   const toggleGenre = (genre) => {
     setSelectedGenres((prev) =>
-      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre]
+      prev.includes(genre) ? prev.filter((g) => g !== genre) : [...prev, genre],
     );
   };
 
@@ -345,7 +334,7 @@ export default function UserProfileCustomizer() {
 
   return (
     <section>
-      <Header></Header>
+      {/* <Header></Header> */}
       <div className="profile-settings-shell">
         <header className="profile-settings-header">
           <div className="profile-settings-header-title">
@@ -353,7 +342,9 @@ export default function UserProfileCustomizer() {
           </div>
 
           <div className="profile-settings-header-cta">
-            <Link to="/profile"><button className="btn btn-ghost">Back to profile</button></Link>
+            <Link to="/profile">
+              <button className="btn btn-ghost">Back to profile</button>
+            </Link>
           </div>
         </header>
 
@@ -504,7 +495,8 @@ export default function UserProfileCustomizer() {
                       key={tag}
                       type="button"
                       className={
-                        "chip" + (profileTags.includes(tag) ? " chip--active" : "")
+                        "chip" +
+                        (profileTags.includes(tag) ? " chip--active" : "")
                       }
                       onClick={() => toggleProfileTag(tag)}
                     >
@@ -552,9 +544,7 @@ export default function UserProfileCustomizer() {
                       type="button"
                       className={
                         "chip" +
-                        (selectedGenres.includes(genre)
-                          ? " chip--active"
-                          : "")
+                        (selectedGenres.includes(genre) ? " chip--active" : "")
                       }
                       onClick={() => toggleGenre(genre)}
                     >
@@ -594,7 +584,7 @@ export default function UserProfileCustomizer() {
           </section>
         </div>
       </div>
-      <Footer></Footer>
+      {/* <Footer></Footer> */}
     </section>
   );
 }

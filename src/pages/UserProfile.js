@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { auth, db } from "../firebase/firebase";
-import { doc, getDoc, collection, getDocs } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { auth,  onAuthStateChanged } from "../firebase/fireAuth";
+import { doc, getDoc, collection, getDocs,db, } from "../firebase/firestore";
 
 import "../styles/profile.css";
 
 import userDefaultProfileImage from "../assets/images/defaultUser.png";
 import checkIcon from "../assets/images/check-icon.png";
-
-import Header from "../components/Header";
-import Footer from "../components/Footer";
 
 export default function UserProfile() {
   const [profile, setProfile] = useState(null);
@@ -89,15 +85,11 @@ export default function UserProfile() {
   // 🔹 Stats
   const totalTracked = libraryGames.length;
 
-  const completedGames = libraryGames.filter(
-    (g) => g.status === "completed"
-  );
+  const completedGames = libraryGames.filter((g) => g.status === "completed");
   const completedCount = completedGames.length;
 
   // 🧾 Backlog = everything not completed
-  const backlogGames = libraryGames.filter(
-    (g) => g.status !== "completed"
-  );
+  const backlogGames = libraryGames.filter((g) => g.status !== "completed");
   const backlogCount = backlogGames.length;
 
   // ⭐ Favorites
@@ -110,21 +102,16 @@ export default function UserProfile() {
 
   // Pagination
   const totalCompletedPages =
-    completedCount > 0
-      ? Math.ceil(completedCount / COMPLETED_PER_PAGE)
-      : 1;
+    completedCount > 0 ? Math.ceil(completedCount / COMPLETED_PER_PAGE) : 1;
 
   const safeCompletedPage = Math.min(completedPage, totalCompletedPages);
-  const completedStartIndex =
-    (safeCompletedPage - 1) * COMPLETED_PER_PAGE;
-  const completedEndIndex =
-    completedStartIndex + COMPLETED_PER_PAGE;
+  const completedStartIndex = (safeCompletedPage - 1) * COMPLETED_PER_PAGE;
+  const completedEndIndex = completedStartIndex + COMPLETED_PER_PAGE;
 
   const paginatedCompletedGames = completedGames.slice(
     completedStartIndex,
-    completedEndIndex
+    completedEndIndex,
   );
-
 
   useEffect(() => {
     if (completedPage > totalCompletedPages) {
@@ -135,18 +122,17 @@ export default function UserProfile() {
   if (loading) {
     return (
       <div className="profile-shell">
-        <Header />
+
         <div className="profile profile-loading">
           <p>Loading profile...</p>
         </div>
-        <Footer />
+
       </div>
     );
   }
 
   return (
     <div className="profile-shell">
-      <Header />
 
       <div className="profile">
         <section className="profile-header-card">
@@ -345,9 +331,7 @@ export default function UserProfile() {
               <button
                 className="page-btn"
                 disabled={safeCompletedPage === 1}
-                onClick={() =>
-                  setCompletedPage((p) => Math.max(1, p - 1))
-                }
+                onClick={() => setCompletedPage((p) => Math.max(1, p - 1))}
               >
                 ‹ Prev
               </button>
@@ -360,9 +344,7 @@ export default function UserProfile() {
                 className="page-btn"
                 disabled={safeCompletedPage === totalCompletedPages}
                 onClick={() =>
-                  setCompletedPage((p) =>
-                    Math.min(totalCompletedPages, p + 1)
-                  )
+                  setCompletedPage((p) => Math.min(totalCompletedPages, p + 1))
                 }
               >
                 Next ›
@@ -372,8 +354,6 @@ export default function UserProfile() {
         </section>
       </div>
 
-      <Footer />
     </div>
   );
 }
-

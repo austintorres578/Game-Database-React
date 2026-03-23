@@ -6,25 +6,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-
 import downChevron from "../assets/images/down_chevron.png";
 import plusIcon from "../assets/images/plus-icon.png";
-import loadingIcon from "../assets/images/loading.gif"
+import loadingIcon from "../assets/images/loading.gif";
 
-import { auth, db } from "../firebase/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  doc,
-  setDoc,
-  deleteDoc,
-  updateDoc,
-  arrayUnion,
-} from "firebase/firestore";
+import { db } from "../firebase/firestore";
+import {auth, onAuthStateChanged } from "../firebase/fireAuth";
+import {collection,getDocs,addDoc,doc,setDoc,deleteDoc,updateDoc,arrayUnion,} from "../firebase/firestore";
 
 import "../styles/yourLibrary.css";
 
@@ -176,7 +164,7 @@ export default function YourLibrary() {
     return [...(list || [])].sort((a, b) =>
       String(a || "").localeCompare(String(b || ""), undefined, {
         sensitivity: "base",
-      })
+      }),
     );
   }
 
@@ -185,8 +173,8 @@ export default function YourLibrary() {
       String(a.cleaned || a.raw || "").localeCompare(
         String(b.cleaned || b.raw || ""),
         undefined,
-        { sensitivity: "base" }
-      )
+        { sensitivity: "base" },
+      ),
     );
   }
 
@@ -318,7 +306,7 @@ export default function YourLibrary() {
     try {
       window.localStorage.setItem(
         getLibraryViewStateKey(uid),
-        JSON.stringify(state)
+        JSON.stringify(state),
       );
     } catch {
       // ignore
@@ -500,13 +488,7 @@ export default function YourLibrary() {
   =========================================================================== */
   function getResultId(r) {
     return (
-      r?.rawgId ||
-      r?.id ||
-      r?.gameId ||
-      r?.slug ||
-      r?.name ||
-      r?.title ||
-      null
+      r?.rawgId || r?.id || r?.gameId || r?.slug || r?.name || r?.title || null
     );
   }
 
@@ -588,9 +570,11 @@ export default function YourLibrary() {
       (prev || []).map((g) => {
         if (g.id !== groupId) return g;
         const existing = Array.isArray(g.gameIds) ? g.gameIds.map(String) : [];
-        const merged = Array.from(new Set([...existing, ...gameIds.map(String)]));
+        const merged = Array.from(
+          new Set([...existing, ...gameIds.map(String)]),
+        );
         return { ...g, gameIds: merged };
-      })
+      }),
     );
   }
 
@@ -678,7 +662,7 @@ export default function YourLibrary() {
         const docIdStr = String(resultId);
 
         const existsInLocalLibrary = (libraryGames || []).some(
-          (g) => String(g.id) === docIdStr
+          (g) => String(g.id) === docIdStr,
         );
 
         const targetIsNone = importTargetGroupId === "none";
@@ -690,7 +674,11 @@ export default function YourLibrary() {
           alreadyInTarget =
             existsInLocalLibrary && isGameUngrouped(customFilters, docIdStr);
         } else if (targetGroupId) {
-          alreadyInTarget = isGameInGroup(customFilters, targetGroupId, docIdStr);
+          alreadyInTarget = isGameInGroup(
+            customFilters,
+            targetGroupId,
+            docIdStr,
+          );
         }
 
         if (alreadyInTarget) {
@@ -712,7 +700,13 @@ export default function YourLibrary() {
         }
 
         if (!existsInLocalLibrary) {
-          const gameDocRef = doc(db, "users", authUser.uid, "library", docIdStr);
+          const gameDocRef = doc(
+            db,
+            "users",
+            authUser.uid,
+            "library",
+            docIdStr,
+          );
           const payload = normalizeResultToLibraryDoc(chosen);
 
           // eslint-disable-next-line no-await-in-loop
@@ -724,9 +718,13 @@ export default function YourLibrary() {
 
             const next = [{ id: docIdStr, ...payload }, ...(prev || [])];
             return next.sort((a, b) =>
-              String(a.title || "").localeCompare(String(b.title || ""), undefined, {
-                sensitivity: "base",
-              })
+              String(a.title || "").localeCompare(
+                String(b.title || ""),
+                undefined,
+                {
+                  sensitivity: "base",
+                },
+              ),
             );
           });
 
@@ -833,7 +831,10 @@ export default function YourLibrary() {
       return;
     }
 
-    const { sortedTitles, nextCandidates } = titlesToCandidates(titles, "manual");
+    const { sortedTitles, nextCandidates } = titlesToCandidates(
+      titles,
+      "manual",
+    );
 
     setScanCleanText(sortedTitles.join("\n"));
 
@@ -960,9 +961,8 @@ export default function YourLibrary() {
       const combined = results.filter(Boolean).join("\n\n---\n\n");
       setScanText(combined);
 
-      const { sortedTitles, nextCandidates } = await extractCandidatesWithLLM(
-        combined
-      );
+      const { sortedTitles, nextCandidates } =
+        await extractCandidatesWithLLM(combined);
 
       setScanCleanText(sortedTitles.join("\n"));
       setCandidates(nextCandidates);
@@ -1060,7 +1060,7 @@ export default function YourLibrary() {
         if (!allowAutoRelink) {
           setScanError(
             meData?.error ||
-              "Not linked to Steam in this browser. Click 'Link Steam' to connect your Steam account."
+              "Not linked to Steam in this browser. Click 'Link Steam' to connect your Steam account.",
           );
           return;
         }
@@ -1102,8 +1102,8 @@ export default function YourLibrary() {
       const titles = Array.isArray(gamesData?.titles)
         ? gamesData.titles
         : Array.isArray(gamesData?.games)
-        ? gamesData.games.map((g) => g?.name).filter(Boolean)
-        : [];
+          ? gamesData.games.map((g) => g?.name).filter(Boolean)
+          : [];
 
       setSteamTitles(titles);
 
@@ -1118,7 +1118,10 @@ export default function YourLibrary() {
       setImportSummary({ imported: 0, notFound: 0, skipped: 0 });
       setImportTargetGroupId("none");
 
-      const { sortedTitles, nextCandidates } = titlesToCandidates(titles, "steam");
+      const { sortedTitles, nextCandidates } = titlesToCandidates(
+        titles,
+        "steam",
+      );
 
       setScanCleanText(sortedTitles.join("\n"));
       setCandidates(nextCandidates);
@@ -1219,9 +1222,13 @@ export default function YourLibrary() {
         });
 
         const sortedGamesByName = games.sort((a, b) =>
-          String(a.title || "").localeCompare(String(b.title || ""), undefined, {
-            sensitivity: "base",
-          })
+          String(a.title || "").localeCompare(
+            String(b.title || ""),
+            undefined,
+            {
+              sensitivity: "base",
+            },
+          ),
         );
 
         setStats({ total, completed, backlog, playing });
@@ -1247,10 +1254,14 @@ export default function YourLibrary() {
         userGroups = userGroups.sort((a, b) =>
           String(a.name || "").localeCompare(String(b.name || ""), undefined, {
             sensitivity: "base",
-          })
+          }),
         );
 
-        const fullFilters = [ALL_PLATFORMS_FILTER, UNGROUPED_FILTER, ...userGroups];
+        const fullFilters = [
+          ALL_PLATFORMS_FILTER,
+          UNGROUPED_FILTER,
+          ...userGroups,
+        ];
 
         let initialGroups = ["all-platforms"];
 
@@ -1299,7 +1310,9 @@ export default function YourLibrary() {
 
             if (
               typeof saved.sortBy === "string" &&
-              ["name_asc", "name_desc", "meta_desc", "meta_asc"].includes(saved.sortBy)
+              ["name_asc", "name_desc", "meta_desc", "meta_asc"].includes(
+                saved.sortBy,
+              )
             ) {
               restoredSortBy = saved.sortBy;
             }
@@ -1312,8 +1325,8 @@ export default function YourLibrary() {
             const savedGroups = Array.isArray(savedGroupsRaw)
               ? savedGroupsRaw
               : typeof savedGroupsRaw === "string"
-              ? [savedGroupsRaw]
-              : [];
+                ? [savedGroupsRaw]
+                : [];
 
             if (savedGroups.length > 0) {
               const validIds = savedGroups.filter((id) => {
@@ -1381,7 +1394,7 @@ export default function YourLibrary() {
     safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "ungrouped";
 
   const realSelectedGroupIds = safeActiveGroupIds.filter(
-    (id) => id !== "all-platforms" && id !== "ungrouped"
+    (id) => id !== "all-platforms" && id !== "ungrouped",
   );
 
   let groupFilteredGames = libraryGames;
@@ -1397,11 +1410,11 @@ export default function YourLibrary() {
     });
 
     groupFilteredGames = libraryGames.filter(
-      (game) => !groupedIdSet.has(String(game.id))
+      (game) => !groupedIdSet.has(String(game.id)),
     );
   } else if (realSelectedGroupIds.length > 0) {
     const selectedGroups = customFilters.filter((g) =>
-      realSelectedGroupIds.includes(g.id)
+      realSelectedGroupIds.includes(g.id),
     );
 
     const gameIdSet = new Set();
@@ -1412,7 +1425,7 @@ export default function YourLibrary() {
     });
 
     groupFilteredGames = libraryGames.filter((game) =>
-      gameIdSet.has(String(game.id))
+      gameIdSet.has(String(game.id)),
     );
   }
 
@@ -1425,7 +1438,7 @@ export default function YourLibrary() {
       else if (status === "playing") acc.playing += 1;
       return acc;
     },
-    { total: 0, completed: 0, backlog: 0, playing: 0 }
+    { total: 0, completed: 0, backlog: 0, playing: 0 },
   );
 
   let filteredGames = groupFilteredGames;
@@ -1462,7 +1475,9 @@ export default function YourLibrary() {
   });
 
   const totalPages =
-    sortedGames.length === 0 ? 1 : Math.ceil(sortedGames.length / ITEMS_PER_PAGE);
+    sortedGames.length === 0
+      ? 1
+      : Math.ceil(sortedGames.length / ITEMS_PER_PAGE);
 
   const safeCurrentPage = Math.min(currentPage, totalPages);
   const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
@@ -1486,7 +1501,7 @@ export default function YourLibrary() {
 
   const dropdownPages = Array.from(
     { length: dropdownEndPage - dropdownStartPage + 1 },
-    (_, i) => dropdownStartPage + i
+    (_, i) => dropdownStartPage + i,
   );
 
   // ✅ paginate the sorted list (NOT the unsorted list)
@@ -1494,7 +1509,7 @@ export default function YourLibrary() {
 
   const scanImportedCount = Object.values(candidateImportStatus || {}).reduce(
     (acc, v) => (v?.state === "imported" ? acc + 1 : acc),
-    0
+    0,
   );
 
   const hasGeneratedCandidates = candidates.length > 0;
@@ -1525,25 +1540,37 @@ export default function YourLibrary() {
 
     try {
       if (editingGroupId) {
-        const groupDocRef = doc(db, "users", authUser.uid, "groups", editingGroupId);
+        const groupDocRef = doc(
+          db,
+          "users",
+          authUser.uid,
+          "groups",
+          editingGroupId,
+        );
         await setDoc(groupDocRef, newFilter, { merge: false });
 
         setCustomFilters((prev) => {
           const permanent = prev.filter(
-            (g) => g.id === "all-platforms" || g.id === "ungrouped"
+            (g) => g.id === "all-platforms" || g.id === "ungrouped",
           );
           const rest = prev.filter(
-            (g) => g.id !== "all-platforms" && g.id !== "ungrouped"
+            (g) => g.id !== "all-platforms" && g.id !== "ungrouped",
           );
 
           const updatedRest = rest
             .map((g) =>
-              g.id === editingGroupId ? { id: editingGroupId, ...newFilter } : g
+              g.id === editingGroupId
+                ? { id: editingGroupId, ...newFilter }
+                : g,
             )
             .sort((a, b) =>
-              String(a.name || "").localeCompare(String(b.name || ""), undefined, {
-                sensitivity: "base",
-              })
+              String(a.name || "").localeCompare(
+                String(b.name || ""),
+                undefined,
+                {
+                  sensitivity: "base",
+                },
+              ),
             );
 
           return [...permanent, ...updatedRest];
@@ -1552,7 +1579,7 @@ export default function YourLibrary() {
         setActiveGroups((prev) => {
           const arr = Array.isArray(prev) ? prev : ["all-platforms"];
           const nonPermanent = arr.filter(
-            (id) => id !== "all-platforms" && id !== "ungrouped"
+            (id) => id !== "all-platforms" && id !== "ungrouped",
           );
           const merged = Array.from(new Set([...nonPermanent, editingGroupId]));
           return merged.length > 0 ? merged : ["all-platforms"];
@@ -1565,16 +1592,20 @@ export default function YourLibrary() {
 
         setCustomFilters((prev) => {
           const permanent = prev.filter(
-            (g) => g.id === "all-platforms" || g.id === "ungrouped"
+            (g) => g.id === "all-platforms" || g.id === "ungrouped",
           );
           const rest = prev.filter(
-            (g) => g.id !== "all-platforms" && g.id !== "ungrouped"
+            (g) => g.id !== "all-platforms" && g.id !== "ungrouped",
           );
 
           const updatedRest = [...rest, savedFilter].sort((a, b) =>
-            String(a.name || "").localeCompare(String(b.name || ""), undefined, {
-              sensitivity: "base",
-            })
+            String(a.name || "").localeCompare(
+              String(b.name || ""),
+              undefined,
+              {
+                sensitivity: "base",
+              },
+            ),
           );
 
           return [...permanent, ...updatedRest];
@@ -1609,11 +1640,19 @@ export default function YourLibrary() {
       return;
     }
 
-    const confirmed = window.confirm("Are you sure you want to delete this group?");
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this group?",
+    );
     if (!confirmed) return;
 
     try {
-      const groupDocRef = doc(db, "users", authUser.uid, "groups", editingGroupId);
+      const groupDocRef = doc(
+        db,
+        "users",
+        authUser.uid,
+        "groups",
+        editingGroupId,
+      );
       await deleteDoc(groupDocRef);
 
       setCustomFilters((prev) => prev.filter((g) => g.id !== editingGroupId));
@@ -1623,7 +1662,7 @@ export default function YourLibrary() {
         const remaining = arr.filter((id) => id !== editingGroupId);
 
         const nonPermanent = remaining.filter(
-          (id) => id !== "all-platforms" && id !== "ungrouped"
+          (id) => id !== "all-platforms" && id !== "ungrouped",
         );
         return nonPermanent.length > 0 ? remaining : ["all-platforms"];
       });
@@ -1713,58 +1752,56 @@ export default function YourLibrary() {
   }
 
   function getSortLabel(sortValue) {
-  switch (sortValue) {
-    case "name_desc":
-      return "Name (Z-A)";
-    case "meta_desc":
-      return "Metacritic (High-Low)";
-    case "meta_asc":
-      return "Metacritic (Low-High)";
-    case "name_asc":
-    default:
-      return "Name (A-Z)";
+    switch (sortValue) {
+      case "name_desc":
+        return "Name (Z-A)";
+      case "meta_desc":
+        return "Metacritic (High-Low)";
+      case "meta_asc":
+        return "Metacritic (Low-High)";
+      case "name_asc":
+      default:
+        return "Name (A-Z)";
+    }
   }
-}
 
-function handleSortChange(nextSort) {
-  setSortBy(nextSort);
-  setCurrentPage(1);
-  setIsPageDropdownOpen(false);
-}
-
-function revealSortingDrop(event) {
-  event.stopPropagation();
-
-  const sorting = event.currentTarget.parentNode;
-  const menu = sorting.querySelector("div");
-
-  if (!menu) return;
-
-  menu.classList.toggle("invisible");
-}
-
-function handleSortingOptionClick(nextSort) {
-  handleSortChange(nextSort);
-
-  const sorting = document.querySelector(".sorting");
-  const menu = sorting?.querySelector("div");
-
-  if (menu) {
-    menu.classList.add("invisible");
+  function handleSortChange(nextSort) {
+    setSortBy(nextSort);
+    setCurrentPage(1);
+    setIsPageDropdownOpen(false);
   }
-}
+
+  function revealSortingDrop(event) {
+    event.stopPropagation();
+
+    const sorting = event.currentTarget.parentNode;
+    const menu = sorting.querySelector("div");
+
+    if (!menu) return;
+
+    menu.classList.toggle("invisible");
+  }
+
+  function handleSortingOptionClick(nextSort) {
+    handleSortChange(nextSort);
+
+    const sorting = document.querySelector(".sorting");
+    const menu = sorting?.querySelector("div");
+
+    if (menu) {
+      menu.classList.add("invisible");
+    }
+  }
 
   /* ===========================================================================
     SHARED RENDER: CANDIDATE IMPORT UI
   =========================================================================== */
-  function renderCandidateImportUI(
-    {
-      title = "Game list (A–Z) — editable:",
-      showTextarea = true,
-      showRegenerateButton = true,
-      showCandidatesHeading = true,
-    } = {}
-  ) {
+  function renderCandidateImportUI({
+    title = "Game list (A–Z) — editable:",
+    showTextarea = true,
+    showRegenerateButton = true,
+    showCandidatesHeading = true,
+  } = {}) {
     if (!scanCleanText) return null;
 
     return (
@@ -1806,14 +1843,23 @@ function handleSortingOptionClick(nextSort) {
         {candidates.length > 0 && (
           <div className="candidate-section" style={{ marginTop: "14px" }}>
             {showCandidatesHeading ? (
-              <p className="candidate-section-title" style={{ marginBottom: "8px" }}>
+              <p
+                className="candidate-section-title"
+                style={{ marginBottom: "8px" }}
+              >
                 Candidates (A–Z) — edit + uncheck junk:
-                <span className="candidate-found" style={{ marginLeft: "10px", opacity: 0.9 }}>
+                <span
+                  className="candidate-found"
+                  style={{ marginLeft: "10px", opacity: 0.9 }}
+                >
                   Imported: {scanImportedCount} / {selectedCandidateIds.size}
                 </span>
               </p>
             ) : (
-              <p className="candidate-section-title" style={{ marginBottom: "8px" }}>
+              <p
+                className="candidate-section-title"
+                style={{ marginBottom: "8px" }}
+              >
                 <span className="candidate-found" style={{ opacity: 0.9 }}>
                   Imported: {scanImportedCount} / {selectedCandidateIds.size}
                 </span>
@@ -1830,7 +1876,9 @@ function handleSortingOptionClick(nextSort) {
               }}
               className="group-import-drop"
             >
-              <label style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <label
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
                 <span style={{ opacity: 0.9 }}>Add imports to group:</span>
 
                 <select
@@ -1846,7 +1894,9 @@ function handleSortingOptionClick(nextSort) {
                 >
                   <option value="none">None</option>
                   {customFilters
-                    .filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped")
+                    .filter(
+                      (g) => g.id !== "all-platforms" && g.id !== "ungrouped",
+                    )
                     .map((g) => (
                       <option key={g.id} value={g.id}>
                         {safeText(g.name, "Group")}
@@ -1885,13 +1935,18 @@ function handleSortingOptionClick(nextSort) {
                 className="btn btn-primary candidate-btn candidate-btn-import"
                 type="button"
                 onClick={importSelectedCandidatesDirect}
-                disabled={candidates.length === 0 || selectedCandidateIds.size === 0}
+                disabled={
+                  candidates.length === 0 || selectedCandidateIds.size === 0
+                }
               >
                 Import Selected
               </button>
             </div>
 
-            <div className="candidate-grid scanned-text-grid" style={{ display: "grid", gap: "8px" }}>
+            <div
+              className="candidate-grid scanned-text-grid"
+              style={{ display: "grid", gap: "8px" }}
+            >
               {candidates.map((c) => {
                 const checked = selectedCandidateIds.has(c.id);
                 const state = candidateImportStatus?.[c.id]?.state;
@@ -1937,7 +1992,9 @@ function handleSortingOptionClick(nextSort) {
                         onChange={(e) => {
                           const val = e.target.value;
                           setCandidates((prev) =>
-                            prev.map((x) => (x.id === c.id ? { ...x, cleaned: val } : x))
+                            prev.map((x) =>
+                              x.id === c.id ? { ...x, cleaned: val } : x,
+                            ),
                           );
                         }}
                         style={{
@@ -1952,7 +2009,10 @@ function handleSortingOptionClick(nextSort) {
 
                       {state && (
                         <span
-                          className={["candidate-status", state ? `is-${state}` : ""]
+                          className={[
+                            "candidate-status",
+                            state ? `is-${state}` : "",
+                          ]
                             .filter(Boolean)
                             .join(" ")}
                         >
@@ -1998,7 +2058,10 @@ function handleSortingOptionClick(nextSort) {
                 <p className="not-found-title" style={{ margin: "6px 0" }}>
                   Couldn’t find these — add manually:
                 </p>
-                <ul className="not-found-list" style={{ margin: 0, paddingLeft: "18px" }}>
+                <ul
+                  className="not-found-list"
+                  style={{ margin: 0, paddingLeft: "18px" }}
+                >
                   {notFoundCandidates.map((x) => (
                     <li key={x.id} className="not-found-item">
                       {x.title}
@@ -2018,7 +2081,6 @@ function handleSortingOptionClick(nextSort) {
   =========================================================================== */
   return (
     <main className="library-page">
-      <Header />
 
       <section className="library-header-card">
         <div className="library-header-main">
@@ -2028,8 +2090,9 @@ function handleSortingOptionClick(nextSort) {
           </div>
           <h1>All your games in one place.</h1>
           <p>
-            Track what you’re playing, what you’ve finished, and what’s still living in the backlog.
-            Import your games by text, image, or through steam, and group together in anyway you want!
+            Track what you’re playing, what you’ve finished, and what’s still
+            living in the backlog. Import your games by text, image, or through
+            steam, and group together in anyway you want!
           </p>
 
           <div className="library-header-actions">
@@ -2038,13 +2101,21 @@ function handleSortingOptionClick(nextSort) {
             </Link>
 
             <a href="#filter-settings">
-              <button className="btn btn-ghost" type="button" onClick={openImportPanel}>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={openImportPanel}
+              >
                 Import Games (Images / Steam Sync)
               </button>
             </a>
 
             <a href="#filter-settings">
-              <button className="btn btn-ghost" type="button" onClick={openTextImportPanel}>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                onClick={openTextImportPanel}
+              >
                 Import Games (Game Titles)
               </button>
             </a>
@@ -2054,8 +2125,12 @@ function handleSortingOptionClick(nextSort) {
         <div className="library-header-meta">
           <div className="library-stat total-game-stat">
             <div className="library-stat-label">Total games</div>
-            <div className="library-stat-value">{loadingStats ? "…" : total}</div>
-            <div className="library-stat-sub">{loadingStats ? "Loading…" : `${completed} completed`}</div>
+            <div className="library-stat-value">
+              {loadingStats ? "…" : total}
+            </div>
+            <div className="library-stat-sub">
+              {loadingStats ? "Loading…" : `${completed} completed`}
+            </div>
           </div>
         </div>
       </section>
@@ -2068,7 +2143,9 @@ function handleSortingOptionClick(nextSort) {
               onClick={() => handleStatusFilterChange("all")}
             >
               <span>All</span>
-              <span className="filter-count">{loadingStats ? "…" : groupStats.total}</span>
+              <span className="filter-count">
+                {loadingStats ? "…" : groupStats.total}
+              </span>
             </button>
 
             <button
@@ -2076,7 +2153,9 @@ function handleSortingOptionClick(nextSort) {
               onClick={() => handleStatusFilterChange("backlog")}
             >
               <span>Backlog</span>
-              <span className="filter-count">{loadingStats ? "…" : groupStats.backlog}</span>
+              <span className="filter-count">
+                {loadingStats ? "…" : groupStats.backlog}
+              </span>
             </button>
 
             <button
@@ -2084,7 +2163,9 @@ function handleSortingOptionClick(nextSort) {
               onClick={() => handleStatusFilterChange("completed")}
             >
               <span>Completed</span>
-              <span className="filter-count">{loadingStats ? "…" : groupStats.completed}</span>
+              <span className="filter-count">
+                {loadingStats ? "…" : groupStats.completed}
+              </span>
             </button>
           </div>
 
@@ -2110,7 +2191,11 @@ function handleSortingOptionClick(nextSort) {
 
             {realSelectedGroupIds.length === 1 && (
               <a href="#filter-settings" className="add-to-group-con">
-                <button type="button" className="add-to-group btn btn-primary" onClick={handleHeaderAddToGroup}>
+                <button
+                  type="button"
+                  className="add-to-group btn btn-primary"
+                  onClick={handleHeaderAddToGroup}
+                >
                   Manage Group
                 </button>
               </a>
@@ -2160,7 +2245,8 @@ function handleSortingOptionClick(nextSort) {
       <section className="library-grid">
         {searchTerm.trim() ? (
           <h3 className="search-query-text">
-            Searching for “{searchTerm.trim()}” ({sortedGames.length} result{sortedGames.length === 1 ? "" : "s"})
+            Searching for “{searchTerm.trim()}” ({sortedGames.length} result
+            {sortedGames.length === 1 ? "" : "s"})
           </h3>
         ) : (
           <h3 className="search-query-text"></h3>
@@ -2229,8 +2315,12 @@ function handleSortingOptionClick(nextSort) {
               const primaryGenre = getPrimaryGenreFromGame(game);
 
               const metacriticScore =
-                game.metacritic ?? game.metacriticScore ?? game.metaScore ?? null;
-              const hasScore = metacriticScore !== null && metacriticScore !== undefined;
+                game.metacritic ??
+                game.metacriticScore ??
+                game.metaScore ??
+                null;
+              const hasScore =
+                metacriticScore !== null && metacriticScore !== undefined;
 
               const groupTags = Array.from(
                 new Set(
@@ -2240,12 +2330,14 @@ function handleSortingOptionClick(nextSort) {
                         g.id !== "all-platforms" &&
                         g.id !== "ungrouped" &&
                         Array.isArray(g.gameIds) &&
-                        g.gameIds.some((id) => String(id) === String(game.id))
+                        g.gameIds.some((id) => String(id) === String(game.id)),
                     )
                     .map((g) => safeText(g.name, ""))
-                    .filter(Boolean)
-                )
-              ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+                    .filter(Boolean),
+                ),
+              ).sort((a, b) =>
+                a.localeCompare(b, undefined, { sensitivity: "base" }),
+              );
 
               const gameHash = game.rawgId || game.slug || game.id;
 
@@ -2253,20 +2345,38 @@ function handleSortingOptionClick(nextSort) {
                 <div className="game-wrapper" key={String(game.id)}>
                   <Link className="game-link" to={`/game#${gameHash}`}>
                     <div className="game-card">
-                      <div className="game-img" style={imageUrl ? { backgroundImage: `url("${imageUrl}")` } : {}} />
+                      <div
+                        className="game-img"
+                        style={
+                          imageUrl
+                            ? { backgroundImage: `url("${imageUrl}")` }
+                            : {}
+                        }
+                      />
 
                       <div className="game-info">
-                        <p className="game-title">{safeText(game.title, "Untitled game")}</p>
+                        <p className="game-title">
+                          {safeText(game.title, "Untitled game")}
+                        </p>
                         <div className="game-sub-info">
-                          {primaryGenre && <p className="game-genre">{primaryGenre}</p>}
-                          <p className="game-meta">{hasScore ? `${metacriticScore} Metacritic` : "Unrated"}</p>
+                          {primaryGenre && (
+                            <p className="game-genre">{primaryGenre}</p>
+                          )}
+                          <p className="game-meta">
+                            {hasScore
+                              ? `${metacriticScore} Metacritic`
+                              : "Unrated"}
+                          </p>
                         </div>
                       </div>
 
                       {groupTags.length > 0 && (
                         <div className="game-group-tags">
                           {groupTags.map((name) => (
-                            <span key={`${game.id}-${name}`} className="game-group-tag">
+                            <span
+                              key={`${game.id}-${name}`}
+                              className="game-group-tag"
+                            >
                               {name}
                             </span>
                           ))}
@@ -2276,7 +2386,11 @@ function handleSortingOptionClick(nextSort) {
                   </Link>
 
                   <div className="add-button-con">
-                    <button className="add-button" type="button" onClick={() => handleAddToGroupFromGame(game.id)}>
+                    <button
+                      className="add-button"
+                      type="button"
+                      onClick={() => handleAddToGroupFromGame(game.id)}
+                    >
                       <img src={plusIcon} alt="Add to group" />
                     </button>
                   </div>
@@ -2352,10 +2466,10 @@ function handleSortingOptionClick(nextSort) {
             {panelMode === "import"
               ? "Import Games"
               : panelMode === "text"
-              ? "Text Import"
-              : editingGroupId
-              ? "Edit Group"
-              : "Create Custom Group"}
+                ? "Text Import"
+                : editingGroupId
+                  ? "Edit Group"
+                  : "Create Custom Group"}
           </h2>
 
           {/* ===========================
@@ -2383,15 +2497,28 @@ function handleSortingOptionClick(nextSort) {
                   placeholder={`Example:\nHalo 3\nDead Space\nFinal Fantasy VII`}
                 />
 
-                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "10px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: "10px",
+                    flexWrap: "wrap",
+                    marginTop: "10px",
+                  }}
+                >
                   <button
                     className="btn btn-primary"
                     type="button"
                     onClick={handleRegenerateCandidatesFromTextarea}
                     disabled={!scanCleanText.trim()}
-                    title={!scanCleanText.trim() ? "Paste at least one title first" : ""}
+                    title={
+                      !scanCleanText.trim()
+                        ? "Paste at least one title first"
+                        : ""
+                    }
                   >
-                    {hasGeneratedCandidates ? "Regenerate Game Selection" : "Generate Game Selection"}
+                    {hasGeneratedCandidates
+                      ? "Regenerate Game Selection"
+                      : "Generate Game Selection"}
                   </button>
 
                   <button
@@ -2404,21 +2531,30 @@ function handleSortingOptionClick(nextSort) {
                       setSelectedCandidateIds(new Set());
                       setCandidateImportStatus({});
                       setNotFoundCandidates([]);
-                      setImportSummary({ imported: 0, notFound: 0, skipped: 0 });
+                      setImportSummary({
+                        imported: 0,
+                        notFound: 0,
+                        skipped: 0,
+                      });
                       setImportTargetGroupId("none");
                     }}
                   >
                     Clear
                   </button>
 
-                  <button className="btn btn-ghost" type="button" onClick={openImportPanel}>
+                  <button
+                    className="btn btn-ghost"
+                    type="button"
+                    onClick={openImportPanel}
+                  >
                     Import from Images / Steam
                   </button>
                 </div>
 
                 {!hasGeneratedCandidates ? (
                   <p style={{ opacity: 0.85, marginTop: "10px" }}>
-                    Paste titles above, then click <strong>Generate</strong> to build candidates.
+                    Paste titles above, then click <strong>Generate</strong> to
+                    build candidates.
                   </p>
                 ) : (
                   renderCandidateImportUI({
@@ -2448,7 +2584,10 @@ function handleSortingOptionClick(nextSort) {
               </label>
 
               <div className="game-selection-con">
-                <div className="game-selection-toggle" onClick={toggleGameSelection}>
+                <div
+                  className="game-selection-toggle"
+                  onClick={toggleGameSelection}
+                >
                   <div className="game-selection-count">
                     <p>Game Selection</p>
                     <span>{selectedGroupGameIds.length}</span>
@@ -2461,7 +2600,6 @@ function handleSortingOptionClick(nextSort) {
                   />
                 </div>
                 <div>
-          
                   {/* <input type="checkbox">Remove From Group</input>
                   <input type="checkbox">Remove From Library</input> */}
                 </div>
@@ -2471,7 +2609,9 @@ function handleSortingOptionClick(nextSort) {
                       <p>No games found.</p>
                     ) : (
                       libraryGames.map((game) => {
-                        const checked = selectedGroupGameIds.map(String).includes(String(game.id));
+                        const checked = selectedGroupGameIds
+                          .map(String)
+                          .includes(String(game.id));
 
                         return (
                           <div
@@ -2496,7 +2636,11 @@ function handleSortingOptionClick(nextSort) {
 
               <div className="cfs-actions">
                 {editingGroupId && (
-                  <button type="button" className="btn btn-primary delete-group-btn" onClick={handleDeleteGroup}>
+                  <button
+                    type="button"
+                    className="btn btn-primary delete-group-btn"
+                    onClick={handleDeleteGroup}
+                  >
                     Delete Group
                   </button>
                 )}
@@ -2524,12 +2668,20 @@ function handleSortingOptionClick(nextSort) {
               <div className="image-scan">
                 <p>Import from Image</p>
 
-                <button className="btn btn-primary" type="button" onClick={openScanFilePicker} disabled={scanLoading}>
+                <button
+                  className="btn btn-primary"
+                  type="button"
+                  onClick={openScanFilePicker}
+                  disabled={scanLoading}
+                >
                   {scanLoading ? "Scanning..." : "Upload"}
                 </button>
 
                 {scanPreviewUrls.length > 0 && (
-                  <div className="game-images-con" style={{ marginTop: "10px" }}>
+                  <div
+                    className="game-images-con"
+                    style={{ marginTop: "10px" }}
+                  >
                     {scanPreviewUrls.map((src, idx) => (
                       <div className="game-image" key={`${src}-${idx}`}>
                         <img src={src} alt={`Scan ${idx + 1}`} />
@@ -2546,69 +2698,81 @@ function handleSortingOptionClick(nextSort) {
 
                 {!scanLoading &&
                   scanCleanText &&
-                  renderCandidateImportUI({ title: "Detected games (A–Z) — editable:" })}
+                  renderCandidateImportUI({
+                    title: "Detected games (A–Z) — editable:",
+                  })}
               </div>
 
-              {!scanLoading && scanPreviewUrls.length === 0 && !scanCleanText && (
-                <div className="steam-sync">
-                  <p>Import from Steam Library</p>
+              {!scanLoading &&
+                scanPreviewUrls.length === 0 &&
+                !scanCleanText && (
+                  <div className="steam-sync">
+                    <p>Import from Steam Library</p>
 
-                  {steamCheckLoading || steamLinked === null ? (
-                    <p style={{ opacity: 0.85 }}>Checking Steam link…</p>
-                  ) : steamLinked ? (
-                    <button
-                      className="btn btn-primary"
-                      type="button"
-                      onClick={() => handleSteamSync({ allowAutoRelink: false })}
-                      disabled={!authUser?.uid}
-                      title={!authUser?.uid ? "Sign in first" : ""}
-                    >
-                      Sync Steam Library
-                    </button>
-                  ) : (
-                    <button
-                      className="btn btn-primary"
-                      type="button"
-                      onClick={handleSteamLogin}
-                      disabled={!authUser?.uid}
-                      title={!authUser?.uid ? "Sign in first" : ""}
-                    >
-                      Link Steam For Library Sync
-                    </button>
-                  )}
-
-                  {steamLinked && (
-                    <button
-                      className="btn btn-ghost"
-                      type="button"
-                      style={{ marginTop: "10px" }}
-                      onClick={async () => {
-                        try {
-                          await fetch(`${BACKEND_BASE}/api/logout`, {
-                            method: "POST",
-                            credentials: "include",
-                          });
-                        } catch {
-                          // ignore
-                        } finally {
-                          setSteamLinked(false);
-                          setSteamTitles([]);
-                          setScanError("Steam unlinked in this browser. Link again to sync.");
+                    {steamCheckLoading || steamLinked === null ? (
+                      <p style={{ opacity: 0.85 }}>Checking Steam link…</p>
+                    ) : steamLinked ? (
+                      <button
+                        className="btn btn-primary"
+                        type="button"
+                        onClick={() =>
+                          handleSteamSync({ allowAutoRelink: false })
                         }
-                      }}
-                    >
-                      Unlink Steam
-                    </button>
-                  )}
+                        disabled={!authUser?.uid}
+                        title={!authUser?.uid ? "Sign in first" : ""}
+                      >
+                        Sync Steam Library
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-primary"
+                        type="button"
+                        onClick={handleSteamLogin}
+                        disabled={!authUser?.uid}
+                        title={!authUser?.uid ? "Sign in first" : ""}
+                      >
+                        Link Steam For Library Sync
+                      </button>
+                    )}
 
-                  <div style={{ marginTop: "12px" }}>
-                    <p>Import Games By Title</p>
-                    <button className="btn btn-ghost" type="button" onClick={openTextImportPanel}>
-                      Enter Games Manually
-                    </button>
+                    {steamLinked && (
+                      <button
+                        className="btn btn-ghost"
+                        type="button"
+                        style={{ marginTop: "10px" }}
+                        onClick={async () => {
+                          try {
+                            await fetch(`${BACKEND_BASE}/api/logout`, {
+                              method: "POST",
+                              credentials: "include",
+                            });
+                          } catch {
+                            // ignore
+                          } finally {
+                            setSteamLinked(false);
+                            setSteamTitles([]);
+                            setScanError(
+                              "Steam unlinked in this browser. Link again to sync.",
+                            );
+                          }
+                        }}
+                      >
+                        Unlink Steam
+                      </button>
+                    )}
+
+                    <div style={{ marginTop: "12px" }}>
+                      <p>Import Games By Title</p>
+                      <button
+                        className="btn btn-ghost"
+                        type="button"
+                        onClick={openTextImportPanel}
+                      >
+                        Enter Games Manually
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
             </div>
           )}
 
@@ -2618,7 +2782,6 @@ function handleSortingOptionClick(nextSort) {
         </div>
       </section>
 
-      <Footer />
     </main>
   );
 }
