@@ -1,8 +1,6 @@
 // GamePage.jsx
-import React, { useState, useEffect, useRef } from "react";
-import parse from "html-react-parser";
+import { useState, useEffect, useRef } from "react";
 import loadingCircle from "../assets/images/loading.gif";
-
 
 import defaultBackground from "../assets/images/background.png";
 import "../styles/gamePage.css";
@@ -10,8 +8,6 @@ import "../styles/gamePage.css";
 import { useNavigate } from "react-router-dom";
 
 // 🔐 Firebase imports
-import { db } from "../firebase/firestore";
-
 import {
   doc,
   setDoc,
@@ -21,6 +17,7 @@ import {
   getDocs,
   updateDoc,
   arrayRemove,
+  db,
 } from "../firebase/firestore";
 
 // ✅ Backend base (Render in prod, override for local if you want)
@@ -28,7 +25,7 @@ const BACKEND_BASE =
   process.env.REACT_APP_BACKEND_BASE ||
   "https://game-database-backend.onrender.com";
 
-export default function GamePage({auth}) {
+export default function GamePage({ auth }) {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
@@ -69,6 +66,9 @@ export default function GamePage({auth}) {
   const [groupDropdownOpen, setGroupDropdownOpen] = useState(false);
   const [savingGroupId, setSavingGroupId] = useState(null);
 
+  // cover loaded state
+  const [coverLoaded, setCoverLoaded] = useState(false);
+
   // ref for the fullscreen container so we can scroll to it
   const fullscreenRef = useRef(null);
 
@@ -80,7 +80,6 @@ export default function GamePage({auth}) {
 
   const addressBarLink = window.location.href;
   const key = "?key=99cd09f6c33b42b5a24a9b447ee04a81";
-
 
   function requireAuth(actionLabel) {
     const user = auth.currentUser;
@@ -121,6 +120,12 @@ export default function GamePage({auth}) {
       return "Ubisoft Store";
     if (u.includes("battle.net")) return "Battle.net";
 
+    // ✅ mobile storefronts
+    if (u.includes("apps.apple.com")) return "App Store";
+    if (u.includes("play.google.com")) return "Google Play";
+    if (u.includes("galaxystore.samsung.com")) return "Galaxy Store";
+    if (u.includes("amazon.com/appstore")) return "Amazon Appstore";
+
     // Fallback: use hostname
     try {
       const host = new URL(url).hostname.replace(/^www\./, "");
@@ -157,6 +162,10 @@ export default function GamePage({auth}) {
       EA: 10,
       "Ubisoft Store": 11,
       "Battle.net": 12,
+      "App Store": 13,
+      "Google Play": 14,
+      "Galaxy Store": 15,
+      "Amazon Appstore": 16,
     };
 
     return deduped.sort((a, b) => {
@@ -178,6 +187,66 @@ export default function GamePage({auth}) {
         seen.add(u);
         return true;
       });
+  }
+
+  function getStoreLabel(item) {
+    if (item?.storeName) return item.storeName;
+
+    return (
+      item?.shop?.name ||
+      item?.shopName ||
+      item?.shop ||
+      item?.store ||
+      item?.name ||
+      item?.title ||
+      "Store"
+    );
+  }
+
+  // ✅ return the full span element only when a price exists
+  function renderStorePrice(item) {
+    const price = Number(item?.price);
+
+    if (Number.isFinite(price)) {
+      return <span className="store-pill-price">${price.toFixed(2)}</span>;
+    }
+
+    return null;
+  }
+
+  // ✅ sort priced stores low -> high, then put stores with no price at the end
+  function sortStoresByPrice(list) {
+    return [...(Array.isArray(list) ? list : [])].sort((a, b) => {
+      const aPrice = Number(a?.price);
+      const bPrice = Number(b?.price);
+
+      const aHasPrice = Number.isFinite(aPrice);
+      const bHasPrice = Number.isFinite(bPrice);
+
+      if (aHasPrice && bHasPrice) {
+        return aPrice - bPrice;
+      }
+
+      if (aHasPrice && !bHasPrice) return -1;
+      if (!aHasPrice && bHasPrice) return 1;
+
+      return String(getStoreLabel(a)).localeCompare(String(getStoreLabel(b)));
+    });
+  }
+
+  // ✅ remove repeat storefront buttons after combining ITAD + RAWG
+  // Prefer the first result encountered, which means ITAD wins over RAWG.
+  function dedupeCombinedStores(list) {
+    const seenLabels = new Set();
+
+    return (Array.isArray(list) ? list : []).filter((item) => {
+      const label = String(getStoreLabel(item)).trim().toLowerCase();
+      const normalizedLabel = label || "store";
+
+      if (seenLabels.has(normalizedLabel)) return false;
+      seenLabels.add(normalizedLabel);
+      return true;
+    });
   }
 
   // ✅ remove a gameId from ALL groups when deleting from library
@@ -339,7 +408,7 @@ export default function GamePage({auth}) {
                 ...x,
                 url: x?.url || x?.link || x?.href || null,
               }))
-              .filter((x) => !!x.url)
+              .filter((x) => !!x.url),
           );
 
           setItadStores(rawOffers);
@@ -465,12 +534,14 @@ export default function GamePage({auth}) {
             id: docSnap.id,
             name: data.name || "Untitled Group",
             pinned: data.pinned ?? true,
-            gameIds: Array.isArray(data.gameIds) ? data.gameIds.map(String) : [],
+            gameIds: Array.isArray(data.gameIds)
+              ? data.gameIds.map(String)
+              : [],
           };
         });
 
         groups.sort((a, b) =>
-          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
         );
         setUserGroups(groups);
       } catch (err) {
@@ -539,7 +610,7 @@ export default function GamePage({auth}) {
             gameIds: Array.isArray(g.gameIds)
               ? g.gameIds.filter((id) => String(id) !== String(docId))
               : [],
-          }))
+          })),
         );
       } else {
         await setDoc(
@@ -549,7 +620,7 @@ export default function GamePage({auth}) {
             status: "backlog",
             isFavorite: false,
           },
-          { merge: true }
+          { merge: true },
         );
         setIsInLibrary(true);
       }
@@ -582,7 +653,7 @@ export default function GamePage({auth}) {
         await setDoc(
           docRef,
           { ...buildBaseGamePayload(), status: "backlog" },
-          { merge: true }
+          { merge: true },
         );
         setIsCompleted(false);
         setIsInLibrary(true);
@@ -590,7 +661,7 @@ export default function GamePage({auth}) {
         await setDoc(
           docRef,
           { ...buildBaseGamePayload(), status: "completed" },
-          { merge: true }
+          { merge: true },
         );
         setIsCompleted(true);
         setIsInLibrary(true);
@@ -598,7 +669,7 @@ export default function GamePage({auth}) {
     } catch (error) {
       console.error("Error updating completed status:", error);
       alert(
-        "There was a problem updating your completed games. Please try again."
+        "There was a problem updating your completed games. Please try again.",
       );
     } finally {
       setSavingCompleted(false);
@@ -629,7 +700,7 @@ export default function GamePage({auth}) {
           isFavorite: !isFavorite,
           status: isCompleted ? "completed" : "backlog",
         },
-        { merge: true }
+        { merge: true },
       );
 
       setIsFavorite(!isFavorite);
@@ -665,7 +736,7 @@ export default function GamePage({auth}) {
           status: isCompleted ? "completed" : "backlog",
           isFavorite: !!isFavorite,
         },
-        { merge: true }
+        { merge: true },
       );
       setIsInLibrary(true);
 
@@ -698,8 +769,8 @@ export default function GamePage({auth}) {
                   ...g,
                   gameIds: (g.gameIds || []).filter((x) => String(x) !== idStr),
                 }
-              : g
-          )
+              : g,
+          ),
         );
       } else {
         // ✅ add to group (merge without duplicates)
@@ -708,7 +779,9 @@ export default function GamePage({auth}) {
 
         // Optimistic UI update
         setUserGroups((prev) =>
-          prev.map((g) => (g.id === groupId ? { ...g, gameIds: updatedIds } : g))
+          prev.map((g) =>
+            g.id === groupId ? { ...g, gameIds: updatedIds } : g,
+          ),
         );
       }
     } catch (err) {
@@ -735,14 +808,14 @@ export default function GamePage({auth}) {
     if (!gameScreenshots.length || activeScreenshotIndex === null) return;
     setActiveScreenshotIndex(
       (prevIndex) =>
-        (prevIndex - 1 + gameScreenshots.length) % gameScreenshots.length
+        (prevIndex - 1 + gameScreenshots.length) % gameScreenshots.length,
     );
   }
 
   function showNextScreenshot() {
     if (!gameScreenshots.length || activeScreenshotIndex === null) return;
     setActiveScreenshotIndex(
-      (prevIndex) => (prevIndex + 1) % gameScreenshots.length
+      (prevIndex) => (prevIndex + 1) % gameScreenshots.length,
     );
   }
 
@@ -796,10 +869,42 @@ export default function GamePage({auth}) {
     setIsDragging(false);
   }
 
+  const heroCoverUrl = gameData
+    ? itadCoverUrl
+      ? itadCoverUrl
+      : !itadChecked
+        ? defaultBackground
+        : gameData.background_image || defaultBackground
+    : defaultBackground;
+
+  useEffect(() => {
+    if (!gameData) {
+      setCoverLoaded(false);
+      return;
+    }
+
+    if (!heroCoverUrl || heroCoverUrl === defaultBackground) {
+      setCoverLoaded(true);
+      return;
+    }
+
+    setCoverLoaded(false);
+
+    const img = new Image();
+    img.src = heroCoverUrl;
+
+    img.onload = () => {
+      setCoverLoaded(true);
+    };
+
+    img.onerror = () => {
+      setCoverLoaded(true);
+    };
+  }, [gameData, heroCoverUrl]);
+
   if (!gameData) {
     return (
       <div className="game-page-shell">
-
         <div className="game-page-container loading-state">
           <img src={loadingCircle} alt="Loading..." />
           <p>Loading Game...</p>
@@ -807,13 +912,6 @@ export default function GamePage({auth}) {
       </div>
     );
   }
-
-  // ✅ Final hero cover URL (prevents RAWG flash while ITAD is pending)
-  const heroCoverUrl = itadCoverUrl
-    ? itadCoverUrl
-    : !itadChecked
-    ? defaultBackground
-    : gameData.background_image || defaultBackground;
 
   // Normalize genres/platforms for rendering (avoids rendering objects)
   const genreNames = Array.isArray(gameData?.genres)
@@ -825,39 +923,26 @@ export default function GamePage({auth}) {
   const platformNames = Array.isArray(gameData?.platforms)
     ? gameData.platforms
         .map((p) =>
-          typeof p === "string" ? p : p?.platform?.name || p?.name || null
+          typeof p === "string" ? p : p?.platform?.name || p?.name || null,
         )
         .filter(Boolean)
     : [];
 
   // ✅ combine store lists (ITAD offers first, RAWG normalized after)
   const storesChecked = rawgStoresChecked && itadStoresChecked;
-  const combinedStores = [
-    ...(Array.isArray(itadStores) ? itadStores : []),
-    ...(Array.isArray(rawgStores) ? rawgStores : []),
-  ];
-
-  function getStoreLabel(item) {
-    // RAWG
-    if (item?.storeName) return item.storeName;
-
-    // ITAD offers: most common is item.shop.name
-    return (
-      item?.shop?.name ||
-      item?.shopName ||
-      item?.shop ||
-      item?.store ||
-      item?.name ||
-      item?.title ||
-      "Store"
-    );
-  }
+  const combinedStores = sortStoresByPrice(
+    dedupeCombinedStores([
+      ...(Array.isArray(itadStores) ? itadStores : []),
+      ...(Array.isArray(rawgStores) ? rawgStores : []),
+    ]),
+  );
 
   // ✅ Helper: pill buttons for store links (ITAD + RAWG)
   function renderStorePills() {
     if (storesChecked && combinedStores.length === 0) {
       return <p>No store links found.</p>;
     }
+
     if (!storesChecked || !combinedStores.length) {
       return <p>Loading store links…</p>;
     }
@@ -871,16 +956,18 @@ export default function GamePage({auth}) {
           if (!url) return null;
 
           return (
-            <a
-              key={`${label}-${idx}-${url}`}
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="store-pill"
-              title={label}
-            >
-              <span className="store-pill__name">{label}</span>
-            </a>
+            <div key={`${label}-${idx}-${url}`} className="store-pill-card">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="store-pill"
+                title={label}
+              >
+                <span className="store-pill__name">{label}</span>
+                {renderStorePrice(s)}
+              </a>
+            </div>
           );
         })}
       </div>
@@ -889,12 +976,11 @@ export default function GamePage({auth}) {
 
   return (
     <div className="game-page-shell">
-
       <div className="game-page-container">
         {/* HERO SECTION */}
         <section className="game-hero">
           <div className="game-cover-wrapper">
-            <div className="game-cover">
+            <div className={`game-cover${coverLoaded ? " loaded" : ""}`}>
               <div
                 className="game-cover-img"
                 style={{ backgroundImage: `url(${heroCoverUrl})` }}
@@ -902,8 +988,8 @@ export default function GamePage({auth}) {
                   itadCoverUrl
                     ? "Cover source: IsThereAnyDeal"
                     : itadChecked && gameData.background_image
-                    ? "Cover source: RAWG"
-                    : "Cover source: placeholder"
+                      ? "Cover source: RAWG"
+                      : "Cover source: placeholder"
                 }
               ></div>
             </div>
@@ -972,8 +1058,8 @@ export default function GamePage({auth}) {
                 {savingLibrary
                   ? "Updating..."
                   : isInLibrary
-                  ? "Remove from Library"
-                  : "Add to Library"}
+                    ? "Remove from Library"
+                    : "Add to Library"}
               </button>
 
               {/* Completed toggle */}
@@ -988,8 +1074,8 @@ export default function GamePage({auth}) {
                 {savingCompleted
                   ? "Updating..."
                   : isCompleted
-                  ? "Unmark Completed"
-                  : "Mark as Completed"}
+                    ? "Unmark Completed"
+                    : "Mark as Completed"}
               </button>
 
               {/* Favorite toggle */}
@@ -1004,15 +1090,16 @@ export default function GamePage({auth}) {
                 {savingFavorite
                   ? "Updating..."
                   : isFavorite
-                  ? "Unfavorite game"
-                  : "Favorite game"}
+                    ? "Unfavorite game"
+                    : "Favorite game"}
               </button>
 
               {/* Group dropdown */}
               {auth.currentUser && userGroups.length > 0 && (
                 <div
                   className={
-                    "dropdown group-dropdown" + (groupDropdownOpen ? " open" : "")
+                    "dropdown group-dropdown" +
+                    (groupDropdownOpen ? " open" : "")
                   }
                 >
                   <button
@@ -1029,7 +1116,7 @@ export default function GamePage({auth}) {
                         const libraryDocId = getLibraryDocId(gameData.id);
                         const inGroup = Array.isArray(group.gameIds)
                           ? group.gameIds.some(
-                              (id) => String(id) === String(libraryDocId)
+                              (id) => String(id) === String(libraryDocId),
                             )
                           : false;
 
@@ -1057,8 +1144,8 @@ export default function GamePage({auth}) {
                               {isBusy
                                 ? "Updating..."
                                 : inGroup
-                                ? "✓ In group (click to remove)"
-                                : "＋ Add"}
+                                  ? "✓ In group (click to remove)"
+                                  : "＋ Add"}
                             </span>
                           </button>
                         );
@@ -1081,9 +1168,9 @@ export default function GamePage({auth}) {
             <div className="digital-stores">
               <h3 style={{ marginTop: 16 }}>Digital Stores</h3>
               <p className="digital-store-dis">
-                Store links come from IsThereAnyDeal (when available) and RAWG as
-                a fallback, and may be incomplete. This game may be available on
-                other stores/platforms not listed here.
+                Store links come from IsThereAnyDeal (when available) and RAWG
+                as a fallback, and may be incomplete. This game may be available
+                on other stores/platforms not listed here.
               </p>
               {renderStorePills()}
             </div>
@@ -1206,7 +1293,6 @@ export default function GamePage({auth}) {
           </div>
         </div>
       )}
-
     </div>
   );
 }

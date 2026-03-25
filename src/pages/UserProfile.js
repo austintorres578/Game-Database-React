@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { auth,  onAuthStateChanged } from "../firebase/fireAuth";
-import { doc, getDoc, collection, getDocs,db, } from "../firebase/firestore";
+import { loadProfileUserData } from "../services/profile/loadUserData";
 
 import "../styles/profile.css";
 
@@ -19,62 +18,25 @@ export default function UserProfile() {
 
   // 🔹 Pagination for completed games
   const [completedPage, setCompletedPage] = useState(1);
+
   const COMPLETED_PER_PAGE = 12;
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setAuthUser(user);
-
-      if (!user) {
-        setProfile(null);
-        setLibraryGames([]);
-        setLoading(false);
-        return;
-      }
-
-      try {
-        // Load profile doc
-        const ref = doc(db, "users", user.uid);
-        const snap = await getDoc(ref);
-
-        if (snap.exists()) {
-          setProfile(snap.data());
-        } else {
-          setProfile(null);
-        }
-
-        // Load user's library
-        const libraryRef = collection(db, "users", user.uid, "library");
-        const librarySnap = await getDocs(libraryRef);
-
-        const games = librarySnap.docs.map((docSnap) => ({
-          id: docSnap.id,
-          ...docSnap.data(),
-        }));
-
-        setLibraryGames(games);
-      } catch (err) {
-        console.error("Error loading profile or library:", err);
-      } finally {
-        setLoading(false);
-      }
+    const prepareProfileData = loadProfileUserData((data) => {
+      setAuthUser(data.user);
+      setProfile(data.profile);
+      setLibraryGames(data.gameLibrary);
+      setLoading(data.loading);
     });
 
-    return () => unsubscribe();
+    return () => prepareProfileData();
   }, []);
 
   // Derived values
-  const displayName =
-    profile?.displayName || authUser?.displayName || "NewPlayer";
-
+  const displayName = profile?.displayName || authUser?.displayName || "NewPlayer";
   const username = profile?.username || authUser?.displayName || "newuser";
-
-  const shortAboutMe =
-    profile?.shortAboutMe || "just a new gamer starting my gaming journey";
-
-  const aboutMe =
-    profile?.aboutMe ||
-    "Hey there! I just joined and I'm excited to start tracking the games I love.";
+  const shortAboutMe = profile?.shortAboutMe || "just a new gamer starting my gaming journey";
+  const aboutMe = profile?.aboutMe || "Hey there! I just joined and I'm excited to start tracking the games I love.";
 
   const selectedPlatforms = profile?.selectedPlatforms || [];
   const selectedGenres = profile?.selectedGenres || [];
@@ -84,7 +46,6 @@ export default function UserProfile() {
 
   // 🔹 Stats
   const totalTracked = libraryGames.length;
-
   const completedGames = libraryGames.filter((g) => g.status === "completed");
   const completedCount = completedGames.length;
 
@@ -95,14 +56,15 @@ export default function UserProfile() {
   // ⭐ Favorites
   const favoriteGames = libraryGames.filter((g) => g.isFavorite);
 
-  const getPrimaryGenre = (game) =>
-    Array.isArray(game.genres) && game.genres.length > 0
+  const getPrimaryGenre = (game) => {
+    return Array.isArray(game.genres) && game.genres.length > 0
       ? game.genres[0]
       : "Unknown genre";
+  };
 
   // Pagination
   const totalCompletedPages =
-    completedCount > 0 ? Math.ceil(completedCount / COMPLETED_PER_PAGE) : 1;
+  completedCount > 0 ? Math.ceil(completedCount / COMPLETED_PER_PAGE) : 1;
 
   const safeCompletedPage = Math.min(completedPage, totalCompletedPages);
   const completedStartIndex = (safeCompletedPage - 1) * COMPLETED_PER_PAGE;
@@ -113,6 +75,7 @@ export default function UserProfile() {
     completedEndIndex,
   );
 
+
   useEffect(() => {
     if (completedPage > totalCompletedPages) {
       setCompletedPage(1);
@@ -122,18 +85,15 @@ export default function UserProfile() {
   if (loading) {
     return (
       <div className="profile-shell">
-
         <div className="profile profile-loading">
           <p>Loading profile...</p>
         </div>
-
       </div>
     );
   }
 
   return (
     <div className="profile-shell">
-
       <div className="profile">
         <section className="profile-header-card">
           <div className="profile-main">
@@ -353,7 +313,6 @@ export default function UserProfile() {
           )}
         </section>
       </div>
-
     </div>
   );
 }

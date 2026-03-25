@@ -28,11 +28,11 @@ body {
 .home-hero {
   padding-top: 100px;
   position: relative;
-  min-height: 70vh;
+  min-height: 600px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4rem 1.5rem 5rem;
+  padding: 150px 20px 60px 20px;
   background: url('https://via.placeholder.com/1600x900') center/cover no-repeat;
 }
 
