@@ -158,6 +158,7 @@ export default function YourLibrary() {
   // null = unknown (still checking), true/false = known
   const [steamLinked, setSteamLinked] = useState(null);
   const [steamCheckLoading, setSteamCheckLoading] = useState(false);
+  const [steamUnlinking, setSteamUnlinking] = useState(false);
 
   // ✅ Restore library search bar + functionality
   const [searchTerm, setSearchTerm] = useState("");
@@ -2325,8 +2326,10 @@ export default function YourLibrary() {
                   <div className="steam-sync">
                     <p>Import from Steam Library</p>
 
-                    {steamCheckLoading || steamLinked === null ? (
-                      <p style={{ opacity: 0.85 }}>Checking Steam link…</p>
+                    {steamCheckLoading || steamLinked === null || steamUnlinking ? (
+                      <p style={{ opacity: 0.85 }}>
+                        {steamUnlinking ? "Unlinking Steam…" : "Checking Steam link…"}
+                      </p>
                     ) : steamLinked ? (
                       <button
                         className="btn btn-primary"
@@ -2357,11 +2360,14 @@ export default function YourLibrary() {
                         type="button"
                         style={{ marginTop: "10px" }}
                         onClick={async () => {
+                          setSteamUnlinking(true);
                           try {
                             await logoutSteamSession();
                           } catch {
                             // ignore
                           } finally {
+                            await new Promise((resolve) => setTimeout(resolve, 3000));
+                            setSteamUnlinking(false);
                             setSteamLinked(false);
                             setSteamTitles([]);
                             setScanError(
