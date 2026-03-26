@@ -119,7 +119,7 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  content: "POOP";
+  content: "";
   z-index: 20;
   background-image: url("../assets/images/loading.gif");
   height: 50px;
@@ -638,7 +638,7 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   height: fit-content;
-  width: 95%;
+  width: fit-content;
   border: solid 1px red;
   background: radial-gradient(
     circle at top left,
@@ -655,7 +655,7 @@ body {
 
 .full-screenshot img {
   width: 100%;
-  height: 95%;
+  height: auto;
   object-fit: contain;
 }
 
@@ -684,16 +684,15 @@ body {
 }
 
 .screenshot-buttons {
-  /* position: absolute;
-  top: 92%;
-  left: 50%;
-  transform: translate(-50%, -50%); */
   height: 5%;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  /* padding: 10px 35px 0px 35px; */
+    width: 125%;
+    align-items: center;
+    justify-content: space-between;
+    position: absolute;
+    display: flex;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 .screenshot-buttons button {
@@ -706,7 +705,6 @@ body {
   font-size: 12px;
   text-decoration: none;
   font-weight: bold;
-  margin: 12px 12px 12px 0px;
   transition: 0.25s;
   cursor: pointer;
 }

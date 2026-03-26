@@ -1,6 +1,6 @@
 // Utility functions for Steam authentication and URL handling.
 
-const BACKEND_BASE = "https://game-database-backend.onrender.com";
+import { BACKEND_BASE } from "../../constants/apiConfig";
 
 /**
  * Builds the Steam OAuth URL that redirects the user through the backend

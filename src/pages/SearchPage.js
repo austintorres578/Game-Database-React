@@ -3,11 +3,15 @@ import { useLocation } from "react-router-dom";
 import loadingCircle from "../assets/images/loading.gif";
 
 import Games from "../components/Games";
+import FilterDropdown from "../components/searchPage/FilterDropdown";
+import NoResultsMessage from "../components/searchPage/NoResultsMessage";
+import SearchPagination from "../components/searchPage/SearchPagination";
 
 import { buildLink } from "../utils/searchPage/buildLink";
 import { scrollToTop } from "../utils/searchPage/scrollHelpers";
 import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
 import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags } from "../services/searchPage/rawgService";
+import { useClickOutside } from "../hooks/searchPage/useClickOutside";
 
 import "../styles/gameSearch.css";
 
@@ -149,15 +153,7 @@ export default function SearchPage({ user }) {
   }, []);
 
   // close page dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsPageDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(dropdownRef, () => setIsPageDropdownOpen(false));
 
   // On mount: if there's a saved search, restore it and re-run it
   useEffect(() => {
@@ -539,66 +535,37 @@ export default function SearchPage({ user }) {
           </div>
 
           {/* PLATFORMS */}
-          <div className="platform-game-toggle multi-toggle">
-            <div className={`toggle${selectedPlatforms.length > 0 ? " has-value" : ""}`} onClick={revealSearchDropdown}>
-              <p className="toggle-selected">{platformSummary}</p>
-              <span>▾</span>
-            </div>
-            <div className="filters platform-filter">
-              {platformFilters.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={
-                    "filter-btn" + (isPlatformActive(p, selectedPlatforms) ? " active" : "")
-                  }
-                  onClick={() => handlePlatformClick(p)}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            summary={platformSummary}
+            hasValue={selectedPlatforms.length > 0}
+            filters={platformFilters}
+            isActive={(p) => isPlatformActive(p, selectedPlatforms)}
+            onItemClick={handlePlatformClick}
+            filterClassName="platform-filter"
+            onToggle={revealSearchDropdown}
+          />
 
           {/* GENRES */}
-          <div className="platform-game-toggle multi-toggle">
-            <div className={`toggle${selectedGenres.length > 0 ? " has-value" : ""}`} onClick={revealSearchDropdown}>
-              <p className="toggle-selected">{genreSummary}</p>
-              <span>▾</span>
-            </div>
-            <div className="filters genre-filter">
-              {genreFilters.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  className={"filter-btn" + (isGenreActive(g, selectedGenres) ? " active" : "")}
-                  onClick={() => handleGenreClick(g)}
-                >
-                  {g.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            summary={genreSummary}
+            hasValue={selectedGenres.length > 0}
+            filters={genreFilters}
+            isActive={(g) => isGenreActive(g, selectedGenres)}
+            onItemClick={handleGenreClick}
+            filterClassName="genre-filter"
+            onToggle={revealSearchDropdown}
+          />
 
-          {/* TAGS 🔹 NEW */}
-          <div className="platform-game-toggle multi-toggle">
-            <div className={`toggle${selectedTags.length > 0 ? " has-value" : ""}`} onClick={revealSearchDropdown}>
-              <p className="toggle-selected">{tagSummary}</p>
-              <span>▾</span>
-            </div>
-            <div className="filters tag-filter">
-              {tagFilters.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={"filter-btn" + (isTagActive(t, selectedTags) ? " active" : "")}
-                  onClick={() => handleTagClick(t)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* TAGS */}
+          <FilterDropdown
+            summary={tagSummary}
+            hasValue={selectedTags.length > 0}
+            filters={tagFilters}
+            isActive={(t) => isTagActive(t, selectedTags)}
+            onItemClick={handleTagClick}
+            filterClassName="tag-filter"
+            onToggle={revealSearchDropdown}
+          />
 
           <button
             type="button"
@@ -618,66 +585,21 @@ export default function SearchPage({ user }) {
 
         {hasResults && <div className="game-grid">{games}</div>}
 
-        {noResults && (
-          <div className="no-results-message">
-            <h2>No games found</h2>
-            <p>
-              We couldn&apos;t find any games matching your search and filters.
-              Try a different title, removing some filters, or resetting the
-              search.
-            </p>
-          </div>
-        )}
+        {noResults && <NoResultsMessage />}
 
         {gatheredData[0].loaded && totalPages > 1 && hasResults && (
-          <div className="pagination">
-            <button
-              className="page-btn"
-              onClick={prevPage}
-              disabled={pageNumber <= 1}
-            >
-              ‹ Prev
-            </button>
-
-            <div
-              className={"dropdown" + (isPageDropdownOpen ? " open" : "")}
-              ref={dropdownRef}
-            >
-              <button
-                className="dropdown-trigger"
-                type="button"
-                onClick={() => setIsPageDropdownOpen((v) => !v)}
-              >
-                Page {pageNumber} of {totalPages} ▾
-              </button>
-
-              {isPageDropdownOpen && (
-                <div className="dropdown-menu">
-                  {pageOptions.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={
-                        "dropdown-item" +
-                        (n === pageNumber ? " current-page" : "")
-                      }
-                      onClick={() => goToPage(n)}
-                    >
-                      Page {n}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button
-              className="page-btn"
-              onClick={nextPage}
-              disabled={pageNumber >= totalPages}
-            >
-              Next ›
-            </button>
-          </div>
+          <SearchPagination
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            pageOptions={pageOptions}
+            isPageDropdownOpen={isPageDropdownOpen}
+            setIsPageDropdownOpen={setIsPageDropdownOpen}
+            dropdownRef={dropdownRef}
+            loading={loading}
+            onPrevPage={prevPage}
+            onNextPage={nextPage}
+            onGoToPage={goToPage}
+          />
         )}
       </div>
 

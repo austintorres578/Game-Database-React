@@ -1,6 +1,6 @@
 // Backend API services for Steam authentication and library sync.
 
-const BACKEND_BASE = "https://game-database-backend.onrender.com";
+import { BACKEND_BASE } from "../../constants/apiConfig";
 
 /**
  * Checks whether the current browser session is linked to a Steam account.

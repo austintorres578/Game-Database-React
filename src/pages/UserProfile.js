@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 import { loadProfileUserData } from "../services/profile/loadUserData";
-import { getPrimaryGenre } from "../utils/userProfile/gameHelpers";
 
 import "../styles/profile.css";
 
 import userDefaultProfileImage from "../assets/images/defaultUser.png";
-import checkIcon from "../assets/images/check-icon.png";
+
+import ProfileHeaderCard from "../components/userProfile/ProfileHeaderCard";
+import FavoriteGamesSection from "../components/userProfile/FavoriteGamesSection";
+import ProfileAboutPanel from "../components/userProfile/ProfileAboutPanel";
+import LibraryStatsPanel from "../components/userProfile/LibraryStatsPanel";
+import CompletedGamesSection from "../components/userProfile/CompletedGamesSection";
 
 export default function UserProfile() {
   const [profile, setProfile] = useState(null);
@@ -90,223 +93,34 @@ export default function UserProfile() {
   return (
     <div className="profile-shell">
       <div className="profile">
-        <section className="profile-header-card">
-          <div className="profile-main">
-            <div className="profile-avatar-wrapper">
-              <div className="profile-avatar">
-                <img src={avatarSrc} alt="Profile avatar" />
-              </div>
-              <div className="profile-status-dot"></div>
-            </div>
-
-            <div className="profile-identity">
-              <div className="profile-name-row">
-                <h1 className="profile-name">{displayName}</h1>
-                <span className="profile-username">@{username}</span>
-              </div>
-
-              <p className="profile-subline">{shortAboutMe}</p>
-
-              <div className="profile-tags">
-                {profileTags.length === 0 ? (
-                  <span className="profile-tag profile-tag--empty">
-                    Add profile tags in settings
-                  </span>
-                ) : (
-                  profileTags.map((tag) => (
-                    <span key={tag} className="profile-tag">
-                      {tag}
-                    </span>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-
-          <p className="platform-title">Platforms</p>
-
-          <div className="game-platforms">
-            {selectedPlatforms.length === 0 ? (
-              <span className="profile-tag profile-tag--empty">
-                Add platforms in settings
-              </span>
-            ) : (
-              selectedPlatforms.map((platform) => (
-                <div key={platform}>{platform}</div>
-              ))
-            )}
-          </div>
-
-          <div className="profile-actions">
-            <Link to="/profile/customize">
-              <button className="btn btn-primary">Edit profile</button>
-            </Link>
-
-            <div className="profile-stats-row">
-              <div className="profile-stat-pill">
-                <strong>{totalTracked}</strong> Games in library
-              </div>
-              <div className="profile-stat-pill">
-                <strong>{completedCount}</strong> Completed
-              </div>
-            </div>
-          </div>
-        </section>
+        <ProfileHeaderCard
+          displayName={displayName}
+          username={username}
+          shortAboutMe={shortAboutMe}
+          profileTags={profileTags}
+          selectedPlatforms={selectedPlatforms}
+          totalTracked={totalTracked}
+          completedCount={completedCount}
+          avatarSrc={avatarSrc}
+        />
 
         <section className="profile-main-grid">
-          {/* ⭐ FAVORITE GAMES */}
-          <article className="profile-panel">
-            <div className="profile-panel-header">
-              <h2>Top Games</h2>
-              <span>Click a game to view details.</span>
-            </div>
+          <FavoriteGamesSection favoriteGames={favoriteGames} />
 
-            <div className="favorite-games-row">
-              {favoriteGames.length === 0 ? (
-                <p className="profile-empty-state">
-                  You haven’t favorited any games yet.
-                </p>
-              ) : (
-                favoriteGames.slice(0, 12).map((game) => (
-                  <Link
-                    key={game.id}
-                    to={`/game#${game.id}`}
-                    className="favorite-game-card"
-                  >
-                    <div
-                      className="favorite-game-cover"
-                      style={{
-                        backgroundImage: game.background_image
-                          ? `url(${game.background_image})`
-                          : "none",
-                      }}
-                    ></div>
-                    <div className="favorite-game-body">
-                      <p className="favorite-game-title">
-                        {game.name || "Untitled game"}
-                      </p>
-                      <div className="favorite-game-meta">
-                        <span>{getPrimaryGenre(game)}</span>
-                        <span className="favorite-game-rating">
-                          {game.metacritic ?? "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
-          </article>
-
-          {/* SIDEBAR */}
           <aside className="profile-sidebar">
-            <div className="profile-panel profile-about">
-              <div className="profile-panel-header">
-                <h2>About</h2>
-              </div>
-              <p>{aboutMe}</p>
-
-              <span className="small-pill-label">Favorite genres</span>
-              <div className="profile-tags-cloud">
-                {selectedGenres.length === 0 ? (
-                  <span className="profile-tag profile-tag--empty">
-                    Add some favorite genres in settings
-                  </span>
-                ) : (
-                  selectedGenres.map((genre) => (
-                    <span key={genre}>{genre}</span>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <div className="profile-panel">
-              <div className="profile-panel-header">
-                <h2>Library stats</h2>
-              </div>
-              <span className="small-pill-label">Overview</span>
-              <div className="backlog-stats-grid">
-                <div className="backlog-stat-item">
-                  <strong>{completedCount}</strong>
-                  Completed
-                </div>
-                <div className="backlog-stat-item">
-                  <strong>{backlogCount}</strong>
-                  In backlog
-                </div>
-              </div>
-            </div>
+            <ProfileAboutPanel aboutMe={aboutMe} selectedGenres={selectedGenres} />
+            <LibraryStatsPanel completedCount={completedCount} backlogCount={backlogCount} />
           </aside>
         </section>
 
-        {/* COMPLETED */}
-        <section className="completed-section">
-          <h2>Completed</h2>
-          <div className="completed-container">
-            {completedGames.length === 0 ? (
-              <p className="profile-empty-state">
-                You haven’t completed any games yet.
-              </p>
-            ) : (
-              paginatedCompletedGames.map((game) => (
-                <Link
-                  key={game.id}
-                  to={`/game#${game.id}`}
-                  className="completed-game-card"
-                >
-                  <div className="select-icon">
-                    <img src={checkIcon} alt="Selected" />
-                  </div>
-                  <div
-                    className="completed-game-cover"
-                    style={{
-                      backgroundImage: game.background_image
-                        ? `url(${game.background_image})`
-                        : "none",
-                    }}
-                  ></div>
-                  <div className="completed-game-body">
-                    <p className="completed-game-title">
-                      {game.name || "Untitled game"}
-                    </p>
-                    <div className="completed-game-meta">
-                      <span>{getPrimaryGenre(game)}</span>
-                      <span className="completed-game-rating">
-                        {game.metacritic ?? "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))
-            )}
-          </div>
-
-          {completedGames.length > COMPLETED_PER_PAGE && (
-            <div className="pagination">
-              <button
-                className="page-btn"
-                disabled={safeCompletedPage === 1}
-                onClick={() => setCompletedPage((p) => Math.max(1, p - 1))}
-              >
-                ‹ Prev
-              </button>
-
-              <span className="page-info">
-                Page {safeCompletedPage} of {totalCompletedPages}
-              </span>
-
-              <button
-                className="page-btn"
-                disabled={safeCompletedPage === totalCompletedPages}
-                onClick={() =>
-                  setCompletedPage((p) => Math.min(totalCompletedPages, p + 1))
-                }
-              >
-                Next ›
-              </button>
-            </div>
-          )}
-        </section>
+        <CompletedGamesSection
+          completedGames={completedGames}
+          paginatedCompletedGames={paginatedCompletedGames}
+          completedPerPage={COMPLETED_PER_PAGE}
+          safeCompletedPage={safeCompletedPage}
+          totalCompletedPages={totalCompletedPages}
+          onPageChange={setCompletedPage}
+        />
       </div>
     </div>
   );

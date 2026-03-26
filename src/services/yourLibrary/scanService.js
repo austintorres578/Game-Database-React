@@ -5,7 +5,7 @@ import {
   sortCandidatesAlpha,
 } from "../../utils/yourLibrary/sortHelpers";
 
-const BACKEND_BASE = "https://game-database-backend.onrender.com";
+import { BACKEND_BASE } from "../../constants/apiConfig";
 
 /**
  * Sends a single image file to the backend OCR endpoint.

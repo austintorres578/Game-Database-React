@@ -3,7 +3,7 @@
 
 import { doc, setDoc, db } from "../../firebase/firestore";
 
-const BACKEND_BASE = "https://game-database-backend.onrender.com";
+import { BACKEND_BASE } from "../../constants/apiConfig";
 
 /**
  * Searches for a game by title using the backend RAWG proxy.

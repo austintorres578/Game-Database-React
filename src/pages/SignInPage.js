@@ -1,13 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
-  onAuthStateChanged,
   setPersistence,
   indexedDBLocalPersistence,
   browserSessionPersistence,
   auth
 } from "../firebase/fireAuth";
+import { useAuthState } from "../hooks/signInPage/useAuthState";
 
 import "../styles/signIn.css";
 import loadingGif from "../assets/images/loading.gif";
@@ -19,22 +19,12 @@ export default function SignInPage(props) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [user, setUser] = useState(null);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  const { user, checkingAuth } = useAuthState();
 
   const [rememberMe, setRememberMe] = useState(() => {
     const stored = localStorage.getItem("rememberMe");
     return stored === "true";
   });
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      console.log("[SIGNIN AUTH STATE]", u ? u.uid : null);
-      setUser(u || null);
-      setCheckingAuth(false);
-    });
-    return () => unsubscribe();
-  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
