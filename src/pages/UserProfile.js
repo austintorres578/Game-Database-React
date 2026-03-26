@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { loadProfileUserData } from "../services/profile/loadUserData";
+import { getPrimaryGenre } from "../utils/userProfile/gameHelpers";
 
 import "../styles/profile.css";
 
@@ -55,12 +56,6 @@ export default function UserProfile() {
 
   // ⭐ Favorites
   const favoriteGames = libraryGames.filter((g) => g.isFavorite);
-
-  const getPrimaryGenre = (game) => {
-    return Array.isArray(game.genres) && game.genres.length > 0
-      ? game.genres[0]
-      : "Unknown genre";
-  };
 
   // Pagination
   const totalCompletedPages =

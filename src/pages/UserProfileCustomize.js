@@ -18,6 +18,7 @@ import { handleSaveSubmit } from "../services/profileCustomization/saveProfile";
 import { loadCustomizeProfileAndStats } from "../services/profileCustomization/loadStats";
 
 import { handleAvatarChange } from "../utils/profileCustomization/avatarChange";
+import { getDropdownPreviewText, toggleArrayItem, toggleArrayItemWithMax } from "../utils/profileCustomization/formHelpers";
 
 import userDefaultProfile from "../assets/images/defaultUser.png";
 import "../styles/userProfileCustomize.css";
@@ -60,14 +61,6 @@ export default function UserProfileCustomizer() {
     setPreviewSrc(userDefaultProfile);
     setGamesLogged(0);
     setGamesCompleted(0);
-  };
-
-  const getDropdownPreviewText = (label, selectedItems) => {
-    if (!selectedItems || selectedItems.length === 0) {
-      return label;
-    }
-
-    return `${label}: ${selectedItems.join(", ")}`;
   };
 
   useEffect(() => {
@@ -140,36 +133,15 @@ export default function UserProfileCustomizer() {
     });
   };
 
-  const togglePlatform = (platform) => {
-    setSelectedPlatforms((prev) =>
-      prev.includes(platform)
-        ? prev.filter((item) => item !== platform)
-        : [...prev, platform],
-    );
-  };
+  const togglePlatform = (platform) =>
+    setSelectedPlatforms((prev) => toggleArrayItem(prev, platform));
 
-  const toggleGenre = (genre) => {
-    setSelectedGenres((prev) =>
-      prev.includes(genre)
-        ? prev.filter((item) => item !== genre)
-        : [...prev, genre],
-    );
-  };
+  const toggleGenre = (genre) =>
+    setSelectedGenres((prev) => toggleArrayItem(prev, genre));
 
   // Max 5 tags
-  const toggleProfileTag = (tag) => {
-    setProfileTags((prev) => {
-      if (prev.includes(tag)) {
-        return prev.filter((item) => item !== tag);
-      }
-
-      if (prev.length >= 5) {
-        return prev;
-      }
-
-      return [...prev, tag];
-    });
-  };
+  const toggleProfileTag = (tag) =>
+    setProfileTags((prev) => toggleArrayItemWithMax(prev, tag, 5));
 
   const prepareAvatarChange = async (e) => {
     try {

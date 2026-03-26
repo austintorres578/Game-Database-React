@@ -535,6 +535,7 @@
 
 .library-page .game-img{
   height: 67%;
+  background: url('../assets/images/noGameBackground.jpg');
 }
 
 .library-page .game-grid .game-wrapper{

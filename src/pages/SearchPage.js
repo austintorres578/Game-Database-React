@@ -4,12 +4,15 @@ import loadingCircle from "../assets/images/loading.gif";
 
 import Games from "../components/Games";
 
+import { buildLink } from "../utils/searchPage/buildLink";
+import { scrollToTop } from "../utils/searchPage/scrollHelpers";
+import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
+import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags } from "../services/searchPage/rawgService";
+
 import "../styles/gameSearch.css";
 
 export default function SearchPage({ user }) {
   const location = useLocation();
-  const origin = "https://rawg-video-games-database.p.rapidapi.com/";
-  const apiKey = "99cd09f6c33b42b5a24a9b447ee04a81";
   const pageSize = 12;
 
   const [loading, setLoading] = useState(false);
@@ -43,29 +46,9 @@ export default function SearchPage({ user }) {
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const fetchLink = `${origin}games?key=${apiKey}&search_exact=true&ordering=-metacritic&page_size=${pageSize}&`;
+  const fetchLink = buildRawgFetchBase(pageSize);
 
   const totalPages = Math.max(1, Math.ceil((totalResults || 0) / pageSize));
-
-  // 🔹 now also takes tagsArr
-  function buildLink(term, platformsArr, genresArr, tagsArr, page = 1) {
-    let link = fetchLink;
-    link += `page=${page}`;
-
-    if (term.trim()) link += `&search=${encodeURIComponent(term.trim())}`;
-    if (platformsArr.length > 0) link += `&platforms=${platformsArr.join(",")}`;
-    if (genresArr.length > 0) link += `&genres=${genresArr.join(",")}`;
-    if (tagsArr.length > 0) link += `&tags=${tagsArr.join(",")}`; // 🔹 RAWG tags filter
-
-    return link;
-  }
-
-  function scrollToTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
 
   // runs the request + stores "last search" meta in localStorage
   function runSearch(link, isFreshSearch = false, metaState) {
@@ -116,21 +99,12 @@ export default function SearchPage({ user }) {
       console.log("------------------------------------");
     }
 
-    const options = {
-      method: "GET",
-      headers: {
-        "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
-        "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
-      },
-    };
-
     setLoading(true);
 
-    fetch(link, options)
-      .then((res) => res.json())
+    fetchRawgGames(link)
       .then((res) => {
         setLoading(false);
-        setTotalResults(res.count || 0);
+        setTotalResults(res.count);
 
         localStorage.setItem("currentLink", link);
         if (metaState) {
@@ -140,13 +114,11 @@ export default function SearchPage({ user }) {
           }
         }
 
-        const results = (res.results || []).slice(0, pageSize);
-
         setGatheredData([
           {
-            results,
-            next: res.next || "",
-            previous: res.previous || "",
+            results: res.results.slice(0, pageSize),
+            next: res.next,
+            previous: res.previous,
             loaded: true,
           },
         ]);
@@ -159,66 +131,17 @@ export default function SearchPage({ user }) {
 
   // fetch platform + genre + tag filters
   useEffect(() => {
-    const options = {
-      method: "GET",
-      headers: {
-        "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
-        "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
-      },
-    };
+    fetchRawgPlatforms().then((platforms) => {
+      setPlatformFilters((prev) => [prev[0], ...platforms]);
+    });
 
-    // Platforms
-    fetch(`${origin}platforms?key=${apiKey}&page_size=50`, options)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data.results.sort((a, b) =>
-          a.name.localeCompare(b.name),
-        );
-        setPlatformFilters((prev) => [
-          prev[0],
-          ...sorted.map((p) => ({
-            id: String(p.id),
-            label: p.name,
-            platformId: p.id,
-          })),
-        ]);
-      });
+    fetchRawgGenres().then((genres) => {
+      setGenreFilters((prev) => [prev[0], ...genres]);
+    });
 
-    // Genres
-    fetch(`${origin}genres?key=${apiKey}&page_size=40`, options)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data.results.sort((a, b) =>
-          a.name.localeCompare(b.name),
-        );
-        setGenreFilters((prev) => [
-          prev[0],
-          ...sorted.map((g) => ({
-            id: String(g.id),
-            label: g.name,
-            slug: g.slug,
-            kind: "genre",
-          })),
-        ]);
-      });
-
-    // 🔹 Tags
-    fetch(`${origin}tags?key=${apiKey}&page_size=40`, options)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.results) return;
-        const sorted = data.results.sort((a, b) =>
-          a.name.localeCompare(b.name),
-        );
-        setTagFilters((prev) => [
-          prev[0],
-          ...sorted.map((t) => ({
-            id: String(t.id),
-            label: t.name,
-            slug: t.slug,
-            kind: "tag",
-          })),
-        ]);
+    fetchRawgTags()
+      .then((tags) => {
+        setTagFilters((prev) => [prev[0], ...tags]);
       })
       .catch((err) => {
         console.error("Error fetching tags:", err);
@@ -260,8 +183,48 @@ export default function SearchPage({ user }) {
 
   useEffect(() => {
     const quickTag = location.state?.quickTag;
+    const quickTagSlug = location.state?.quickTagSlug;
 
-    if (!quickTag) return;
+    if (!quickTag && !quickTagSlug) return;
+
+    // If a slug was passed directly (e.g. from GamePage), use it without
+    // needing to wait for or match against the loaded filter lists.
+    if (quickTagSlug) {
+      const page = 1;
+      const nextTags = [quickTagSlug];
+
+      // Ensure the tag exists as a pill in the filter list
+      setTagFilters((prev) => {
+        const exists = prev.some((t) => t.slug === quickTagSlug);
+        if (exists) return prev;
+        return [
+          ...prev,
+          { id: `quick-${quickTagSlug}`, label: quickTag, slug: quickTagSlug, kind: "tag" },
+        ];
+      });
+
+      setSearchTerm("");
+      setSelectedPlatforms([]);
+      setSelectedGenres([]);
+      setSelectedTags(nextTags);
+      setPageNumber(page);
+      setIsPageDropdownOpen(false);
+
+      const link = buildLink(fetchLink, "", [], [], nextTags, page);
+
+      runSearch(link, true, {
+        term: "",
+        platforms: [],
+        genres: [],
+        tags: nextTags,
+        page,
+      });
+
+      scrollToTop();
+      return;
+    }
+
+    // Footer quick-tags: match by label against loaded filters
     if (genreFilters.length <= 1 && tagFilters.length <= 1) return;
 
     const matchedGenre = genreFilters.find(
@@ -285,7 +248,7 @@ export default function SearchPage({ user }) {
       setSelectedGenres(nextGenres);
       setSelectedTags([]);
 
-      const link = buildLink("", [], nextGenres, [], page);
+      const link = buildLink(fetchLink, "", [], nextGenres, [], page);
 
       runSearch(link, true, {
         term: "",
@@ -305,7 +268,7 @@ export default function SearchPage({ user }) {
       setSelectedGenres([]);
       setSelectedTags(nextTags);
 
-      const link = buildLink("", [], [], nextTags, page);
+      const link = buildLink(fetchLink, "", [], [], nextTags, page);
 
       runSearch(link, true, {
         term: "",
@@ -327,6 +290,7 @@ export default function SearchPage({ user }) {
     localStorage.setItem("currentPage", String(page));
 
     const link = buildLink(
+      fetchLink,
       searchTerm,
       selectedPlatforms,
       selectedGenres,
@@ -350,6 +314,7 @@ export default function SearchPage({ user }) {
 
     const newPage = pageNumber + 1;
     const link = buildLink(
+      fetchLink,
       searchTerm,
       selectedPlatforms,
       selectedGenres,
@@ -376,6 +341,7 @@ export default function SearchPage({ user }) {
 
     const newPage = pageNumber - 1;
     const link = buildLink(
+      fetchLink,
       searchTerm,
       selectedPlatforms,
       selectedGenres,
@@ -401,6 +367,7 @@ export default function SearchPage({ user }) {
     if (loading || num === pageNumber) return;
 
     const link = buildLink(
+      fetchLink,
       searchTerm,
       selectedPlatforms,
       selectedGenres,
@@ -512,20 +479,6 @@ export default function SearchPage({ user }) {
     />
   ));
 
-  function isPlatformActive(p) {
-    if (p.id === "all") return selectedPlatforms.length === 0;
-    return selectedPlatforms.includes(p.platformId);
-  }
-
-  function isGenreActive(g) {
-    if (g.id === "all") return selectedGenres.length === 0;
-    return selectedGenres.includes(g.slug);
-  }
-
-  function isTagActive(t) {
-    if (t.id === "all") return selectedTags.length === 0;
-    return selectedTags.includes(t.slug);
-  }
 
   // selected platforms/genres/tags summary
   const selectedPlatformLabels = platformFilters
@@ -553,24 +506,7 @@ export default function SearchPage({ user }) {
   const tagSummary =
     selectedTagLabels.length === 0 ? "All Tags" : selectedTagLabels.join(", ");
 
-  const pageOptions = (() => {
-    const total = totalPages;
-    if (total <= 10) return Array.from({ length: total }, (_, i) => i + 1);
-
-    let start = pageNumber - 4;
-    let end = pageNumber + 5;
-
-    if (start < 1) {
-      start = 1;
-      end = 10;
-    }
-    if (end > total) {
-      end = total;
-      start = total - 9;
-    }
-
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  })();
+  const pageOptions = getPageOptions(totalPages, pageNumber);
 
   const hasResults =
     gatheredData[0].loaded && gatheredData[0].results.length > 0;
@@ -604,7 +540,7 @@ export default function SearchPage({ user }) {
 
           {/* PLATFORMS */}
           <div className="platform-game-toggle multi-toggle">
-            <div className="toggle" onClick={revealSearchDropdown}>
+            <div className={`toggle${selectedPlatforms.length > 0 ? " has-value" : ""}`} onClick={revealSearchDropdown}>
               <p className="toggle-selected">{platformSummary}</p>
               <span>▾</span>
             </div>
@@ -614,7 +550,7 @@ export default function SearchPage({ user }) {
                   key={p.id}
                   type="button"
                   className={
-                    "filter-btn" + (isPlatformActive(p) ? " active" : "")
+                    "filter-btn" + (isPlatformActive(p, selectedPlatforms) ? " active" : "")
                   }
                   onClick={() => handlePlatformClick(p)}
                 >
@@ -626,7 +562,7 @@ export default function SearchPage({ user }) {
 
           {/* GENRES */}
           <div className="platform-game-toggle multi-toggle">
-            <div className="toggle" onClick={revealSearchDropdown}>
+            <div className={`toggle${selectedGenres.length > 0 ? " has-value" : ""}`} onClick={revealSearchDropdown}>
               <p className="toggle-selected">{genreSummary}</p>
               <span>▾</span>
             </div>
@@ -635,7 +571,7 @@ export default function SearchPage({ user }) {
                 <button
                   key={g.id}
                   type="button"
-                  className={"filter-btn" + (isGenreActive(g) ? " active" : "")}
+                  className={"filter-btn" + (isGenreActive(g, selectedGenres) ? " active" : "")}
                   onClick={() => handleGenreClick(g)}
                 >
                   {g.label}
@@ -646,7 +582,7 @@ export default function SearchPage({ user }) {
 
           {/* TAGS 🔹 NEW */}
           <div className="platform-game-toggle multi-toggle">
-            <div className="toggle" onClick={revealSearchDropdown}>
+            <div className={`toggle${selectedTags.length > 0 ? " has-value" : ""}`} onClick={revealSearchDropdown}>
               <p className="toggle-selected">{tagSummary}</p>
               <span>▾</span>
             </div>
@@ -655,7 +591,7 @@ export default function SearchPage({ user }) {
                 <button
                   key={t.id}
                   type="button"
-                  className={"filter-btn" + (isTagActive(t) ? " active" : "")}
+                  className={"filter-btn" + (isTagActive(t, selectedTags) ? " active" : "")}
                   onClick={() => handleTagClick(t)}
                 >
                   {t.label}

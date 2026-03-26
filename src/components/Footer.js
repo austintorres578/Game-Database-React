@@ -1,8 +1,19 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { auth, onAuthStateChanged } from "../firebase/fireAuth";
 
 import "../styles/footer.css";
 
 export default function Footer() {
+  const [user, setUser] = useState(auth.currentUser);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return unsubscribe;
+  }, []);
+
   const navigate = useNavigate();
 
   // When a footer tag is clicked, jump to /search
@@ -35,8 +46,12 @@ export default function Footer() {
             <br />
             <Link to="/search">Search</Link>
             <br />
-            <Link to="/profile">Profile</Link>
-            <br />
+            {user && (
+              <>
+                <Link to="/profile">Profile</Link>
+                <br />
+              </>
+            )}
           </div>
 
           <div className="footer-column">

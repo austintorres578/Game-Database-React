@@ -10,30 +10,62 @@ import downChevron from "../assets/images/down_chevron.png";
 import plusIcon from "../assets/images/plus-icon.png";
 import loadingIcon from "../assets/images/loading.gif";
 
-import { db } from "../firebase/firestore";
-import {auth, onAuthStateChanged } from "../firebase/fireAuth";
-import {collection,getDocs,addDoc,doc,setDoc,deleteDoc,updateDoc,arrayUnion,} from "../firebase/firestore";
+import { auth, onAuthStateChanged } from "../firebase/fireAuth";
+import { collection, getDocs, db } from "../firebase/firestore";
+
+import {
+  addGameIdsToGroupFirestore,
+  createGroupInFirestore,
+  updateGroupInFirestore,
+  deleteGroupFromFirestore,
+} from "../services/yourLibrary/groupService";
+import {
+  scanImageForText,
+  extractGameTitlesWithLLM,
+} from "../services/yourLibrary/scanService";
+import {
+  checkSteamSession,
+  fetchSteamOwnedGameTitles,
+  logoutSteamSession,
+} from "../services/yourLibrary/steamService";
+import {
+  searchGameByTitle,
+  saveGameToLibraryFirestore,
+} from "../services/yourLibrary/gameSearchService";
 
 import "../styles/yourLibrary.css";
+
+import {
+  safeText,
+  compareByTitle,
+  compareByMetacritic,
+  getSortLabel,
+} from "../utils/yourLibrary/sortHelpers";
+import {
+  isGameInGroup,
+  isGameUngrouped,
+} from "../utils/yourLibrary/groupFilterHelpers";
+import {
+  readLibraryViewState,
+  writeLibraryViewState,
+} from "../utils/yourLibrary/viewStatePersistence";
+import { getPrimaryGenreFromGame } from "../utils/yourLibrary/gameDataHelpers";
+import {
+  getResultId,
+  normalizeResultToLibraryDoc,
+  pickBestResult,
+  titlesToCandidates,
+  parseTitlesFromTextarea,
+} from "../utils/yourLibrary/importHelpers";
+import {
+  steamAuthUrl,
+  stripSteamQueryParam,
+} from "../utils/yourLibrary/steamUtils";
 
 /* =============================================================================
   CONFIG
 ============================================================================= */
 const ITEMS_PER_PAGE = 12;
-const BACKEND_BASE = "https://game-database-backend.onrender.com";
-
-// ✅ removes ?steam=linked (or ?steam=fail) so refresh doesn't re-trigger flows
-function stripSteamQueryParam() {
-  try {
-    const url = new URL(window.location.href);
-    if (url.searchParams.has("steam")) {
-      url.searchParams.delete("steam");
-      window.history.replaceState({}, "", url.pathname + url.search + url.hash);
-    }
-  } catch {
-    // ignore
-  }
-}
 
 export default function YourLibrary() {
   /* ===========================================================================
@@ -151,119 +183,6 @@ export default function YourLibrary() {
   ]);
 
   /* ===========================================================================
-    ✅ HELPERS: STEAM AUTH URL (FIXES "Missing ?uid=...")
-  =========================================================================== */
-  function steamAuthUrl(uid) {
-    return `${BACKEND_BASE}/auth/steam?uid=${encodeURIComponent(uid)}`;
-  }
-
-  /* ===========================================================================
-    HELPERS: SORTING (strings/candidates)
-  =========================================================================== */
-  function sortStringsAlpha(list) {
-    return [...(list || [])].sort((a, b) =>
-      String(a || "").localeCompare(String(b || ""), undefined, {
-        sensitivity: "base",
-      }),
-    );
-  }
-
-  function sortCandidatesAlpha(list) {
-    return [...(list || [])].sort((a, b) =>
-      String(a.cleaned || a.raw || "").localeCompare(
-        String(b.cleaned || b.raw || ""),
-        undefined,
-        { sensitivity: "base" },
-      ),
-    );
-  }
-
-  /* ===========================================================================
-    ✅ HELPERS: GAME SORTING (Name + Metacritic)
-  =========================================================================== */
-  function getMetacriticNumber(game) {
-    const v =
-      game?.metacritic ?? game?.metacriticScore ?? game?.metaScore ?? null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null; // null = unrated
-  }
-
-  function safeText(v, fallback = "") {
-    if (typeof v === "string") return v;
-    if (v && typeof v === "object")
-      return v.name || v.title || v.slug || fallback;
-    if (typeof v === "number") return String(v);
-    return fallback;
-  }
-
-  function compareByTitle(a, b, dir = "asc") {
-    const ta = safeText(a?.title, "").trim();
-    const tb = safeText(b?.title, "").trim();
-    const cmp = ta.localeCompare(tb, undefined, { sensitivity: "base" });
-    return dir === "asc" ? cmp : -cmp;
-  }
-
-  function compareByMetacritic(a, b, dir = "desc") {
-    const ma = getMetacriticNumber(a);
-    const mb = getMetacriticNumber(b);
-
-    // Unrated always goes to bottom, regardless of direction
-    const aMissing = ma === null;
-    const bMissing = mb === null;
-    if (aMissing && bMissing) return compareByTitle(a, b, "asc");
-    if (aMissing) return 1;
-    if (bMissing) return -1;
-
-    const diff = ma - mb;
-    if (diff === 0) return compareByTitle(a, b, "asc");
-    return dir === "asc" ? diff : -diff;
-  }
-
-  /* ===========================================================================
-    HELPERS: SAFE RENDERING (FIXES OBJECT-RENDER CRASHES)
-  =========================================================================== */
-  function normalizeGenre(g) {
-    if (!g) return "";
-    if (typeof g === "string") return g;
-    if (typeof g === "object") return g.name || g.slug || "";
-    return "";
-  }
-
-  function getPrimaryGenreFromGame(game) {
-    const genresArray =
-      game?.genres || game?.genreList || game?.genre_names || [];
-    if (Array.isArray(genresArray)) return normalizeGenre(genresArray[0]);
-    return normalizeGenre(genresArray);
-  }
-
-  /* ===========================================================================
-    ✅ HELPERS: GROUP / UNGROUPED MEMBERSHIP CHECKS
-  =========================================================================== */
-  function getGroupedIdSetFromCustomFilters(filters) {
-    const set = new Set();
-    (filters || []).forEach((g) => {
-      if (g.id === "all-platforms" || g.id === "ungrouped") return;
-      if (Array.isArray(g.gameIds)) {
-        g.gameIds.forEach((id) => set.add(String(id)));
-      }
-    });
-    return set;
-  }
-
-  function isGameInGroup(filters, groupId, gameId) {
-    const gid = String(gameId);
-    const group = (filters || []).find((g) => g.id === groupId);
-    if (!group || !Array.isArray(group.gameIds)) return false;
-    return group.gameIds.some((x) => String(x) === gid);
-  }
-
-  function isGameUngrouped(filters, gameId) {
-    const gid = String(gameId);
-    const groupedSet = getGroupedIdSetFromCustomFilters(filters);
-    return !groupedSet.has(gid);
-  }
-
-  /* ===========================================================================
     HELPERS: GROUP SELECTION PERSISTENCE
   =========================================================================== */
   function setActiveGroups(next) {
@@ -284,33 +203,6 @@ export default function YourLibrary() {
 
       return nextIds;
     });
-  }
-
-  /* ===========================================================================
-    NEW: VIEW STATE PERSISTENCE (group + status + page + sort + search)
-  =========================================================================== */
-  function getLibraryViewStateKey(uid) {
-    return uid ? `vgdb_libraryViewState_${uid}` : "vgdb_libraryViewState_guest";
-  }
-
-  function readLibraryViewState(uid) {
-    try {
-      const raw = window.localStorage.getItem(getLibraryViewStateKey(uid));
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function writeLibraryViewState(uid, state) {
-    try {
-      window.localStorage.setItem(
-        getLibraryViewStateKey(uid),
-        JSON.stringify(state),
-      );
-    } catch {
-      // ignore
-    }
   }
 
   /* ===========================================================================
@@ -483,88 +375,12 @@ export default function YourLibrary() {
     setNotFoundCandidates((prev) => prev.filter((x) => x.id !== candidateId));
   }
 
-  /* ===========================================================================
-    IMPORT HELPERS
-  =========================================================================== */
-  function getResultId(r) {
-    return (
-      r?.rawgId || r?.id || r?.gameId || r?.slug || r?.name || r?.title || null
-    );
-  }
-
-  function normalizeResultToLibraryDoc(r) {
-    const title =
-      r?.name || r?.title || r?.gameTitle || r?.slug || "Untitled game";
-
-    const backgroundImage =
-      r?.background_image ||
-      r?.backgroundImage ||
-      r?.image ||
-      r?.coverImage ||
-      "";
-
-    const genres =
-      r?.genres ||
-      r?.genreList ||
-      r?.genre_names ||
-      (Array.isArray(r?.tags) ? r.tags : []);
-
-    const metacritic =
-      r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
-
-    const platforms =
-      r?.platforms ||
-      r?.parent_platforms ||
-      r?.platform ||
-      r?.platformName ||
-      "";
-
-    return {
-      title,
-      rawgId: r?.id ?? r?.rawgId ?? null,
-      slug: r?.slug ?? null,
-      backgroundImage,
-      genres,
-      metacritic,
-      platforms,
-      status: "backlog",
-      _source: "scan_match",
-      _raw: r || null,
-    };
-  }
-
-  function normalizeKey(str) {
-    return String(str || "")
-      .toLowerCase()
-      .replace(/&/g, "and")
-      .replace(/[^a-z0-9]+/g, " ")
-      .trim();
-  }
-
-  function getResultTitle(r) {
-    return safeText(r?.name) || safeText(r?.title) || safeText(r?.slug) || "";
-  }
-
-  function pickBestResult(results, queryTitle) {
-    if (!Array.isArray(results) || results.length === 0) return null;
-
-    const q = normalizeKey(queryTitle);
-    const exact = results.find((r) => normalizeKey(getResultTitle(r)) === q);
-    if (exact) return exact;
-
-    return results[0];
-  }
-
   async function addGameIdsToGroup(groupId, gameIds) {
     if (!authUser) return;
     if (!groupId || groupId === "none") return;
     if (!Array.isArray(gameIds) || gameIds.length === 0) return;
 
-    const groupRef = doc(db, "users", authUser.uid, "groups", groupId);
-
-    await updateDoc(groupRef, {
-      gameIds: arrayUnion(...gameIds.map(String)),
-    });
+    await addGameIdsToGroupFirestore(authUser.uid, groupId, gameIds);
 
     setCustomFilters((prev) =>
       (prev || []).map((g) => {
@@ -616,20 +432,8 @@ export default function YourLibrary() {
       }));
 
       try {
-        const url = `${BACKEND_BASE}/api/search-game?q=${encodeURIComponent(q)}`;
-
         // eslint-disable-next-line no-await-in-loop
-        const res = await fetch(url, {
-          method: "GET",
-          credentials: "include",
-          headers: { Accept: "application/json" },
-        });
-
-        // eslint-disable-next-line no-await-in-loop
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data?.message || "Search failed");
-
-        const results = Array.isArray(data?.results) ? data.results : [];
+        const results = await searchGameByTitle(q);
         if (results.length === 0) {
           notFound.push({ id: c.id, title: q });
           setCandidateImportStatus((prev) => ({
@@ -700,17 +504,10 @@ export default function YourLibrary() {
         }
 
         if (!existsInLocalLibrary) {
-          const gameDocRef = doc(
-            db,
-            "users",
-            authUser.uid,
-            "library",
-            docIdStr,
-          );
           const payload = normalizeResultToLibraryDoc(chosen);
 
           // eslint-disable-next-line no-await-in-loop
-          await setDoc(gameDocRef, payload, { merge: true });
+          await saveGameToLibraryFirestore(authUser.uid, docIdStr, payload);
 
           setLibraryGames((prev) => {
             const exists = (prev || []).some((g) => String(g.id) === docIdStr);
@@ -775,49 +572,6 @@ export default function YourLibrary() {
   /* ===========================================================================
     STEAM/SCAN SHARED: TITLES -> CANDIDATES
   =========================================================================== */
-  function titlesToCandidates(titles, idPrefix = "steam") {
-    const seen = new Set();
-    const uniq = [];
-
-    for (const t of titles || []) {
-      const s = String(t || "").trim();
-      if (!s) continue;
-      const key = s.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      uniq.push(s);
-    }
-
-    const sortedTitles = sortStringsAlpha(uniq);
-
-    const now = Date.now();
-    const nextCandidatesRaw = sortedTitles.map((t, idx) => ({
-      id: `${idPrefix}_${now}_${idx}`,
-      raw: t,
-      cleaned: t,
-    }));
-    const nextCandidates = sortCandidatesAlpha(nextCandidatesRaw);
-
-    return { sortedTitles, nextCandidates };
-  }
-
-  function parseTitlesFromTextarea(text) {
-    const lines = String(text || "")
-      .split(/\r?\n/g)
-      .map((l) => l.trim())
-      .filter(Boolean);
-
-    const seen = new Set();
-    const uniq = [];
-    for (const t of lines) {
-      const key = t.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      uniq.push(t);
-    }
-    return uniq;
-  }
-
   function handleRegenerateCandidatesFromTextarea() {
     const titles = parseTitlesFromTextarea(scanCleanText);
 
@@ -845,48 +599,6 @@ export default function YourLibrary() {
   /* ===========================================================================
     SCAN IMPORT: AI CLEANUP (SERVER ROUTE)
   =========================================================================== */
-  async function extractCandidatesWithLLM(text) {
-    const cleanedText = String(text || "").trim();
-    if (!cleanedText) return { sortedTitles: [], nextCandidates: [] };
-
-    const res = await fetch(`${BACKEND_BASE}/api/extract-game-candidates`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ text: cleanedText }),
-    });
-
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error(data?.error || data?.message || "LLM extract failed");
-    }
-
-    const titles = Array.isArray(data?.titles) ? data.titles : [];
-
-    const seen = new Set();
-    const uniq = [];
-    for (const t of titles) {
-      const s = String(t || "").trim();
-      if (!s) continue;
-      const key = s.toLowerCase();
-      if (seen.has(key)) continue;
-      seen.add(key);
-      uniq.push(s);
-    }
-
-    const sortedTitles = sortStringsAlpha(uniq);
-
-    const now = Date.now();
-    const nextCandidatesRaw = sortedTitles.map((t, idx) => ({
-      id: `${now}_${idx}`,
-      raw: t,
-      cleaned: t,
-    }));
-    const nextCandidates = sortCandidatesAlpha(nextCandidatesRaw);
-
-    return { sortedTitles, nextCandidates };
-  }
-
   /* ===========================================================================
     SCAN IMPORT: UPLOAD FLOW (MULTI-IMAGE OCR -> COMBINE -> LLM -> THEN SHOW)
   =========================================================================== */
@@ -925,44 +637,16 @@ export default function YourLibrary() {
       const results = [];
 
       for (const file of files) {
-        const fd = new FormData();
-        fd.append("image", file);
-
         // eslint-disable-next-line no-await-in-loop
-        const res = await fetch(`${BACKEND_BASE}/api/scan-image`, {
-          method: "POST",
-          body: fd,
-          credentials: "include",
-        });
-
-        const contentType = res.headers.get("content-type") || "";
-        // eslint-disable-next-line no-await-in-loop
-        const payload = contentType.includes("application/json")
-          ? await res.json().catch(() => ({}))
-          : { message: await res.text().catch(() => "") };
-
-        if (!res.ok) {
-          const msg =
-            payload?.error ||
-            payload?.message ||
-            `Scan failed (HTTP ${res.status}).`;
-          throw new Error(msg);
-        }
-
-        const raw =
-          payload?.rawText ||
-          payload?.text ||
-          payload?.result ||
-          payload?.ocrText ||
-          "";
-        results.push(String(raw || "").trim());
+        const raw = await scanImageForText(file);
+        results.push(raw);
       }
 
       const combined = results.filter(Boolean).join("\n\n---\n\n");
       setScanText(combined);
 
       const { sortedTitles, nextCandidates } =
-        await extractCandidatesWithLLM(combined);
+        await extractGameTitlesWithLLM(combined);
 
       setScanCleanText(sortedTitles.join("\n"));
       setCandidates(nextCandidates);
@@ -994,16 +678,7 @@ export default function YourLibrary() {
   async function refreshSteamLinkedState() {
     try {
       setSteamCheckLoading(true);
-
-      const res = await fetch(`${BACKEND_BASE}/api/me`, {
-        method: "GET",
-        credentials: "include",
-        headers: { Accept: "application/json" },
-      });
-
-      const data = await res.json().catch(() => ({}));
-      const linked = !!data?.loggedIn;
-
+      const { linked } = await checkSteamSession();
       setSteamLinked(linked);
       return linked;
     } catch (e) {
@@ -1044,22 +719,14 @@ export default function YourLibrary() {
         return;
       }
 
-      const meRes = await fetch(`${BACKEND_BASE}/api/me`, {
-        method: "GET",
-        credentials: "include",
-        headers: { Accept: "application/json" },
-      });
-
-      const meData = await meRes.json().catch(() => ({}));
-      console.log("✅ Steam /api/me:", meData);
-
-      const loggedIn = !!meData?.loggedIn;
+      const { linked: loggedIn, errorMsg: meError } = await checkSteamSession();
+      console.log("✅ Steam /api/me:", { loggedIn });
       setSteamLinked(loggedIn);
 
       if (!loggedIn) {
         if (!allowAutoRelink) {
           setScanError(
-            meData?.error ||
+            meError ||
               "Not linked to Steam in this browser. Click 'Link Steam' to connect your Steam account.",
           );
           return;
@@ -1069,41 +736,21 @@ export default function YourLibrary() {
         return;
       }
 
-      // ✅ FIX: backend now requires x-firebase-uid on this route
-      const gamesRes = await fetch(`${BACKEND_BASE}/api/steam/owned-games`, {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "x-firebase-uid": authUser.uid,
-        },
-      });
-
-      const gamesData = await gamesRes.json().catch(() => ({}));
-      console.log("🎮 Steam owned-games:", gamesData);
-
-      if (!gamesRes.ok) {
-        const errMsg = String(gamesData?.error || gamesData?.message || "");
-
-        if (
-          allowAutoRelink &&
-          errMsg.toLowerCase().includes("not logged in with steam")
-        ) {
+      let titles;
+      try {
+        titles = await fetchSteamOwnedGameTitles(authUser.uid);
+        console.log("🎮 Steam owned-games fetched:", titles.length);
+      } catch (gamesErr) {
+        const errMsg = gamesErr?.message || "";
+        if (allowAutoRelink && errMsg.toLowerCase().includes("not logged in with steam")) {
           window.location.href = steamAuthUrl(authUser.uid);
           return;
         }
-
         setScanError(errMsg || "Could not fetch Steam library.");
         return;
       }
 
       setSteamLinked(true);
-
-      const titles = Array.isArray(gamesData?.titles)
-        ? gamesData.titles
-        : Array.isArray(gamesData?.games)
-          ? gamesData.games.map((g) => g?.name).filter(Boolean)
-          : [];
 
       setSteamTitles(titles);
 
@@ -1540,14 +1187,7 @@ export default function YourLibrary() {
 
     try {
       if (editingGroupId) {
-        const groupDocRef = doc(
-          db,
-          "users",
-          authUser.uid,
-          "groups",
-          editingGroupId,
-        );
-        await setDoc(groupDocRef, newFilter, { merge: false });
+        await updateGroupInFirestore(authUser.uid, editingGroupId, newFilter);
 
         setCustomFilters((prev) => {
           const permanent = prev.filter(
@@ -1585,10 +1225,7 @@ export default function YourLibrary() {
           return merged.length > 0 ? merged : ["all-platforms"];
         });
       } else {
-        const groupsRef = collection(db, "users", authUser.uid, "groups");
-        const docRef = await addDoc(groupsRef, newFilter);
-
-        const savedFilter = { id: docRef.id, ...newFilter };
+        const savedFilter = await createGroupInFirestore(authUser.uid, newFilter);
 
         setCustomFilters((prev) => {
           const permanent = prev.filter(
@@ -1611,7 +1248,7 @@ export default function YourLibrary() {
           return [...permanent, ...updatedRest];
         });
 
-        setActiveGroups([docRef.id]);
+        setActiveGroups([savedFilter.id]);
       }
 
       setFilterName("");
@@ -1646,14 +1283,7 @@ export default function YourLibrary() {
     if (!confirmed) return;
 
     try {
-      const groupDocRef = doc(
-        db,
-        "users",
-        authUser.uid,
-        "groups",
-        editingGroupId,
-      );
-      await deleteDoc(groupDocRef);
+      await deleteGroupFromFirestore(authUser.uid, editingGroupId);
 
       setCustomFilters((prev) => prev.filter((g) => g.id !== editingGroupId));
 
@@ -1749,20 +1379,6 @@ export default function YourLibrary() {
       return;
     }
     openGroupModalForGroup(realSelectedGroupIds[0], String(gameId));
-  }
-
-  function getSortLabel(sortValue) {
-    switch (sortValue) {
-      case "name_desc":
-        return "Name (Z-A)";
-      case "meta_desc":
-        return "Metacritic (High-Low)";
-      case "meta_asc":
-        return "Metacritic (Low-High)";
-      case "name_asc":
-      default:
-        return "Name (A-Z)";
-    }
   }
 
   function handleSortChange(nextSort) {
@@ -2742,10 +2358,7 @@ export default function YourLibrary() {
                         style={{ marginTop: "10px" }}
                         onClick={async () => {
                           try {
-                            await fetch(`${BACKEND_BASE}/api/logout`, {
-                              method: "POST",
-                              credentials: "include",
-                            });
+                            await logoutSteamSession();
                           } catch {
                             // ignore
                           } finally {

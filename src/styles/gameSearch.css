@@ -468,6 +468,10 @@ ease-out;
         box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
     }
 
+    .multi-toggle .toggle.has-value{
+        color: white;
+    }
+
       .multi-toggle .toggle.active{
         border-color: #22c55e;
         box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);

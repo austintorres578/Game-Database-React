@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import loadingCircle from "../assets/images/loading.gif";
 
-import defaultBackground from "../assets/images/background.png";
+import defaultBackground from "../assets/images/noGameBackground.jpg";
 import "../styles/gamePage.css";
 
 import { useNavigate } from "react-router-dom";
@@ -19,6 +19,18 @@ import {
   arrayRemove,
   db,
 } from "../firebase/firestore";
+
+import { getLibraryDocId } from "../utils/gamePage/libraryDocId";
+import {
+  inferStoreNameFromUrl,
+  normalizeAndSortStores,
+  dedupeByUrl,
+  getStoreLabel,
+  renderStorePrice,
+  sortStoresByPrice,
+  dedupeCombinedStores,
+} from "../utils/gamePage/storeUtils";
+import { removeGameFromAllGroups } from "../services/gamePage/groupService";
 
 // ✅ Backend base (Render in prod, override for local if you want)
 const BACKEND_BASE =
@@ -89,187 +101,6 @@ export default function GamePage({ auth }) {
       return false;
     }
     return true;
-  }
-
-  /**
-   * ✅ OLD doc-id convention:
-   * Firestore doc id === RAWG id as a string, e.g. "3498"
-   */
-  function getLibraryDocId(rawgId) {
-    if (rawgId === null || rawgId === undefined) return null;
-    return String(rawgId);
-  }
-
-  // ✅ Frontend helper: infer store name from URL when RAWG returns "Store"
-  function inferStoreNameFromUrl(url) {
-    if (!url) return "Store";
-    const u = String(url).toLowerCase();
-
-    if (u.includes("store.steampowered.com")) return "Steam";
-    if (u.includes("gog.com")) return "GOG";
-    if (u.includes("epicgames.com/store")) return "Epic Games Store";
-    if (u.includes("store.playstation.com")) return "PlayStation Store";
-    if (u.includes("xbox.com") || u.includes("microsoft.com/store"))
-      return "Microsoft Store";
-    if (u.includes("nintendo.com")) return "Nintendo eShop";
-    if (u.includes("humblebundle.com")) return "Humble Bundle";
-    if (u.includes("itch.io")) return "itch.io";
-    if (u.includes("greenmangaming.com")) return "Green Man Gaming";
-    if (u.includes("ea.com") || u.includes("origin.com")) return "EA";
-    if (u.includes("store.ubi.com") || u.includes("ubisoft.com"))
-      return "Ubisoft Store";
-    if (u.includes("battle.net")) return "Battle.net";
-
-    // ✅ mobile storefronts
-    if (u.includes("apps.apple.com")) return "App Store";
-    if (u.includes("play.google.com")) return "Google Play";
-    if (u.includes("galaxystore.samsung.com")) return "Galaxy Store";
-    if (u.includes("amazon.com/appstore")) return "Amazon Appstore";
-
-    // Fallback: use hostname
-    try {
-      const host = new URL(url).hostname.replace(/^www\./, "");
-      const parts = host.split(".");
-      const base = parts[0] === "store" ? parts[1] : parts[0];
-      return base ? base.charAt(0).toUpperCase() + base.slice(1) : "Store";
-    } catch {
-      return "Store";
-    }
-  }
-
-  // ✅ RAWG-only: nice ordering + dedupe by url
-  function normalizeAndSortStores(list) {
-    const seen = new Set();
-    const deduped = (Array.isArray(list) ? list : [])
-      .filter((x) => x?.url)
-      .filter((x) => {
-        const url = String(x.url);
-        if (seen.has(url)) return false;
-        seen.add(url);
-        return true;
-      });
-
-    const priority = {
-      Steam: 1,
-      GOG: 2,
-      "Epic Games Store": 3,
-      "PlayStation Store": 4,
-      "Microsoft Store": 5,
-      "Nintendo eShop": 6,
-      "Humble Bundle": 7,
-      "Green Man Gaming": 8,
-      "itch.io": 9,
-      EA: 10,
-      "Ubisoft Store": 11,
-      "Battle.net": 12,
-      "App Store": 13,
-      "Google Play": 14,
-      "Galaxy Store": 15,
-      "Amazon Appstore": 16,
-    };
-
-    return deduped.sort((a, b) => {
-      const pa = priority[a.storeName] ?? 999;
-      const pb = priority[b.storeName] ?? 999;
-      if (pa !== pb) return pa - pb;
-      return String(a.storeName || "").localeCompare(String(b.storeName || ""));
-    });
-  }
-
-  // ✅ Dedupe ITAD offers by URL (keeps first occurrence)
-  function dedupeByUrl(list) {
-    const seen = new Set();
-    return (Array.isArray(list) ? list : [])
-      .filter((x) => x?.url)
-      .filter((x) => {
-        const u = String(x.url);
-        if (seen.has(u)) return false;
-        seen.add(u);
-        return true;
-      });
-  }
-
-  function getStoreLabel(item) {
-    if (item?.storeName) return item.storeName;
-
-    return (
-      item?.shop?.name ||
-      item?.shopName ||
-      item?.shop ||
-      item?.store ||
-      item?.name ||
-      item?.title ||
-      "Store"
-    );
-  }
-
-  // ✅ return the full span element only when a price exists
-  function renderStorePrice(item) {
-    const price = Number(item?.price);
-
-    if (Number.isFinite(price)) {
-      return <span className="store-pill-price">${price.toFixed(2)}</span>;
-    }
-
-    return null;
-  }
-
-  // ✅ sort priced stores low -> high, then put stores with no price at the end
-  function sortStoresByPrice(list) {
-    return [...(Array.isArray(list) ? list : [])].sort((a, b) => {
-      const aPrice = Number(a?.price);
-      const bPrice = Number(b?.price);
-
-      const aHasPrice = Number.isFinite(aPrice);
-      const bHasPrice = Number.isFinite(bPrice);
-
-      if (aHasPrice && bHasPrice) {
-        return aPrice - bPrice;
-      }
-
-      if (aHasPrice && !bHasPrice) return -1;
-      if (!aHasPrice && bHasPrice) return 1;
-
-      return String(getStoreLabel(a)).localeCompare(String(getStoreLabel(b)));
-    });
-  }
-
-  // ✅ remove repeat storefront buttons after combining ITAD + RAWG
-  // Prefer the first result encountered, which means ITAD wins over RAWG.
-  function dedupeCombinedStores(list) {
-    const seenLabels = new Set();
-
-    return (Array.isArray(list) ? list : []).filter((item) => {
-      const label = String(getStoreLabel(item)).trim().toLowerCase();
-      const normalizedLabel = label || "store";
-
-      if (seenLabels.has(normalizedLabel)) return false;
-      seenLabels.add(normalizedLabel);
-      return true;
-    });
-  }
-
-  // ✅ remove a gameId from ALL groups when deleting from library
-  async function removeGameFromAllGroups(userId, gameIdStr) {
-    try {
-      const groupsRef = collection(db, "users", userId, "groups");
-      const snap = await getDocs(groupsRef);
-
-      const updates = snap.docs.map(async (groupSnap) => {
-        const data = groupSnap.data();
-        const ids = Array.isArray(data.gameIds) ? data.gameIds.map(String) : [];
-
-        if (!ids.includes(String(gameIdStr))) return;
-
-        await updateDoc(groupSnap.ref, {
-          gameIds: arrayRemove(String(gameIdStr)),
-        });
-      });
-
-      await Promise.all(updates);
-    } catch (err) {
-      console.error("Error removing game from all groups:", err);
-    }
   }
 
   function createGameLink() {
@@ -1056,7 +887,7 @@ export default function GamePage({ auth }) {
                 disabled={savingLibrary || savingFavorite || savingCompleted}
               >
                 {savingLibrary
-                  ? "Updating..."
+                  ? " Updating..."
                   : isInLibrary
                     ? "Remove from Library"
                     : "Add to Library"}
@@ -1217,7 +1048,17 @@ export default function GamePage({ auth }) {
               <div className="game-tags-cloud">
                 {gameData.tags?.length ? (
                   gameData.tags.map((tag) => (
-                    <span key={tag.id}>{tag.name}</span>
+                    <button
+                      key={tag.id}
+                      type="button"
+                      onClick={() =>
+                        navigate("/search", {
+                          state: { quickTag: tag.name, quickTagSlug: tag.slug },
+                        })
+                      }
+                    >
+                      {tag.name}
+                    </button>
                   ))
                 ) : (
                   <span>No tags</span>
