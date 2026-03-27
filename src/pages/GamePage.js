@@ -17,7 +17,6 @@ import ScreenshotFullscreen from "../components/gamePage/ScreenshotFullscreen";
 import {
   doc,
   setDoc,
-  deleteDoc,
   updateDoc,
   arrayRemove,
   getDoc,
@@ -91,6 +90,7 @@ export default function GamePage({ auth }) {
       genres: gameData.genres?.map((g) => g?.name).filter(Boolean) || [],
 
       addedAt: new Date().toISOString(),
+      inLibrary: true,
     };
   }
 
@@ -112,12 +112,10 @@ export default function GamePage({ auth }) {
       setSavingLibrary(true);
 
       if (isInLibrary) {
-        await deleteDoc(docRef);
+        await updateDoc(docRef, { inLibrary: false });
         await removeGameFromAllGroups(user.uid, String(docId));
 
         setIsInLibrary(false);
-        setIsCompleted(false);
-        setIsFavorite(false);
 
         setUserGroups((prev) =>
           prev.map((g) => ({
@@ -167,19 +165,17 @@ export default function GamePage({ auth }) {
       if (isCompleted) {
         await setDoc(
           docRef,
-          { ...buildBaseGamePayload(), status: "backlog" },
+          { ...buildBaseGamePayload(), inLibrary: isInLibrary, status: "backlog" },
           { merge: true },
         );
         setIsCompleted(false);
-        setIsInLibrary(true);
       } else {
         await setDoc(
           docRef,
-          { ...buildBaseGamePayload(), status: "completed" },
+          { ...buildBaseGamePayload(), inLibrary: isInLibrary, status: "completed" },
           { merge: true },
         );
         setIsCompleted(true);
-        setIsInLibrary(true);
       }
     } catch (error) {
       console.error("Error updating completed status:", error);
@@ -212,6 +208,7 @@ export default function GamePage({ auth }) {
         docRef,
         {
           ...buildBaseGamePayload(),
+          inLibrary: isInLibrary,
           isFavorite: !isFavorite,
           status: isCompleted ? "completed" : "backlog",
         },
@@ -219,7 +216,6 @@ export default function GamePage({ auth }) {
       );
 
       setIsFavorite(!isFavorite);
-      setIsInLibrary(true);
     } catch (error) {
       console.error("Error updating favorite:", error);
       alert("There was a problem updating favorites. Please try again.");
@@ -412,8 +408,8 @@ export default function GamePage({ auth }) {
               </div>
               <div className="meta-divider"></div>
               <div>
-                <span className="meta-label">User score</span>
-                <span> {gameData.rating ?? "N/A"} / 5</span>
+                <span className="meta-label">RAWG User score</span>
+                <span className=""> {gameData.rating ?? "N/A"} / 5</span>
               </div>
             </div>
 
