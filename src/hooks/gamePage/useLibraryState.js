@@ -37,7 +37,7 @@ export function useLibraryState(auth, gameData) {
 
         if (snap.exists()) {
           const data = snap.data();
-          setIsInLibrary(true);
+          setIsInLibrary(data.inLibrary !== false);
           setIsFavorite(!!data.isFavorite);
           setIsCompleted(data.status === "completed");
         } else {
