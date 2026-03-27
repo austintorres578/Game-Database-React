@@ -1,18 +1,22 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import loadingCircle from "../assets/images/loading.gif";
 
 import Games from "../components/Games";
+import FilterDropdown from "../components/searchPage/FilterDropdown";
+import NoResultsMessage from "../components/searchPage/NoResultsMessage";
+import SearchPagination from "../components/searchPage/SearchPagination";
+
+import { buildLink } from "../utils/searchPage/buildLink";
+import { scrollToTop } from "../utils/searchPage/scrollHelpers";
+import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
+import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags } from "../services/searchPage/rawgService";
+import { useClickOutside } from "../hooks/searchPage/useClickOutside";
 
 import "../styles/gameSearch.css";
 
-import Header from "../components/Header";
-import Footer from "../components/Footer";
-
 export default function SearchPage({ user }) {
   const location = useLocation();
-  const origin = "https://rawg-video-games-database.p.rapidapi.com/";
-  const apiKey = "99cd09f6c33b42b5a24a9b447ee04a81";
   const pageSize = 12;
 
   const [loading, setLoading] = useState(false);
@@ -46,39 +50,20 @@ export default function SearchPage({ user }) {
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const fetchLink = `${origin}games?key=${apiKey}&search_exact=true&ordering=-metacritic&page_size=${pageSize}&`;
+  const fetchLink = buildRawgFetchBase(pageSize);
 
   const totalPages = Math.max(1, Math.ceil((totalResults || 0) / pageSize));
 
-  // 🔹 now also takes tagsArr
-  function buildLink(term, platformsArr, genresArr, tagsArr, page = 1) {
-    let link = fetchLink;
-    link += `page=${page}`;
-
-    if (term.trim()) link += `&search=${encodeURIComponent(term.trim())}`;
-    if (platformsArr.length > 0) link += `&platforms=${platformsArr.join(",")}`;
-    if (genresArr.length > 0) link += `&genres=${genresArr.join(",")}`;
-    if (tagsArr.length > 0) link += `&tags=${tagsArr.join(",")}`; // 🔹 RAWG tags filter
-
-    return link;
-  }
-
-  function scrollToTop() {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  }
-
   // runs the request + stores "last search" meta in localStorage
   function runSearch(link, isFreshSearch = false, metaState) {
-
     console.log("🔍 RAWG REQUEST URL:", link);
 
     if (metaState) {
       const { term, platforms = [], genres = [], tags = [], page } = metaState;
 
-      console.log(isFreshSearch ? "🔍 NEW / FRESH SEARCH" : "🔁 RE-RUN / RESTORED SEARCH");
+      console.log(
+        isFreshSearch ? "🔍 NEW / FRESH SEARCH" : "🔁 RE-RUN / RESTORED SEARCH",
+      );
       console.log("Search Term:", term || "");
 
       console.log("Platforms Selected:");
@@ -118,21 +103,12 @@ export default function SearchPage({ user }) {
       console.log("------------------------------------");
     }
 
-    const options = {
-      method: "GET",
-      headers: {
-        "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
-        "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
-      },
-    };
-
     setLoading(true);
 
-    fetch(link, options)
-      .then((res) => res.json())
+    fetchRawgGames(link)
       .then((res) => {
         setLoading(false);
-        setTotalResults(res.count || 0);
+        setTotalResults(res.count);
 
         localStorage.setItem("currentLink", link);
         if (metaState) {
@@ -142,13 +118,11 @@ export default function SearchPage({ user }) {
           }
         }
 
-        const results = (res.results || []).slice(0, pageSize);
-
         setGatheredData([
           {
-            results,
-            next: res.next || "",
-            previous: res.previous || "",
+            results: res.results.slice(0, pageSize),
+            next: res.next,
+            previous: res.previous,
             loaded: true,
           },
         ]);
@@ -161,77 +135,25 @@ export default function SearchPage({ user }) {
 
   // fetch platform + genre + tag filters
   useEffect(() => {
-    const options = {
-      method: "GET",
-      headers: {
-        "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
-        "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
-      },
-    };
+    fetchRawgPlatforms().then((platforms) => {
+      setPlatformFilters((prev) => [prev[0], ...platforms]);
+    });
 
-    // Platforms
-    fetch(`${origin}platforms?key=${apiKey}&page_size=50`, options)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
-        setPlatformFilters((prev) => [
-          prev[0],
-          ...sorted.map((p) => ({
-            id: String(p.id),
-            label: p.name,
-            platformId: p.id,
-          })),
-        ]);
-      });
+    fetchRawgGenres().then((genres) => {
+      setGenreFilters((prev) => [prev[0], ...genres]);
+    });
 
-    // Genres
-    fetch(`${origin}genres?key=${apiKey}&page_size=40`, options)
-      .then((res) => res.json())
-      .then((data) => {
-        const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
-        setGenreFilters((prev) => [
-          prev[0],
-          ...sorted.map((g) => ({
-            id: String(g.id),
-            label: g.name,
-            slug: g.slug,
-            kind: "genre",
-          })),
-        ]);
-      });
-
-    // 🔹 Tags
-    fetch(`${origin}tags?key=${apiKey}&page_size=40`, options)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.results) return;
-        const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
-        setTagFilters((prev) => [
-          prev[0],
-          ...sorted.map((t) => ({
-            id: String(t.id),
-            label: t.name,
-            slug: t.slug,
-            kind: "tag",
-          })),
-        ]);
+    fetchRawgTags()
+      .then((tags) => {
+        setTagFilters((prev) => [prev[0], ...tags]);
       })
       .catch((err) => {
         console.error("Error fetching tags:", err);
       });
-
   }, []);
 
   // close page dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        setIsPageDropdownOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  useClickOutside(dropdownRef, () => setIsPageDropdownOpen(false));
 
   // On mount: if there's a saved search, restore it and re-run it
   useEffect(() => {
@@ -255,66 +177,106 @@ export default function SearchPage({ user }) {
     }
   }, []);
 
- useEffect(() => {
-  const quickTag = location.state?.quickTag;
+  useEffect(() => {
+    const quickTag = location.state?.quickTag;
+    const quickTagSlug = location.state?.quickTagSlug;
 
-  if (!quickTag) return;
-  if (genreFilters.length <= 1 && tagFilters.length <= 1) return;
+    if (!quickTag && !quickTagSlug) return;
 
-  const matchedGenre = genreFilters.find(
-    (genre) => genre.label.toLowerCase() === quickTag.toLowerCase()
-  );
+    // If a slug was passed directly (e.g. from GamePage), use it without
+    // needing to wait for or match against the loaded filter lists.
+    if (quickTagSlug) {
+      const page = 1;
+      const nextTags = [quickTagSlug];
 
-  const matchedTag = tagFilters.find(
-    (tag) => tag.label.toLowerCase() === quickTag.toLowerCase()
-  );
+      // Ensure the tag exists as a pill in the filter list
+      setTagFilters((prev) => {
+        const exists = prev.some((t) => t.slug === quickTagSlug);
+        if (exists) return prev;
+        return [
+          ...prev,
+          { id: `quick-${quickTagSlug}`, label: quickTag, slug: quickTagSlug, kind: "tag" },
+        ];
+      });
 
-  const page = 1;
+      setSearchTerm("");
+      setSelectedPlatforms([]);
+      setSelectedGenres([]);
+      setSelectedTags(nextTags);
+      setPageNumber(page);
+      setIsPageDropdownOpen(false);
 
-  setSearchTerm("");
-  setSelectedPlatforms([]);
-  setPageNumber(page);
-  setIsPageDropdownOpen(false);
+      const link = buildLink(fetchLink, "", [], [], nextTags, page);
 
-  if (matchedGenre?.slug) {
-    const nextGenres = [matchedGenre.slug];
+      runSearch(link, true, {
+        term: "",
+        platforms: [],
+        genres: [],
+        tags: nextTags,
+        page,
+      });
 
-    setSelectedGenres(nextGenres);
-    setSelectedTags([]);
+      scrollToTop();
+      return;
+    }
 
-    const link = buildLink("", [], nextGenres, [], page);
+    // Footer quick-tags: match by label against loaded filters
+    if (genreFilters.length <= 1 && tagFilters.length <= 1) return;
 
-    runSearch(link, true, {
-      term: "",
-      platforms: [],
-      genres: nextGenres,
-      tags: [],
-      page,
-    });
+    const matchedGenre = genreFilters.find(
+      (genre) => genre.label.toLowerCase() === quickTag.toLowerCase(),
+    );
 
-    scrollToTop();
-    return;
-  }
+    const matchedTag = tagFilters.find(
+      (tag) => tag.label.toLowerCase() === quickTag.toLowerCase(),
+    );
 
-  if (matchedTag?.slug) {
-    const nextTags = [matchedTag.slug];
+    const page = 1;
 
-    setSelectedGenres([]);
-    setSelectedTags(nextTags);
+    setSearchTerm("");
+    setSelectedPlatforms([]);
+    setPageNumber(page);
+    setIsPageDropdownOpen(false);
 
-    const link = buildLink("", [], [], nextTags, page);
+    if (matchedGenre?.slug) {
+      const nextGenres = [matchedGenre.slug];
 
-    runSearch(link, true, {
-      term: "",
-      platforms: [],
-      genres: [],
-      tags: nextTags,
-      page,
-    });
+      setSelectedGenres(nextGenres);
+      setSelectedTags([]);
 
-    scrollToTop();
-  }
-}, [location.state, genreFilters, tagFilters]);
+      const link = buildLink(fetchLink, "", [], nextGenres, [], page);
+
+      runSearch(link, true, {
+        term: "",
+        platforms: [],
+        genres: nextGenres,
+        tags: [],
+        page,
+      });
+
+      scrollToTop();
+      return;
+    }
+
+    if (matchedTag?.slug) {
+      const nextTags = [matchedTag.slug];
+
+      setSelectedGenres([]);
+      setSelectedTags(nextTags);
+
+      const link = buildLink(fetchLink, "", [], [], nextTags, page);
+
+      runSearch(link, true, {
+        term: "",
+        platforms: [],
+        genres: [],
+        tags: nextTags,
+        page,
+      });
+
+      scrollToTop();
+    }
+  }, [location.state, genreFilters, tagFilters]);
 
   function handleSubmit(event) {
     event.preventDefault();
@@ -323,7 +285,14 @@ export default function SearchPage({ user }) {
     setPageNumber(page);
     localStorage.setItem("currentPage", String(page));
 
-    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, page);
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      page,
+    );
 
     runSearch(link, true, {
       term: searchTerm,
@@ -340,7 +309,14 @@ export default function SearchPage({ user }) {
     if (loading || pageNumber >= totalPages) return;
 
     const newPage = pageNumber + 1;
-    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, newPage);
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      newPage,
+    );
 
     setPageNumber(newPage);
     localStorage.setItem("currentPage", String(newPage));
@@ -360,7 +336,14 @@ export default function SearchPage({ user }) {
     if (loading || pageNumber <= 1) return;
 
     const newPage = pageNumber - 1;
-    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, newPage);
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      newPage,
+    );
 
     setPageNumber(newPage);
     localStorage.setItem("currentPage", String(newPage));
@@ -379,7 +362,14 @@ export default function SearchPage({ user }) {
   function goToPage(num) {
     if (loading || num === pageNumber) return;
 
-    const link = buildLink(searchTerm, selectedPlatforms, selectedGenres, selectedTags, num);
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      num,
+    );
 
     setPageNumber(num);
     localStorage.setItem("currentPage", String(num));
@@ -403,7 +393,10 @@ export default function SearchPage({ user }) {
 
     const arrow = parent.querySelector("span");
 
-    if (arrow.style.transform === "" || arrow.style.transform === "rotate(0deg)") {
+    if (
+      arrow.style.transform === "" ||
+      arrow.style.transform === "rotate(0deg)"
+    ) {
       arrow.style.transform = "rotate(180deg)";
       filters.style.height = "100%";
       filters.style.marginTop = "15px";
@@ -420,21 +413,31 @@ export default function SearchPage({ user }) {
     if (p.id === "all") return setSelectedPlatforms([]);
 
     setSelectedPlatforms((prev) =>
-      prev.includes(p.platformId) ? prev.filter((id) => id !== p.platformId) : [...prev, p.platformId]
+      prev.includes(p.platformId)
+        ? prev.filter((id) => id !== p.platformId)
+        : [...prev, p.platformId],
     );
   }
 
   function handleGenreClick(g) {
     if (g.id === "all") return setSelectedGenres([]);
 
-    setSelectedGenres((prev) => (prev.includes(g.slug) ? prev.filter((sl) => sl !== g.slug) : [...prev, g.slug]));
+    setSelectedGenres((prev) =>
+      prev.includes(g.slug)
+        ? prev.filter((sl) => sl !== g.slug)
+        : [...prev, g.slug],
+    );
   }
 
   // 🔹 Tag click handler
   function handleTagClick(t) {
     if (t.id === "all") return setSelectedTags([]);
 
-    setSelectedTags((prev) => (prev.includes(t.slug) ? prev.filter((sl) => sl !== t.slug) : [...prev, t.slug]));
+    setSelectedTags((prev) =>
+      prev.includes(t.slug)
+        ? prev.filter((sl) => sl !== t.slug)
+        : [...prev, t.slug],
+    );
   }
 
   function resetSearch() {
@@ -472,69 +475,48 @@ export default function SearchPage({ user }) {
     />
   ));
 
-  function isPlatformActive(p) {
-    if (p.id === "all") return selectedPlatforms.length === 0;
-    return selectedPlatforms.includes(p.platformId);
-  }
-
-  function isGenreActive(g) {
-    if (g.id === "all") return selectedGenres.length === 0;
-    return selectedGenres.includes(g.slug);
-  }
-
-  function isTagActive(t) {
-    if (t.id === "all") return selectedTags.length === 0;
-    return selectedTags.includes(t.slug);
-  }
 
   // selected platforms/genres/tags summary
   const selectedPlatformLabels = platformFilters
     .filter((p) => p.id !== "all" && selectedPlatforms.includes(p.platformId))
     .map((p) => p.label);
 
-  const platformSummary = selectedPlatformLabels.length === 0 ? "All Platforms" : selectedPlatformLabels.join(", ");
+  const platformSummary =
+    selectedPlatformLabels.length === 0
+      ? "All Platforms"
+      : selectedPlatformLabels.join(", ");
 
   const selectedGenreLabels = genreFilters
     .filter((g) => g.id !== "all" && selectedGenres.includes(g.slug))
     .map((g) => g.label);
 
-  const genreSummary = selectedGenreLabels.length === 0 ? "All Genres" : selectedGenreLabels.join(", ");
+  const genreSummary =
+    selectedGenreLabels.length === 0
+      ? "All Genres"
+      : selectedGenreLabels.join(", ");
 
   const selectedTagLabels = tagFilters
     .filter((t) => t.id !== "all" && selectedTags.includes(t.slug))
     .map((t) => t.label);
 
-  const tagSummary = selectedTagLabels.length === 0 ? "All Tags" : selectedTagLabels.join(", ");
+  const tagSummary =
+    selectedTagLabels.length === 0 ? "All Tags" : selectedTagLabels.join(", ");
 
-  const pageOptions = (() => {
-    const total = totalPages;
-    if (total <= 10) return Array.from({ length: total }, (_, i) => i + 1);
+  const pageOptions = getPageOptions(totalPages, pageNumber);
 
-    let start = pageNumber - 4;
-    let end = pageNumber + 5;
-
-    if (start < 1) {
-      start = 1;
-      end = 10;
-    }
-    if (end > total) {
-      end = total;
-      start = total - 9;
-    }
-
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  })();
-
-  const hasResults = gatheredData[0].loaded && gatheredData[0].results.length > 0;
-  const noResults = gatheredData[0].loaded && !loading && gatheredData[0].results.length === 0;
+  const hasResults =
+    gatheredData[0].loaded && gatheredData[0].results.length > 0;
+  const noResults =
+    gatheredData[0].loaded && !loading && gatheredData[0].results.length === 0;
 
   return (
     <div className="search-container">
-      <Header />
 
       <div className="search-header">
         <h1 className="search-title">Find Your Next Game</h1>
-        <p className="search-subtitle">Search thousands of titles across all platforms.</p>
+        <p className="search-subtitle">
+          Search thousands of titles across all platforms.
+        </p>
       </div>
 
       <div className="search-page-container">
@@ -553,66 +535,43 @@ export default function SearchPage({ user }) {
           </div>
 
           {/* PLATFORMS */}
-          <div className="platform-game-toggle multi-toggle">
-            <div className="toggle" onClick={revealSearchDropdown}>
-              <p className="toggle-selected">{platformSummary}</p>
-              <span>▾</span>
-            </div>
-            <div className="filters platform-filter">
-              {platformFilters.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  className={"filter-btn" + (isPlatformActive(p) ? " active" : "")}
-                  onClick={() => handlePlatformClick(p)}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            summary={platformSummary}
+            hasValue={selectedPlatforms.length > 0}
+            filters={platformFilters}
+            isActive={(p) => isPlatformActive(p, selectedPlatforms)}
+            onItemClick={handlePlatformClick}
+            filterClassName="platform-filter"
+            onToggle={revealSearchDropdown}
+          />
 
           {/* GENRES */}
-          <div className="platform-game-toggle multi-toggle">
-            <div className="toggle" onClick={revealSearchDropdown}>
-              <p className="toggle-selected">{genreSummary}</p>
-              <span>▾</span>
-            </div>
-            <div className="filters genre-filter">
-              {genreFilters.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  className={"filter-btn" + (isGenreActive(g) ? " active" : "")}
-                  onClick={() => handleGenreClick(g)}
-                >
-                  {g.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            summary={genreSummary}
+            hasValue={selectedGenres.length > 0}
+            filters={genreFilters}
+            isActive={(g) => isGenreActive(g, selectedGenres)}
+            onItemClick={handleGenreClick}
+            filterClassName="genre-filter"
+            onToggle={revealSearchDropdown}
+          />
 
-          {/* TAGS 🔹 NEW */}
-          <div className="platform-game-toggle multi-toggle">
-            <div className="toggle" onClick={revealSearchDropdown}>
-              <p className="toggle-selected">{tagSummary}</p>
-              <span>▾</span>
-            </div>
-            <div className="filters tag-filter">
-              {tagFilters.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  className={"filter-btn" + (isTagActive(t) ? " active" : "")}
-                  onClick={() => handleTagClick(t)}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* TAGS */}
+          <FilterDropdown
+            summary={tagSummary}
+            hasValue={selectedTags.length > 0}
+            filters={tagFilters}
+            isActive={(t) => isTagActive(t, selectedTags)}
+            onItemClick={handleTagClick}
+            filterClassName="tag-filter"
+            onToggle={revealSearchDropdown}
+          />
 
-          <button type="button" className="reset-search-button" onClick={resetSearch}>
+          <button
+            type="button"
+            className="reset-search-button"
+            onClick={resetSearch}
+          >
             Reset Search
           </button>
         </form>
@@ -626,51 +585,24 @@ export default function SearchPage({ user }) {
 
         {hasResults && <div className="game-grid">{games}</div>}
 
-        {noResults && (
-          <div className="no-results-message">
-            <h2>No games found</h2>
-            <p>
-              We couldn&apos;t find any games matching your search and filters. Try a different title, removing some
-              filters, or resetting the search.
-            </p>
-          </div>
-        )}
+        {noResults && <NoResultsMessage />}
 
         {gatheredData[0].loaded && totalPages > 1 && hasResults && (
-          <div className="pagination">
-            <button className="page-btn" onClick={prevPage} disabled={pageNumber <= 1}>
-              ‹ Prev
-            </button>
-
-            <div className={"dropdown" + (isPageDropdownOpen ? " open" : "")} ref={dropdownRef}>
-              <button className="dropdown-trigger" type="button" onClick={() => setIsPageDropdownOpen((v) => !v)}>
-                Page {pageNumber} of {totalPages} ▾
-              </button>
-
-              {isPageDropdownOpen && (
-                <div className="dropdown-menu">
-                  {pageOptions.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      className={"dropdown-item" + (n === pageNumber ? " current-page" : "")}
-                      onClick={() => goToPage(n)}
-                    >
-                      Page {n}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <button className="page-btn" onClick={nextPage} disabled={pageNumber >= totalPages}>
-              Next ›
-            </button>
-          </div>
+          <SearchPagination
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            pageOptions={pageOptions}
+            isPageDropdownOpen={isPageDropdownOpen}
+            setIsPageDropdownOpen={setIsPageDropdownOpen}
+            dropdownRef={dropdownRef}
+            loading={loading}
+            onPrevPage={prevPage}
+            onNextPage={nextPage}
+            onGoToPage={goToPage}
+          />
         )}
       </div>
 
-      <Footer />
     </div>
   );
 }

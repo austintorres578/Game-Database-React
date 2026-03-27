@@ -1,7 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { auth } from "../firebase/firebase";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth, onAuthStateChanged, signOut } from "../firebase/fireAuth";
 
 import headerLogo from "../assets/images/gameDatabase-nav-logo.png";
 import mobileNavIcon from "../assets/images/ham-menu-icon.png";

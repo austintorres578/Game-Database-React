@@ -5,8 +5,8 @@ import noGameBackground from "../assets/images/noGameBackground.jpg";
 import addIcon from "../assets/images/plus-icon.png";
 
 // 🔐 Firebase
-import { auth, db } from "../firebase/firebase";
-import { doc, setDoc, getDoc, deleteDoc } from "firebase/firestore";
+import { auth} from "../firebase/fireAuth";
+import { doc, setDoc, getDoc, deleteDoc, db } from "../firebase/firestore";
 
 export default function Games(props) {
   const [isHovered, setIsHovered] = useState(false);

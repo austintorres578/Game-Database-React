@@ -1,35 +1,11 @@
-import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-
-import arrow from '../assets/images/arrow.png'
-import loadingCircle from '../assets/images/loading.gif'
-import whiteArrow from '../assets/images/white-arrow-up.png'
-import noGameBackground from '../assets/images/noGameBackground.jpg'
-import redDeadImage from '../assets/images/redDeadPreview.jpg'
 
 import '../styles/home.css'
 
-import Header from '../components/Header'
-import Footer from '../components/Footer'
-
-import { auth } from '../firebase/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-
-export default function HomePage() {
-  const [user, setUser] = useState(null);
-
-  // Detect if user is logged in
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-
-    return () => unsub();
-  }, []);
+export default function HomePage({user}) {
 
   return (
     <div className='home-page'>
-      <Header />
 
       <section className="home-hero">
         <div className="home-hero-inner">
@@ -121,7 +97,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <Footer/>
     </div>
   );
 }

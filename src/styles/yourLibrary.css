@@ -258,6 +258,7 @@
   max-width: 1275px;
   padding-left: 20px;
   padding-right: 20px;
+  padding-top: 15px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -535,6 +536,7 @@
 
 .library-page .game-img{
   height: 67%;
+  background: url('../assets/images/noGameBackground.jpg');
 }
 
 .library-page .game-grid .game-wrapper{
@@ -827,10 +829,16 @@
   width: 152px;
 }
 
+.library-page .sort-con{
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .library-page .sort-by-con{
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   position: relative;
 }
 
