@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import GamePage from "./pages/GamePage";
+import CustomGame from "./pages/CustomGame";
 import HomePage from "./pages/HomePage";
 import SignInPage from "./pages/SignInPage";
 import SignUpPage from "./pages/SignUpPage";
@@ -42,6 +43,7 @@ function App() {
           <Route path="/" element={<HomePage user={user} />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/game" element={<GamePage auth={auth} />} />
+          <Route path="/custom-game" element={<CustomGame auth={auth} />} />
           <Route path="/signup" element={<SignUpPage auth={auth} />} />
           <Route path="/signin" element={<SignInPage auth={auth}/>} />
 

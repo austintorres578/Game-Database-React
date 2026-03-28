@@ -38,6 +38,9 @@ export default function Header() {
           <NavLink to="/search" className={navClass}>
             Search For Games
           </NavLink>
+          <NavLink to="/custom-game" className={navClass}>
+            Custom Game (DEV)
+          </NavLink>
 
           {user ? (
             <>
@@ -91,6 +94,9 @@ export default function Header() {
 
           <NavLink to="/search" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
             Search For Games
+          </NavLink>
+          <NavLink to="/custom-game" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+            Custom Game (DEV)
           </NavLink>
 
           {user ? (

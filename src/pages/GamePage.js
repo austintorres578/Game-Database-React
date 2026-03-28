@@ -11,7 +11,7 @@ import StorePills from "../components/gamePage/StorePills";
 import GameHeroActions from "../components/gamePage/GameHeroActions";
 import GameDetailsPanel from "../components/gamePage/GameDetailsPanel";
 import ScreenshotsRow from "../components/gamePage/ScreenshotsRow";
-import ScreenshotFullscreen from "../components/gamePage/ScreenshotFullscreen";
+import ScreenshotModal from "../components/customGame/ScreenshotModal";
 
 // 🔐 Firebase imports
 import {
@@ -328,7 +328,6 @@ export default function GamePage({ auth }) {
   const {
     isFullScreenshotOpen,
     activeScreenshotIndex,
-    fullscreenRef,
     openScreenshot,
     closeScreenshot,
     showPrevScreenshot,
@@ -402,14 +401,14 @@ export default function GamePage({ auth }) {
             <div className="game-meta-row">
               <div>
                 <span className="meta-label">Metascore</span>
-                <span className="metascore-pill">
+                <span className="score-pill">
                   {gameData.metacritic ?? "N/A"}
                 </span>
               </div>
               <div className="meta-divider"></div>
               <div>
                 <span className="meta-label">RAWG User score</span>
-                <span className=""> {gameData.rating ?? "N/A"} / 5</span>
+                <span className="score-pill"> {gameData.rating ?? "N/A"} / 5</span>
               </div>
             </div>
 
@@ -505,12 +504,10 @@ export default function GamePage({ auth }) {
         />
       </div>
 
-      <ScreenshotFullscreen
-        isOpen={isFullScreenshotOpen}
-        fullscreenRef={fullscreenRef}
-        onClose={closeScreenshot}
-        activeIndex={activeScreenshotIndex}
+      <ScreenshotModal
         screenshots={gameScreenshots}
+        activeIndex={isFullScreenshotOpen ? activeScreenshotIndex : null}
+        onClose={closeScreenshot}
         onPrev={showPrevScreenshot}
         onNext={showNextScreenshot}
       />

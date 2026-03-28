@@ -208,7 +208,7 @@ body {
   color: #cbd5f5;
 }
 
-.metascore-pill {
+.score-pill {
   padding: 5px 7px;
   border-radius: 100px;
   background: #22c55e;
@@ -349,7 +349,10 @@ body {
   border: 1px solid rgba(31, 41, 55, 0.9);
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.8);
   padding: 1.3rem 1.4rem 1.5rem;
-  height: fit-content;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .panel-title {
