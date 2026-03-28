@@ -922,6 +922,10 @@
         color: #9ca3af;
      }
 
+.library-page .game-card .game-genre {
+  color: #16a34a;
+}
+
 .library-page .custom-filter-settings .cfs-rule-inputs {
   width: 100%;
   height: 33px;

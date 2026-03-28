@@ -56,6 +56,22 @@ export default function SortSelector({
             >
               Metacritic (Low-High)
             </button>
+
+            <button
+              type="button"
+              className={sortBy === "rawg_desc" ? "active" : ""}
+              onClick={() => onSortOptionClick("rawg_desc")}
+            >
+              RAWG (High-Low)
+            </button>
+
+            <button
+              type="button"
+              className={sortBy === "rawg_asc" ? "active" : ""}
+              onClick={() => onSortOptionClick("rawg_asc")}
+            >
+              RAWG (Low-High)
+            </button>
           </div>
         </div>
       </div>

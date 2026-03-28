@@ -12,10 +12,11 @@
  * @param {number} page           - Page number (default 1)
  * @returns {string} The fully constructed request URL
  */
-export function buildLink(baseUrl, term, platformsArr, genresArr, tagsArr, page = 1) {
+export function buildLink(baseUrl, term, platformsArr, genresArr, tagsArr, page = 1, ordering = "-metacritic") {
   let link = baseUrl;
   link += `page=${page}`;
 
+  if (ordering) link += `&ordering=${ordering}`;
   if (term.trim()) link += `&search=${encodeURIComponent(term.trim())}`;
   if (platformsArr.length > 0) link += `&platforms=${platformsArr.join(",")}`;
   if (genresArr.length > 0) link += `&genres=${genresArr.join(",")}`;

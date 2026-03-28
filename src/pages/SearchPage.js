@@ -47,6 +47,10 @@ export default function SearchPage({ user }) {
     { id: "all", label: "All Tags", slug: "", kind: "all" },
   ]);
 
+  const [sortBy, setSortBy] = useState("-metacritic");
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef(null);
+
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -133,6 +137,11 @@ export default function SearchPage({ user }) {
       });
   }
 
+  // Scroll to top when page loads
+  useEffect(() => {
+    scrollToTop();
+  }, []);
+
   // fetch platform + genre + tag filters
   useEffect(() => {
     fetchRawgPlatforms().then((platforms) => {
@@ -154,6 +163,7 @@ export default function SearchPage({ user }) {
 
   // close page dropdown when clicking outside
   useClickOutside(dropdownRef, () => setIsPageDropdownOpen(false));
+  useClickOutside(sortDropdownRef, () => setIsSortDropdownOpen(false));
 
   // On mount: if there's a saved search, restore it and re-run it
   useEffect(() => {
@@ -167,8 +177,9 @@ export default function SearchPage({ user }) {
         setSearchTerm(savedState.term || "");
         setSelectedPlatforms(savedState.platforms || []);
         setSelectedGenres(savedState.genres || []);
-        setSelectedTags(savedState.tags || []); // 🔹 restore tags
+        setSelectedTags(savedState.tags || []);
         setPageNumber(savedState.page || 1);
+        if (savedState.sortBy) setSortBy(savedState.sortBy);
 
         runSearch(savedLink, false, savedState);
       } catch (err) {
@@ -206,7 +217,7 @@ export default function SearchPage({ user }) {
       setPageNumber(page);
       setIsPageDropdownOpen(false);
 
-      const link = buildLink(fetchLink, "", [], [], nextTags, page);
+      const link = buildLink(fetchLink, "", [], [], nextTags, page, sortBy);
 
       runSearch(link, true, {
         term: "",
@@ -214,6 +225,7 @@ export default function SearchPage({ user }) {
         genres: [],
         tags: nextTags,
         page,
+        sortBy,
       });
 
       scrollToTop();
@@ -244,7 +256,7 @@ export default function SearchPage({ user }) {
       setSelectedGenres(nextGenres);
       setSelectedTags([]);
 
-      const link = buildLink(fetchLink, "", [], nextGenres, [], page);
+      const link = buildLink(fetchLink, "", [], nextGenres, [], page, sortBy);
 
       runSearch(link, true, {
         term: "",
@@ -252,6 +264,7 @@ export default function SearchPage({ user }) {
         genres: nextGenres,
         tags: [],
         page,
+        sortBy,
       });
 
       scrollToTop();
@@ -264,7 +277,7 @@ export default function SearchPage({ user }) {
       setSelectedGenres([]);
       setSelectedTags(nextTags);
 
-      const link = buildLink(fetchLink, "", [], [], nextTags, page);
+      const link = buildLink(fetchLink, "", [], [], nextTags, page, sortBy);
 
       runSearch(link, true, {
         term: "",
@@ -272,6 +285,7 @@ export default function SearchPage({ user }) {
         genres: [],
         tags: nextTags,
         page,
+        sortBy,
       });
 
       scrollToTop();
@@ -292,6 +306,7 @@ export default function SearchPage({ user }) {
       selectedGenres,
       selectedTags,
       page,
+      sortBy,
     );
 
     runSearch(link, true, {
@@ -300,6 +315,7 @@ export default function SearchPage({ user }) {
       genres: selectedGenres,
       tags: selectedTags,
       page,
+      sortBy,
     });
 
     scrollToTop();
@@ -316,6 +332,7 @@ export default function SearchPage({ user }) {
       selectedGenres,
       selectedTags,
       newPage,
+      sortBy,
     );
 
     setPageNumber(newPage);
@@ -327,6 +344,7 @@ export default function SearchPage({ user }) {
       genres: selectedGenres,
       tags: selectedTags,
       page: newPage,
+      sortBy,
     });
 
     scrollToTop();
@@ -343,6 +361,7 @@ export default function SearchPage({ user }) {
       selectedGenres,
       selectedTags,
       newPage,
+      sortBy,
     );
 
     setPageNumber(newPage);
@@ -354,6 +373,7 @@ export default function SearchPage({ user }) {
       genres: selectedGenres,
       tags: selectedTags,
       page: newPage,
+      sortBy,
     });
 
     scrollToTop();
@@ -369,6 +389,7 @@ export default function SearchPage({ user }) {
       selectedGenres,
       selectedTags,
       num,
+      sortBy,
     );
 
     setPageNumber(num);
@@ -380,6 +401,35 @@ export default function SearchPage({ user }) {
       genres: selectedGenres,
       tags: selectedTags,
       page: num,
+      sortBy,
+    });
+
+    scrollToTop();
+  }
+
+  function handleSortChange(nextSort) {
+    setSortBy(nextSort);
+    setIsSortDropdownOpen(false);
+    const page = 1;
+    setPageNumber(page);
+
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      page,
+      nextSort,
+    );
+
+    runSearch(link, false, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page,
+      sortBy: nextSort,
     });
 
     scrollToTop();
@@ -444,9 +494,11 @@ export default function SearchPage({ user }) {
     setSearchTerm("");
     setSelectedPlatforms([]);
     setSelectedGenres([]);
-    setSelectedTags([]); // 🔹 reset tags
+    setSelectedTags([]);
+    setSortBy("-metacritic");
     setPageNumber(1);
     setIsPageDropdownOpen(false);
+    setIsSortDropdownOpen(false);
 
     setGatheredData([{ results: [], next: "", previous: "", loaded: false }]);
     setTotalResults(0);
@@ -463,8 +515,7 @@ export default function SearchPage({ user }) {
       user={user} // ✅ IMPORTANT: Games can now block “Add to Library” when logged out
       id={game.id}
       name={game.name}
-      rating={game.metacritic}
-      developers={game.developers}
+      rating={game.metacritic}      rawgRating={game.rating}      developers={game.developers}
       genre={game.genres}
       background={game.background_image}
       consoleList={game.platforms}
@@ -503,6 +554,18 @@ export default function SearchPage({ user }) {
     selectedTagLabels.length === 0 ? "All Tags" : selectedTagLabels.join(", ");
 
   const pageOptions = getPageOptions(totalPages, pageNumber);
+
+  function getSortLabel(value) {
+    switch (value) {
+      case "metacritic":  return "Metacritic (Low-High)";
+      case "-rating":     return "RAWG (High-Low)";
+      case "rating":      return "RAWG (Low-High)";
+      case "name":        return "Name (A-Z)";
+      case "-name":       return "Name (Z-A)";
+      case "-metacritic":
+      default:            return "Metacritic (High-Low)";
+    }
+  }
 
   const hasResults =
     gatheredData[0].loaded && gatheredData[0].results.length > 0;
@@ -575,6 +638,35 @@ export default function SearchPage({ user }) {
             Reset Search
           </button>
         </form>
+
+        {/* SORT */}
+        {hasResults && <div className="search-sort-con" ref={sortDropdownRef}>
+          <p>Sort by</p>
+          <div className="sorting">
+            <button type="button" onClick={() => setIsSortDropdownOpen((prev) => !prev)}>
+              {getSortLabel(sortBy)}
+            </button>
+            <div className={isSortDropdownOpen ? "" : "invisible"}>
+              {[
+                { key: "-metacritic", label: "Metacritic (High-Low)" },
+                { key: "metacritic",  label: "Metacritic (Low-High)" },
+                { key: "-rating",     label: "RAWG (High-Low)" },
+                { key: "rating",      label: "RAWG (Low-High)" },
+                { key: "name",        label: "Name (A-Z)" },
+                { key: "-name",       label: "Name (Z-A)" },
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  type="button"
+                  className={sortBy === key ? "active" : ""}
+                  onClick={() => handleSortChange(key)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>}
 
         {loading && (
           <div className="loading-wrapper">

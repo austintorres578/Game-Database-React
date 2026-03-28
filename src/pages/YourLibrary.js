@@ -20,7 +20,7 @@ import GroupPanel from "../components/yourLibrary/GroupPanel";
 import ImportPanel from "../components/yourLibrary/ImportPanel";
 import CandidateList from "../components/yourLibrary/CandidateList";
 
-import { safeText, compareByTitle, compareByMetacritic } from "../utils/yourLibrary/sortHelpers";
+import { safeText, compareByTitle, compareByMetacritic, compareByRawg } from "../utils/yourLibrary/sortHelpers";
 
 import { useLibraryData } from "../hooks/yourLibrary/useLibraryData";
 import { useSteamSync } from "../hooks/yourLibrary/useSteamSync";
@@ -268,6 +268,10 @@ export default function YourLibrary() {
         return compareByMetacritic(a, b, "desc");
       case "meta_asc":
         return compareByMetacritic(a, b, "asc");
+      case "rawg_desc":
+        return compareByRawg(a, b, "desc");
+      case "rawg_asc":
+        return compareByRawg(a, b, "asc");
       case "name_asc":
       default:
         return compareByTitle(a, b, "asc");

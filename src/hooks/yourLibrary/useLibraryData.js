@@ -204,7 +204,7 @@ export function useLibraryData() {
 
             if (
               typeof saved.sortBy === "string" &&
-              ["name_asc", "name_desc", "meta_desc", "meta_asc"].includes(
+              ["name_asc", "name_desc", "meta_desc", "meta_asc", "rawg_desc", "rawg_asc"].includes(
                 saved.sortBy,
               )
             ) {

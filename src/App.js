@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 import GamePage from "./pages/GamePage";
 import CustomGame from "./pages/CustomGame";
@@ -9,11 +10,19 @@ import UserProfile from "./pages/UserProfile";
 import SearchPage from "./pages/SearchPage";
 import YourLibrary from "./pages/YourLibrary";
 import UserProfileCustomizer from "./pages/UserProfileCustomize";
-import Header from './components/Header'
-import Footer from './components/Footer'
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 import { auth } from "./firebase/fireAuth";
 import { useAuth } from "./hooks/useAuth";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [pathname]);
+  return null;
+}
 
 /* 🔒 Protected wrapper that respects auth loading */
 function ProtectedRoute({ user, authLoading, children }) {
@@ -37,6 +46,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Header />
         <Routes>
           {/* ✅ Public routes */}

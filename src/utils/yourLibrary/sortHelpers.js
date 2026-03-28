@@ -78,6 +78,36 @@ export function compareByMetacritic(a, b, dir = "desc") {
 }
 
 /**
+ * Extracts a numeric RAWG rating (0–5) from a game object.
+ * Returns null if missing or stored as a metacritic-range value (> 5).
+ */
+export function getRawgRatingNumber(game) {
+  const v = game?.rating ?? null;
+  const n = Number(v);
+  return Number.isFinite(n) && n <= 5 ? n : null;
+}
+
+/**
+ * Comparator for sorting games by RAWG rating.
+ * Unrated games always sort to the bottom regardless of direction.
+ * Ties are broken alphabetically by title.
+ */
+export function compareByRawg(a, b, dir = "desc") {
+  const ra = getRawgRatingNumber(a);
+  const rb = getRawgRatingNumber(b);
+
+  const aMissing = ra === null;
+  const bMissing = rb === null;
+  if (aMissing && bMissing) return compareByTitle(a, b, "asc");
+  if (aMissing) return 1;
+  if (bMissing) return -1;
+
+  const diff = ra - rb;
+  if (diff === 0) return compareByTitle(a, b, "asc");
+  return dir === "asc" ? diff : -diff;
+}
+
+/**
  * Returns the human-readable label for a given sort key.
  */
 export function getSortLabel(sortValue) {
@@ -88,6 +118,10 @@ export function getSortLabel(sortValue) {
       return "Metacritic (High-Low)";
     case "meta_asc":
       return "Metacritic (Low-High)";
+    case "rawg_desc":
+      return "RAWG (High-Low)";
+    case "rawg_asc":
+      return "RAWG (Low-High)";
     case "name_asc":
     default:
       return "Name (A-Z)";

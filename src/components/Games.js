@@ -22,12 +22,17 @@ export default function Games(props) {
   const primaryGenre =
     props.genre && props.genre.length > 0 && props.genre[0]?.name
       ? props.genre[0].name
-      : "No Genre";
+      : "Genre Unlisted";
 
   const hasRating =
     typeof props.rating === "number" && !Number.isNaN(props.rating);
 
+  const hasRawgRating =
+    typeof props.rawgRating === "number" && !Number.isNaN(props.rawgRating);
+
   const metaText = hasRating ? `${props.rating} Metacritic` : "No Score";
+
+  const rawgText = hasRawgRating ? `${Math.round(props.rawgRating)}/5 RAWG` : "";
 
   // ✅ OLD doc-id convention (pre rawg_):
   // Firestore doc id === RAWG id as a string, e.g. "3498"
@@ -112,7 +117,7 @@ export default function Games(props) {
 
           platforms: extractPlatformNames(props.consoleList),
 
-          genres: primaryGenre !== "No Genre" ? [primaryGenre] : [],
+          genres: primaryGenre !== "Genre Unlisted" ? [primaryGenre] : [],
 
           status: "backlog",
           isFavorite: false,
@@ -185,7 +190,7 @@ export default function Games(props) {
 
             <div className="game-sub-info">
               <p className="game-genre">{primaryGenre} •</p>
-              <p className="game-meta">{metaText}</p>
+              <p className="game-meta">{metaText} {hasRawgRating && <span>• {rawgText}</span>}</p>
             </div>
           </div>
         </div>

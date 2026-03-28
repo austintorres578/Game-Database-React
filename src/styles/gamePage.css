@@ -350,9 +350,6 @@ body {
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.8);
   padding: 1.3rem 1.4rem 1.5rem;
   height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 }
 
 .panel-title {
@@ -386,6 +383,12 @@ body {
   color: #9ca3af;
   margin-top: 0;
   margin-bottom: 1.1rem;
+}
+
+.game-description{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .game-description p {
