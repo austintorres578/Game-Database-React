@@ -26,25 +26,20 @@ export default function LibraryStatsHeader({
             Search For Game
           </Link>
 
+          <Link to="/custom-game" className="btn btn-ghost">
+            Create Custom Game
+          </Link>
+
           <a href="#filter-settings">
             <button
               className="btn btn-ghost"
               type="button"
               onClick={onOpenImportPanel}
             >
-              Import Games (Images / Steam Sync)
+              Import Games
             </button>
           </a>
 
-          <a href="#filter-settings">
-            <button
-              className="btn btn-ghost"
-              type="button"
-              onClick={onOpenTextImportPanel}
-            >
-              Import Games (Game Titles)
-            </button>
-          </a>
         </div>
       </div>
 

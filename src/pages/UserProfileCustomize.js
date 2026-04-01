@@ -26,6 +26,8 @@ export default function UserProfileCustomizer() {
 
   // Avatar preview
   const [previewSrc, setPreviewSrc] = useState(userDefaultProfile);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [existingAvatarUrl, setExistingAvatarUrl] = useState(null);
 
   // Profile data
   const [displayName, setDisplayName] = useState(DEFAULT_DISPLAY_NAME);
@@ -56,6 +58,8 @@ export default function UserProfileCustomizer() {
     setSelectedGenres([]);
     setProfileTags([]);
     setPreviewSrc(userDefaultProfile);
+    setAvatarFile(null);
+    setExistingAvatarUrl(null);
     setGamesLogged(0);
     setGamesCompleted(0);
   };
@@ -104,7 +108,8 @@ export default function UserProfileCustomizer() {
             : [],
         );
 
-        setPreviewSrc(userData.avatarPreview || userDefaultProfile);
+        setExistingAvatarUrl(userData.avatarUrl || null);
+        setPreviewSrc(userData.avatarUrl || userDefaultProfile);
       } catch (err) {
         console.error("Failed to prepare profile and stats:", err);
 
@@ -140,17 +145,13 @@ export default function UserProfileCustomizer() {
   const toggleProfileTag = (tag) =>
     setProfileTags((prev) => toggleArrayItemWithMax(prev, tag, 5));
 
-  const prepareAvatarChange = async (e) => {
-    try {
-      const newPreviewSrc = await handleAvatarChange(e);
+  const prepareAvatarChange = (e) => {
+    const file = handleAvatarChange(e);
 
-      if (!newPreviewSrc) return;
+    if (!file) return;
 
-      setPreviewSrc(newPreviewSrc);
-    } catch (err) {
-      console.error("Failed to prepare avatar preview:", err);
-      setError("Failed to load selected image.");
-    }
+    setAvatarFile(file);
+    setPreviewSrc(URL.createObjectURL(file));
   };
 
   const prepareSave = async (e) => {
@@ -167,7 +168,8 @@ export default function UserProfileCustomizer() {
         selectedPlatforms,
         selectedGenres,
         profileTags,
-        previewSrc,
+        avatarFile,
+        existingAvatarUrl,
       });
 
       alert("Profile saved successfully!");

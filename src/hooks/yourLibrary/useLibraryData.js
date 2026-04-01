@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth, onAuthStateChanged } from "../../firebase/fireAuth";
-import { collection, getDocs, db } from "../../firebase/firestore";
+import { collection, onSnapshot, query, db } from "../../firebase/firestore";
 import { safeText } from "../../utils/yourLibrary/sortHelpers";
 import {
   readLibraryViewState,
@@ -24,6 +24,10 @@ export const UNGROUPED_FILTER = {
  * Also persists view state changes back to localStorage.
  */
 export function useLibraryData() {
+  const unsubLibraryRef = useRef(null);
+  const unsubGroupsRef = useRef(null);
+  const initializedRef = useRef(false);
+
   const [authUser, setAuthUser] = useState(null);
   const [stats, setStats] = useState({
     total: 0,
@@ -68,8 +72,12 @@ export function useLibraryData() {
     AUTH LISTENER → LOAD LIBRARY + GROUPS + RESTORE VIEW STATE
   -------------------------------------------------------------------------- */
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
       setAuthUser(user);
+
+      if (unsubLibraryRef.current) { unsubLibraryRef.current(); unsubLibraryRef.current = null; }
+      if (unsubGroupsRef.current) { unsubGroupsRef.current(); unsubGroupsRef.current = null; }
+      initializedRef.current = false;
 
       if (!user) {
         setStats({ total: 0, completed: 0, backlog: 0, playing: 0 });
@@ -84,67 +92,43 @@ export function useLibraryData() {
         return;
       }
 
-      try {
-        const libraryRef = collection(db, "users", user.uid, "library");
-        const snapshot = await getDocs(libraryRef);
-
-        let total = 0;
-        let completed = 0;
-        let backlog = 0;
-        let playing = 0;
-        let games = [];
+      // --- LIBRARY LISTENER ---
+      const libraryRef = query(collection(db, "users", user.uid, "library"));
+      unsubLibraryRef.current = onSnapshot(libraryRef, (snapshot) => {
+        let total = 0, completed = 0, backlog = 0, playing = 0;
+        const games = [];
 
         snapshot.forEach((docSnap) => {
           total += 1;
           const data = docSnap.data();
-
-          const title =
-            safeText(data.title) ||
-            safeText(data.name) ||
-            safeText(data.gameTitle) ||
-            safeText(data.game_name) ||
-            "Untitled game";
-
+          const title = safeText(data.title) || "Untitled game";
           games.push({ id: String(docSnap.id), title, ...data });
 
           const status = data.status?.toLowerCase?.() || "";
-          switch (status) {
-            case "completed":
-              completed++;
-              break;
-            case "backlog":
-              backlog++;
-              break;
-            case "playing":
-              playing++;
-              break;
-            default:
-              break;
-          }
+          if (status === "completed") completed++;
+          else if (status === "backlog") backlog++;
+          else if (status === "playing") playing++;
         });
 
-        const sortedGamesByName = games.sort((a, b) =>
-          String(a.title || "").localeCompare(
-            String(b.title || ""),
-            undefined,
-            { sensitivity: "base" },
-          ),
+        const sortedGames = games.sort((a, b) =>
+          String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity: "base" })
         );
 
         setStats({ total, completed, backlog, playing });
-        setLibraryGames(sortedGamesByName);
+        setLibraryGames(sortedGames);
+      }, (err) => {
+        console.error("Library snapshot error:", err);
+      });
 
-        const groupsRef = collection(db, "users", user.uid, "groups");
-        const groupsSnap = await getDocs(groupsRef);
-
+      // --- GROUPS LISTENER ---
+      const groupsRef = query(collection(db, "users", user.uid, "groups"));
+      unsubGroupsRef.current = onSnapshot(groupsRef, (groupsSnap) => {
         let userGroups = groupsSnap.docs.map((docSnap) => {
           const data = docSnap.data();
           return {
             id: docSnap.id,
             name: safeText(data.name, "Untitled Group") || "Untitled Group",
-            gameIds: Array.isArray(data.gameIds)
-              ? data.gameIds.map((id) => String(id))
-              : [],
+            gameIds: Array.isArray(data.gameIds) ? data.gameIds.map((id) => String(id)) : [],
             field: data.field || "platform",
             operator: data.operator || "eq",
             value: data.value || "",
@@ -152,101 +136,84 @@ export function useLibraryData() {
         });
 
         userGroups = userGroups.sort((a, b) =>
-          String(a.name || "").localeCompare(
-            String(b.name || ""),
-            undefined,
-            { sensitivity: "base" },
-          ),
+          String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" })
         );
 
-        const fullFilters = [
-          ALL_PLATFORMS_FILTER,
-          UNGROUPED_FILTER,
-          ...userGroups,
-        ];
-
-        let initialGroups = ["all-platforms"];
-        if (typeof window !== "undefined") {
-          const storageKey = `vgdb_lastGroupIds_${user.uid}`;
-          const storedRaw = window.localStorage.getItem(storageKey);
-          if (storedRaw) {
-            try {
-              const parsed = JSON.parse(storedRaw);
-              let candidateIds = [];
-              if (Array.isArray(parsed)) candidateIds = parsed;
-              else if (typeof parsed === "string") candidateIds = [parsed];
-              const validIds = candidateIds.filter((id) => {
-                if (id === "all-platforms") return true;
-                if (id === "ungrouped") return true;
-                return userGroups.some((g) => g.id === id);
-              });
-              if (validIds.length > 0) initialGroups = validIds;
-            } catch {
-              // ignore
-            }
-          }
-        }
-
-        let restoredGroups = initialGroups;
-        let restoredStatus = "all";
-        let restoredPage = 1;
-        let restoredSortBy = "name_asc";
-        let restoredSearchTerm = "";
-
-        if (typeof window !== "undefined") {
-          const saved = readLibraryViewState(user.uid);
-          if (saved) {
-            if (typeof saved.statusFilter === "string")
-              restoredStatus = saved.statusFilter;
-
-            if (Number.isFinite(Number(saved.currentPage)))
-              restoredPage = Math.max(1, Number(saved.currentPage));
-
-            if (
-              typeof saved.sortBy === "string" &&
-              ["name_asc", "name_desc", "meta_desc", "meta_asc"].includes(
-                saved.sortBy,
-              )
-            ) {
-              restoredSortBy = saved.sortBy;
-            }
-
-            if (typeof saved.searchTerm === "string")
-              restoredSearchTerm = saved.searchTerm;
-
-            const savedGroupsRaw = saved.activeGroupIds;
-            const savedGroups = Array.isArray(savedGroupsRaw)
-              ? savedGroupsRaw
-              : typeof savedGroupsRaw === "string"
-                ? [savedGroupsRaw]
-                : [];
-
-            if (savedGroups.length > 0) {
-              const validIds = savedGroups.filter((id) => {
-                if (id === "all-platforms") return true;
-                if (id === "ungrouped") return true;
-                return userGroups.some((g) => g.id === id);
-              });
-              if (validIds.length > 0) restoredGroups = validIds;
-            }
-          }
-        }
-
+        const fullFilters = [ALL_PLATFORMS_FILTER, UNGROUPED_FILTER, ...userGroups];
         setCustomFilters(fullFilters);
-        setStatusFilter(restoredStatus);
-        setActiveGroupIds(restoredGroups);
-        setCurrentPage(restoredPage);
-        setSortBy(restoredSortBy);
-        setSearchTerm(restoredSearchTerm);
-        setIsPageDropdownOpen(false);
-      } catch (err) {
-        console.error("Error loading library or groups:", err);
-      } finally {
+
+        // View state restore — runs once per login session only
+        if (!initializedRef.current) {
+          initializedRef.current = true;
+
+          let restoredGroups = ["all-platforms"];
+          let restoredStatus = "all";
+          let restoredPage = 1;
+          let restoredSortBy = "name_asc";
+          let restoredSearchTerm = "";
+
+          if (typeof window !== "undefined") {
+            const storageKey = `vgdb_lastGroupIds_${user.uid}`;
+            const storedRaw = window.localStorage.getItem(storageKey);
+            if (storedRaw) {
+              try {
+                const parsed = JSON.parse(storedRaw);
+                let candidateIds = [];
+                if (Array.isArray(parsed)) candidateIds = parsed;
+                else if (typeof parsed === "string") candidateIds = [parsed];
+                const validIds = candidateIds.filter((id) => {
+                  if (id === "all-platforms") return true;
+                  if (id === "ungrouped") return true;
+                  return userGroups.some((g) => g.id === id);
+                });
+                if (validIds.length > 0) restoredGroups = validIds;
+              } catch { /* ignore */ }
+            }
+
+            const saved = readLibraryViewState(user.uid);
+            if (saved) {
+              if (typeof saved.statusFilter === "string") restoredStatus = saved.statusFilter;
+              if (Number.isFinite(Number(saved.currentPage))) restoredPage = Math.max(1, Number(saved.currentPage));
+              if (
+                typeof saved.sortBy === "string" &&
+                ["name_asc", "name_desc", "meta_desc", "meta_asc", "rawg_desc", "rawg_asc"].includes(saved.sortBy)
+              ) restoredSortBy = saved.sortBy;
+              if (typeof saved.searchTerm === "string") restoredSearchTerm = saved.searchTerm;
+
+              const savedGroupsRaw = saved.activeGroupIds;
+              const savedGroups = Array.isArray(savedGroupsRaw)
+                ? savedGroupsRaw
+                : typeof savedGroupsRaw === "string" ? [savedGroupsRaw] : [];
+              if (savedGroups.length > 0) {
+                const validIds = savedGroups.filter((id) => {
+                  if (id === "all-platforms") return true;
+                  if (id === "ungrouped") return true;
+                  return userGroups.some((g) => g.id === id);
+                });
+                if (validIds.length > 0) restoredGroups = validIds;
+              }
+            }
+          }
+
+          setStatusFilter(restoredStatus);
+          setActiveGroupIds(restoredGroups);
+          setCurrentPage(restoredPage);
+          setSortBy(restoredSortBy);
+          setSearchTerm(restoredSearchTerm);
+          setIsPageDropdownOpen(false);
+          setLoadingStats(false);
+        }
+      }, (err) => {
+        console.error("Groups snapshot error:", err);
         setLoadingStats(false);
-      }
+      });
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubAuth();
+      if (unsubLibraryRef.current) unsubLibraryRef.current();
+      if (unsubGroupsRef.current) unsubGroupsRef.current();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

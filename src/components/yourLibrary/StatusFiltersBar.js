@@ -45,6 +45,16 @@ export default function StatusFiltersBar({
               {loadingStats ? "…" : groupStats.completed}
             </span>
           </button>
+
+          <button
+            className={`filter-pill ${statusFilter === "custom" ? "is-active" : ""}`}
+            onClick={() => onStatusFilterChange("custom")}
+          >
+            <span>Custom</span>
+            <span className="filter-count">
+              {loadingStats ? "…" : groupStats.custom}
+            </span>
+          </button>
         </div>
 
         <a href="#filter-settings">

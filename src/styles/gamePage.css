@@ -100,6 +100,29 @@ body {
   backdrop-filter: blur(10px);
 }
 
+.game-edit-button{
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: #20c05b;
+  height: 45px;
+  width: 45px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+}
+
+/* .game-page-container .cg-title-row div{
+  display: flex;
+  flex-direction: column;
+} */
+
+.game-edit-button img{
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
 .game-cover-wrapper {
   display: flex;
   flex-direction: column;
@@ -208,7 +231,7 @@ body {
   color: #cbd5f5;
 }
 
-.metascore-pill {
+.score-pill {
   padding: 5px 7px;
   border-radius: 100px;
   background: #22c55e;
@@ -349,7 +372,7 @@ body {
   border: 1px solid rgba(31, 41, 55, 0.9);
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.8);
   padding: 1.3rem 1.4rem 1.5rem;
-  height: fit-content;
+  height: 100%;
 }
 
 .panel-title {
@@ -383,6 +406,12 @@ body {
   color: #9ca3af;
   margin-top: 0;
   margin-bottom: 1.1rem;
+}
+
+.game-description{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .game-description p {

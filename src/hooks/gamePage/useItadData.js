@@ -18,6 +18,7 @@ export function useItadData(gameData) {
 
   useEffect(() => {
     if (!gameData?.name) return;
+    if (gameData?.isCustom) { setItadChecked(true); setItadStoresChecked(true); return; }
 
     const fetchItad = async () => {
       try {

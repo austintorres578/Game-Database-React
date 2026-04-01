@@ -634,3 +634,90 @@ ease-out;
     text-shadow: 0px 0px 10px rgba(0, 0, 0, 1);
     pointer-events: none;
 }
+
+/* SORT DROPDOWN */
+.search-sort-con {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px 0;
+    max-width: 1125px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search-sort-con p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #9ca3af;
+    white-space: nowrap;
+}
+
+.search-page-container .sorting {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.search-page-container .sorting .invisible {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.search-page-container .sorting > button {
+    width: 185px;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+    border-radius: 20px;
+    padding: 5px 12px;
+    color: white;
+    cursor: pointer;
+    transition: .25s;
+    text-align: left;
+}
+
+.search-page-container .sorting > button::after {
+    content: " ▾";
+}
+
+.search-page-container .sorting > button:hover {
+    border-color: #1ba04c;
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.35);
+}
+
+.search-page-container .sorting div {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    z-index: 10;
+    top: 38px;
+    left: 0;
+    width: 185px;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid rgba(51, 65, 85, 0.7);
+    padding: 3px 0;
+    border-radius: 5px;
+}
+
+.search-page-container .sorting div button {
+    width: 100%;
+    background-color: transparent;
+    border: none;
+    height: 32px;
+    color: white;
+    transition: .25s;
+    cursor: pointer;
+    text-align: left;
+    padding: 0 12px;
+    font-size: 0.88rem;
+}
+
+.search-page-container .sorting div button:hover {
+    background: rgba(34, 197, 94, 0.16);
+    color: rgb(229, 231, 235);
+}
+
+.search-page-container .sorting div button.active {
+    color: #22c55e;
+    font-weight: bold;
+}

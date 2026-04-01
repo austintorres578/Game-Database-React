@@ -35,6 +35,14 @@ export default function GameGrid({
           const hasScore =
             metacriticScore !== null && metacriticScore !== undefined;
 
+          const rawgRating =
+            typeof game.rating === "number" &&
+            !Number.isNaN(game.rating) &&
+            game.rating <= 5
+              ? game.rating
+              : null;
+          const hasRawgRating = rawgRating !== null;
+
           const groupTags = Array.from(
             new Set(
               customFilters
@@ -57,7 +65,7 @@ export default function GameGrid({
           return (
             <div className="game-wrapper" key={String(game.id)}>
               <Link className="game-link" to={`/game#${gameHash}`}>
-                <div className="game-card">
+                <div className={`game-card${game.isCustom ? " game-card--custom" : ""}`}>
                   <div
                     className="game-img"
                     style={
@@ -72,13 +80,17 @@ export default function GameGrid({
                       {safeText(game.title, "Untitled game")}
                     </p>
                     <div className="game-sub-info">
-                      {primaryGenre && (
-                        <p className="game-genre">{primaryGenre}</p>
-                      )}
+                      <p className="game-genre">
+                        {primaryGenre || "Genre Unlisted"} •
+                      </p>
                       <p className="game-meta">
                         {hasScore
                           ? `${metacriticScore} Metacritic`
-                          : "Unrated"}
+                          : "Metacritic Unrated"}
+                        {hasRawgRating
+                          ? <span> • {Math.round(rawgRating)}/5 RAWG</span>
+                          : <span> • RAWG Unrated</span>
+                        }
                       </p>
                     </div>
                   </div>

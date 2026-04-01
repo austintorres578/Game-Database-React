@@ -16,7 +16,7 @@ const RAWG_HEADERS = {
  * @returns {string}
  */
 export function buildRawgFetchBase(pageSize) {
-  return `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search_exact=true&ordering=-metacritic&page_size=${pageSize}&`;
+  return `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search_exact=true&page_size=${pageSize}&`;
 }
 
 /**

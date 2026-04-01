@@ -20,7 +20,7 @@ import GroupPanel from "../components/yourLibrary/GroupPanel";
 import ImportPanel from "../components/yourLibrary/ImportPanel";
 import CandidateList from "../components/yourLibrary/CandidateList";
 
-import { safeText, compareByTitle, compareByMetacritic } from "../utils/yourLibrary/sortHelpers";
+import { safeText, compareByTitle, compareByMetacritic, compareByRawg } from "../utils/yourLibrary/sortHelpers";
 
 import { useLibraryData } from "../hooks/yourLibrary/useLibraryData";
 import { useSteamSync } from "../hooks/yourLibrary/useSteamSync";
@@ -237,9 +237,10 @@ export default function YourLibrary() {
       if (status === "completed") acc.completed += 1;
       else if (status === "backlog") acc.backlog += 1;
       else if (status === "playing") acc.playing += 1;
+      if (game.isCustom) acc.custom += 1;
       return acc;
     },
-    { total: 0, completed: 0, backlog: 0, playing: 0 },
+    { total: 0, completed: 0, backlog: 0, playing: 0, custom: 0 },
   );
 
   let filteredGames = groupFilteredGames;
@@ -248,6 +249,7 @@ export default function YourLibrary() {
       const status = game.status?.toLowerCase?.() || "";
       if (statusFilter === "backlog") return status === "backlog";
       if (statusFilter === "completed") return status === "completed";
+      if (statusFilter === "custom") return !!game.isCustom;
       return true;
     });
   }
@@ -268,6 +270,10 @@ export default function YourLibrary() {
         return compareByMetacritic(a, b, "desc");
       case "meta_asc":
         return compareByMetacritic(a, b, "asc");
+      case "rawg_desc":
+        return compareByRawg(a, b, "desc");
+      case "rawg_asc":
+        return compareByRawg(a, b, "asc");
       case "name_asc":
       default:
         return compareByTitle(a, b, "asc");
@@ -372,23 +378,6 @@ export default function YourLibrary() {
           authUser.uid,
           newFilter,
         );
-
-        setCustomFilters((prev) => {
-          const permanent = prev.filter(
-            (g) => g.id === "all-platforms" || g.id === "ungrouped",
-          );
-          const rest = prev.filter(
-            (g) => g.id !== "all-platforms" && g.id !== "ungrouped",
-          );
-          const updatedRest = [...rest, savedFilter].sort((a, b) =>
-            String(a.name || "").localeCompare(
-              String(b.name || ""),
-              undefined,
-              { sensitivity: "base" },
-            ),
-          );
-          return [...permanent, ...updatedRest];
-        });
 
         setActiveGroups([savedFilter.id]);
       }

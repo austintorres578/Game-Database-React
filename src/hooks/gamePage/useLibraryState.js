@@ -1,8 +1,9 @@
 // Reads the current user's library, favorite, and completed status for a game
-// from Firestore. Re-checks whenever the game data changes.
+// from Firestore. Re-checks whenever the game data or auth state changes.
 
 import { useState, useEffect } from "react";
 import { doc, getDoc, db } from "../../firebase/firestore";
+import { onAuthStateChanged } from "../../firebase/fireAuth";
 import { getLibraryDocId } from "../../utils/gamePage/libraryDocId";
 
 /**
@@ -18,13 +19,24 @@ export function useLibraryState(auth, gameData) {
   const [isInLibrary, setIsInLibrary] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
+
+  // Track auth state so the library check re-runs once the user is resolved.
+  // Custom games load from Firestore quickly and can beat auth restoration
+  // (indexedDB persistence is async), so auth.currentUser may be null on the
+  // first pass — this subscription catches that case.
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return unsubscribe;
+  }, [auth]);
 
   useEffect(() => {
     const checkLibraryState = async () => {
-      const user = auth.currentUser;
       const docId = getLibraryDocId(gameData?.id);
 
-      if (!user || !docId) {
+      if (!currentUser || !docId) {
         setIsInLibrary(false);
         setIsFavorite(false);
         setIsCompleted(false);
@@ -32,7 +44,7 @@ export function useLibraryState(auth, gameData) {
       }
 
       try {
-        const ref = doc(db, "users", user.uid, "library", docId);
+        const ref = doc(db, "users", currentUser.uid, "library", docId);
         const snap = await getDoc(ref);
 
         if (snap.exists()) {
@@ -51,7 +63,7 @@ export function useLibraryState(auth, gameData) {
     };
 
     checkLibraryState();
-  }, [gameData]);
+  }, [gameData, currentUser]);
 
   return {
     isInLibrary, setIsInLibrary,
