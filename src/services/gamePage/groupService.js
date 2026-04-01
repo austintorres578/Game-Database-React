@@ -7,6 +7,8 @@ import {
   arrayRemove,
   db,
 } from "../../firebase/firestore";
+import { getStorage, ref, deleteObject } from "firebase/storage";
+import { app } from "../../firebase/firebase";
 
 /**
  * Removes a game from every group the user has in Firestore.
@@ -32,4 +34,25 @@ export async function removeGameFromAllGroups(userId, gameIdStr) {
   } catch (err) {
     console.error("Error removing game from all groups:", err);
   }
+}
+
+export async function deleteCustomGameStorageFiles(userId, docId, backgroundImage, screenshots) {
+  const storage = getStorage(app);
+  const deletions = [];
+
+  if (typeof backgroundImage === "string" && backgroundImage.includes("firebasestorage.googleapis.com")) {
+    const coverRef = ref(storage, `users/${userId}/customGameCovers/${docId}`);
+    deletions.push(deleteObject(coverRef).catch(() => {}));
+  }
+
+  if (Array.isArray(screenshots)) {
+    for (const screenshot of screenshots) {
+      if (screenshot?.storagePath) {
+        const screenshotRef = ref(storage, screenshot.storagePath);
+        deletions.push(deleteObject(screenshotRef).catch(() => {}));
+      }
+    }
+  }
+
+  await Promise.all(deletions);
 }
