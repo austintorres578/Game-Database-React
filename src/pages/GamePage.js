@@ -85,7 +85,6 @@ export default function GamePage({ auth }) {
       id: gameData.id,
       rawgId: gameData.id,
 
-      name: gameData.name,
       title: gameData.name,
       slug: gameData.slug || "",
 
