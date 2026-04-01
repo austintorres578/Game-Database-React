@@ -31,7 +31,7 @@ export default function FavoriteGamesSection({ favoriteGames }) {
               ></div>
               <div className="favorite-game-body">
                 <p className="favorite-game-title">
-                  {game.name || "Untitled game"}
+                  {game.title || "Untitled game"}
                 </p>
                 <div className="favorite-game-meta">
                   <span>{getPrimaryGenre(game)}</span>
