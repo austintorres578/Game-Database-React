@@ -1,6 +1,7 @@
 // GamePage.jsx
 import { useState } from "react";
 import loadingCircle from "../assets/images/loading.gif";
+import editIcon from '../assets/images/edit.png'
 
 import defaultBackground from "../assets/images/noGameBackground.jpg";
 import "../styles/gamePage.css";
@@ -12,6 +13,7 @@ import GameHeroActions from "../components/gamePage/GameHeroActions";
 import GameDetailsPanel from "../components/gamePage/GameDetailsPanel";
 import ScreenshotsRow from "../components/gamePage/ScreenshotsRow";
 import ScreenshotModal from "../components/customGame/ScreenshotModal";
+import VideoModal from "../components/customGame/VideoModal";
 
 // 🔐 Firebase imports
 import {
@@ -43,7 +45,7 @@ export default function GamePage({ auth }) {
   const navigate = useNavigate();
 
   // --- Data hooks ---
-  const { loading, gameData, gameScreenshots, gameVideos } = useGameData();
+  const { loading, gameData, gameScreenshots, gameVideos, isCustomGame } = useGameData();
   const { itadCoverUrl, itadChecked, itadStores, itadStoresChecked } = useItadData(gameData);
   const { rawgStores, rawgStoresChecked } = useRawgStores(gameData);
   const { isInLibrary, setIsInLibrary, isFavorite, setIsFavorite, isCompleted, setIsCompleted } = useLibraryState(auth, gameData);
@@ -55,6 +57,7 @@ export default function GamePage({ auth }) {
   const [savingCompleted, setSavingCompleted] = useState(false);
   const [groupDropdownOpen, setGroupDropdownOpen] = useState(false);
   const [savingGroupId, setSavingGroupId] = useState(null);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(null);
 
   function requireAuth(actionLabel) {
     const user = auth.currentUser;
@@ -69,6 +72,14 @@ export default function GamePage({ auth }) {
   // Helper: base payload used whenever we create/update a library doc
   function buildBaseGamePayload() {
     if (!gameData) return {};
+
+    if (gameData.isCustom) {
+      return {
+        title: gameData.name,
+        inLibrary: true,
+        isCustom: true,
+      };
+    }
 
     return {
       id: gameData.id,
@@ -305,11 +316,13 @@ export default function GamePage({ auth }) {
   }
 
   const heroCoverUrl = gameData
-    ? itadCoverUrl
-      ? itadCoverUrl
-      : !itadChecked
-        ? defaultBackground
-        : gameData.background_image || defaultBackground
+    ? isCustomGame
+      ? gameData.background_image || defaultBackground
+      : itadCoverUrl
+        ? itadCoverUrl
+        : !itadChecked
+          ? defaultBackground
+          : gameData.background_image || defaultBackground
     : defaultBackground;
 
   const { coverLoaded } = useCoverImageLoader(gameData, heroCoverUrl, defaultBackground);
@@ -324,6 +337,27 @@ export default function GamePage({ auth }) {
     handleTouchMove,
     stopDraggingTouch,
   } = useDraggableScroll();
+
+  const {
+    containerRef: videosRowRef,
+    isDragging: isVideoDragging,
+    handleMouseDown: handleVideoMouseDown,
+    handleMouseMove: handleVideoMouseMove,
+    stopDragging: stopVideoDragging,
+    handleTouchStart: handleVideoTouchStart,
+    handleTouchMove: handleVideoTouchMove,
+    stopDraggingTouch: stopVideoDraggingTouch,
+  } = useDraggableScroll();
+
+  const playableVideos = gameVideos.filter((v) => v.embedUrl);
+
+  function handlePrevVideo() {
+    setActiveVideoIndex((i) => (i > 0 ? i - 1 : playableVideos.length - 1));
+  }
+
+  function handleNextVideo() {
+    setActiveVideoIndex((i) => (i < playableVideos.length - 1 ? i + 1 : 0));
+  }
 
   const {
     isFullScreenshotOpen,
@@ -380,11 +414,13 @@ export default function GamePage({ auth }) {
                 className="game-cover-img"
                 style={{ backgroundImage: `url(${heroCoverUrl})` }}
                 title={
-                  itadCoverUrl
-                    ? "Cover source: IsThereAnyDeal"
-                    : itadChecked && gameData.background_image
-                      ? "Cover source: RAWG"
-                      : "Cover source: placeholder"
+                  isCustomGame
+                    ? "Custom game cover"
+                    : itadCoverUrl
+                      ? "Cover source: IsThereAnyDeal"
+                      : itadChecked && gameData.background_image
+                        ? "Cover source: RAWG"
+                        : "Cover source: placeholder"
                 }
               ></div>
             </div>
@@ -398,19 +434,21 @@ export default function GamePage({ auth }) {
               </span>
             </div>
 
-            <div className="game-meta-row">
-              <div>
-                <span className="meta-label">Metascore</span>
-                <span className="score-pill">
-                  {gameData.metacritic ?? "N/A"}
-                </span>
+            {!isCustomGame && (
+              <div className="game-meta-row">
+                <div>
+                  <span className="meta-label">Metascore</span>
+                  <span className="score-pill">
+                    {gameData.metacritic ?? "N/A"}
+                  </span>
+                </div>
+                <div className="meta-divider"></div>
+                <div>
+                  <span className="meta-label">RAWG User score</span>
+                  <span className="score-pill"> {gameData.rating ?? "N/A"} / 5</span>
+                </div>
               </div>
-              <div className="meta-divider"></div>
-              <div>
-                <span className="meta-label">RAWG User score</span>
-                <span className="score-pill"> {gameData.rating ?? "N/A"} / 5</span>
-              </div>
-            </div>
+            )}
 
             <div className="game-genres">
               <span className="meta-label">Genres</span>
@@ -459,6 +497,19 @@ export default function GamePage({ auth }) {
               onToggleGroup={handleToggleGroup}
             />
           </div>
+          {isCustomGame && (
+            <button
+              className="game-edit-button"
+              onClick={() =>
+                navigate("/custom-game", {
+                  state: { editMode: true, docId: gameData.id, gameData, gameScreenshots, gameVideos },
+                })
+              }
+              title="Edit this custom game"
+            >
+              <img src={editIcon} alt="Edit" />
+            </button>
+          )}
         </section>
 
         {/* MAIN LAYOUT */}
@@ -467,16 +518,18 @@ export default function GamePage({ auth }) {
             <h2 className="panel-title">About this game</h2>
             <p>{gameData.description_raw}</p>
 
-            {/* ✅ ITAD (AnyDeal) + RAWG store pills */}
-            <div className="digital-stores">
-              <h3 style={{ marginTop: 16 }}>Digital Stores</h3>
-              <p className="digital-store-dis">
-                Store links come from IsThereAnyDeal (when available) and RAWG
-                as a fallback, and may be incomplete. This game may be available
-                on other stores/platforms not listed here.
-              </p>
-              <StorePills storesChecked={storesChecked} combinedStores={combinedStores} />
-            </div>
+            {/* ✅ ITAD (AnyDeal) + RAWG store pills — hidden for custom games */}
+            {!isCustomGame && (
+              <div className="digital-stores">
+                <h3 style={{ marginTop: 16 }}>Digital Stores</h3>
+                <p className="digital-store-dis">
+                  Store links come from IsThereAnyDeal (when available) and RAWG
+                  as a fallback, and may be incomplete. This game may be available
+                  on other stores/platforms not listed here.
+                </p>
+                <StorePills storesChecked={storesChecked} combinedStores={combinedStores} />
+              </div>
+            )}
           </article>
 
           <GameDetailsPanel
@@ -488,6 +541,40 @@ export default function GamePage({ auth }) {
             }
           />
         </section>
+
+        {playableVideos.length > 0 && (
+          <section className="game-screenshots-section">
+            <div className="screenshots-header">
+              <h2>Videos</h2>
+            </div>
+            <div
+              ref={videosRowRef}
+              className={`screenshots-row${isVideoDragging ? " is-dragging" : ""}`}
+              onMouseDown={handleVideoMouseDown}
+              onMouseMove={handleVideoMouseMove}
+              onMouseUp={stopVideoDragging}
+              onMouseLeave={stopVideoDragging}
+              onTouchStart={handleVideoTouchStart}
+              onTouchMove={handleVideoTouchMove}
+              onTouchEnd={stopVideoDraggingTouch}
+            >
+              {playableVideos.map((video, index) => (
+                <div
+                  key={video.videoId || index}
+                  className="screenshot-card video-card"
+                  onClick={() => !isVideoDragging && setActiveVideoIndex(index)}
+                >
+                  <div
+                    className="screenshot-img video-thumb"
+                    style={{ backgroundImage: `url(${video.thumbnailUrl})` }}
+                  >
+                    <div className="video-play-icon">▶</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <ScreenshotsRow
           gameScreenshots={gameScreenshots}
@@ -510,6 +597,14 @@ export default function GamePage({ auth }) {
         onClose={closeScreenshot}
         onPrev={showPrevScreenshot}
         onNext={showNextScreenshot}
+      />
+
+      <VideoModal
+        videos={playableVideos}
+        activeIndex={activeVideoIndex}
+        onClose={() => setActiveVideoIndex(null)}
+        onPrev={handlePrevVideo}
+        onNext={handleNextVideo}
       />
     </div>
   );

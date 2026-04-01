@@ -65,7 +65,7 @@ export default function GameGrid({
           return (
             <div className="game-wrapper" key={String(game.id)}>
               <Link className="game-link" to={`/game#${gameHash}`}>
-                <div className="game-card">
+                <div className={`game-card${game.isCustom ? " game-card--custom" : ""}`}>
                   <div
                     className="game-img"
                     style={

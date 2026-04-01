@@ -237,9 +237,10 @@ export default function YourLibrary() {
       if (status === "completed") acc.completed += 1;
       else if (status === "backlog") acc.backlog += 1;
       else if (status === "playing") acc.playing += 1;
+      if (game.isCustom) acc.custom += 1;
       return acc;
     },
-    { total: 0, completed: 0, backlog: 0, playing: 0 },
+    { total: 0, completed: 0, backlog: 0, playing: 0, custom: 0 },
   );
 
   let filteredGames = groupFilteredGames;
@@ -248,6 +249,7 @@ export default function YourLibrary() {
       const status = game.status?.toLowerCase?.() || "";
       if (statusFilter === "backlog") return status === "backlog";
       if (statusFilter === "completed") return status === "completed";
+      if (statusFilter === "custom") return !!game.isCustom;
       return true;
     });
   }

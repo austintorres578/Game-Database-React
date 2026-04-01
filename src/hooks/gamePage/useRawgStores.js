@@ -19,6 +19,7 @@ export function useRawgStores(gameData) {
 
   useEffect(() => {
     if (!gameData?.id) return;
+    if (gameData?.isCustom) { setRawgStoresChecked(true); return; }
 
     const fetchRawgStores = async () => {
       try {

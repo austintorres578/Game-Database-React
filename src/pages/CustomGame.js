@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import defaultBackground from "../assets/images/noGameBackground.jpg";
-import addImageIcon from '../../src/assets/images/add-image-icon.svg'
+import addImageIcon from "../../src/assets/images/add-image-icon.svg";
 import "../styles/customGame.css";
 
 import FilterDropdown from "../components/searchPage/FilterDropdown";
@@ -11,73 +13,117 @@ import ScreenshotsRowCustom from "../components/customGame/ScreenshotsRowCustom"
 
 import { useScreenshotGallery } from "../hooks/gamePage/useScreenshotGallery";
 import { parseVideoUrl } from "../utils/customGame/videoHelpers";
+import { useAuth } from "../hooks/useAuth";
+import { app } from "../firebase/firebase";
+import { saveGameToLibraryFirestore } from "../services/yourLibrary/gameSearchService";
 
 const GENRE_OPTIONS = [
-  { id: "action",      label: "Action" },
-  { id: "adventure",   label: "Adventure" },
-  { id: "rpg",         label: "RPG" },
-  { id: "strategy",    label: "Strategy" },
-  { id: "simulation",  label: "Simulation" },
-  { id: "sports",      label: "Sports" },
-  { id: "racing",      label: "Racing" },
-  { id: "puzzle",      label: "Puzzle" },
-  { id: "shooter",     label: "Shooter" },
-  { id: "fighting",    label: "Fighting" },
-  { id: "horror",      label: "Horror" },
-  { id: "platformer",  label: "Platformer" },
-  { id: "indie",       label: "Indie" },
-  { id: "casual",      label: "Casual" },
-  { id: "survival",    label: "Survival" },
+  { id: "action", label: "Action" },
+  { id: "adventure", label: "Adventure" },
+  { id: "rpg", label: "RPG" },
+  { id: "strategy", label: "Strategy" },
+  { id: "simulation", label: "Simulation" },
+  { id: "sports", label: "Sports" },
+  { id: "racing", label: "Racing" },
+  { id: "puzzle", label: "Puzzle" },
+  { id: "shooter", label: "Shooter" },
+  { id: "fighting", label: "Fighting" },
+  { id: "horror", label: "Horror" },
+  { id: "platformer", label: "Platformer" },
+  { id: "indie", label: "Indie" },
+  { id: "casual", label: "Casual" },
+  { id: "survival", label: "Survival" },
 ];
 
 const PLATFORM_OPTIONS = [
-  { id: "pc",      label: "PC" },
-  { id: "ps5",     label: "PlayStation 5" },
-  { id: "ps4",     label: "PlayStation 4" },
-  { id: "xsx",     label: "Xbox Series X/S" },
-  { id: "xone",    label: "Xbox One" },
-  { id: "switch",  label: "Nintendo Switch" },
-  { id: "ios",     label: "iOS" },
+  { id: "pc", label: "PC" },
+  { id: "ps5", label: "PlayStation 5" },
+  { id: "ps4", label: "PlayStation 4" },
+  { id: "xsx", label: "Xbox Series X/S" },
+  { id: "xone", label: "Xbox One" },
+  { id: "switch", label: "Nintendo Switch" },
+  { id: "ios", label: "iOS" },
   { id: "android", label: "Android" },
-  { id: "mac",     label: "Mac" },
-  { id: "linux",   label: "Linux" },
+  { id: "mac", label: "Mac" },
+  { id: "linux", label: "Linux" },
 ];
 
 const TAG_OPTIONS = [
-  { id: "singleplayer",  label: "Singleplayer" },
-  { id: "multiplayer",   label: "Multiplayer" },
-  { id: "coop",          label: "Co-op" },
-  { id: "openworld",     label: "Open World" },
-  { id: "storyrich",     label: "Story Rich" },
-  { id: "atmospheric",   label: "Atmospheric" },
-  { id: "difficult",     label: "Difficult" },
-  { id: "exploration",   label: "Exploration" },
-  { id: "fantasy",       label: "Fantasy" },
-  { id: "scifi",         label: "Sci-Fi" },
-  { id: "pixelart",      label: "Pixel Art" },
-  { id: "retro",         label: "Retro" },
-  { id: "roguelike",     label: "Roguelike" },
-  { id: "sandbox",       label: "Sandbox" },
-  { id: "crafting",      label: "Crafting" },
-  { id: "stealth",       label: "Stealth" },
+  { id: "singleplayer", label: "Singleplayer" },
+  { id: "multiplayer", label: "Multiplayer" },
+  { id: "coop", label: "Co-op" },
+  { id: "openworld", label: "Open World" },
+  { id: "storyrich", label: "Story Rich" },
+  { id: "atmospheric", label: "Atmospheric" },
+  { id: "difficult", label: "Difficult" },
+  { id: "exploration", label: "Exploration" },
+  { id: "fantasy", label: "Fantasy" },
+  { id: "scifi", label: "Sci-Fi" },
+  { id: "pixelart", label: "Pixel Art" },
+  { id: "retro", label: "Retro" },
+  { id: "roguelike", label: "Roguelike" },
+  { id: "sandbox", label: "Sandbox" },
+  { id: "crafting", label: "Crafting" },
+  { id: "stealth", label: "Stealth" },
 ];
 
 export default function CustomGame() {
-  const [formData, setFormData] = useState({
-    name: "",
-    released: "",
-    metacritic: "",
-    rating: "",
-    genres: [],
-    platforms: [],
-    description: "",
-    coverUrl: "",
-    developer: "",
-    publisher: "",
-    esrbRating: "",
-    tags: [],
-    videos: [],
-    screenshots: [],
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const editState = location.state?.editMode ? location.state : null;
+  const gd = editState?.gameData;
+
+  const [saveStatus, setSaveStatus] = useState("idle"); // "idle" | "saving" | "success" | "error"
+  const [saveError, setSaveError] = useState("");
+  const [coverFile, setCoverFile] = useState(null);
+
+  const [formData, setFormData] = useState(() => {
+    if (gd) {
+      return {
+        name: gd.name || "",
+        released: gd.released || "",
+        metacritic: "",
+        rating: "",
+        genres: (gd.genres || [])
+          .map((g) => (typeof g === "string" ? g : g.name))
+          .filter(Boolean),
+        platforms: (gd.platforms || [])
+          .map((p) =>
+            typeof p === "string" ? p : p?.platform?.name || p?.name || "",
+          )
+          .filter(Boolean),
+        shortDescription: gd.shortDescription || "",
+        description: gd.description_raw || "",
+        coverUrl: gd.background_image || "",
+        developer: gd.developers?.[0]?.name || "",
+        publisher: gd.publishers?.[0]?.name || "",
+        esrbRating: gd.esrb_rating?.name || "",
+        tags: (gd.tags || [])
+          .map((t) => (typeof t === "string" ? t : t.name))
+          .filter(Boolean),
+        videos: editState.gameVideos || [],
+        screenshots: (editState.gameScreenshots || []).map((s) => ({ id: s.id, image: s.image, storagePath: s.storagePath })),
+      };
+    }
+    return {
+      name: "",
+      released: "",
+      metacritic: "",
+      rating: "",
+      genres: [],
+      platforms: [],
+      shortDescription: "",
+      description: "",
+      coverUrl: "",
+      developer: "",
+      publisher: "",
+      esrbRating: "",
+      tags: [],
+      videos: [],
+      screenshots: [],
+    };
   });
 
   const [showVideoInput, setShowVideoInput] = useState(false);
@@ -95,10 +141,98 @@ export default function CustomGame() {
   const handleCoverFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setCoverFile(file);
       const localUrl = URL.createObjectURL(file);
       setFormData((prev) => ({ ...prev, coverUrl: localUrl }));
     }
   };
+
+  async function handleAddToLibrary() {
+    if (!user) {
+      navigate("/signin");
+      return;
+    }
+    if (!formData.name.trim()) {
+      setSaveError("Please enter a game title.");
+      return;
+    }
+
+    setSaveStatus("saving");
+    setSaveError("");
+
+    try {
+      const docId = editState ? editState.docId : `custom_${Date.now()}`;
+
+      const storage = getStorage(app);
+
+      let backgroundImage = formData.coverUrl || "";
+      if (coverFile) {
+        const coverRef = ref(storage, `users/${user.uid}/customGameCovers/${docId}`);
+        await uploadBytes(coverRef, coverFile);
+        backgroundImage = await getDownloadURL(coverRef);
+      }
+
+      if (editState) {
+        const keptPaths = new Set(formData.screenshots.map((s) => s.storagePath).filter(Boolean));
+        const removedPaths = (editState.gameScreenshots || [])
+          .map((s) => s.storagePath)
+          .filter((p) => p && !keptPaths.has(p));
+        await Promise.all(
+          removedPaths.map((p) => deleteObject(ref(storage, p)).catch(() => {}))
+        );
+      }
+
+      const savedScreenshots = await Promise.all(
+        formData.screenshots.map(async (shot, i) => {
+          if (shot.file) {
+            const storagePath = `users/${user.uid}/customGameScreenshots/${docId}/${Date.now()}_${i}`;
+            const shotRef = ref(storage, storagePath);
+            await uploadBytes(shotRef, shot.file);
+            const url = await getDownloadURL(shotRef);
+            return { id: url, image: url, storagePath };
+          }
+          return { id: shot.id, image: shot.image, storagePath: shot.storagePath };
+        })
+      );
+
+      const payload = {
+        title: formData.name.trim(),
+        rawgId: null,
+        slug: null,
+        backgroundImage,
+        genres: formData.genres,
+        platforms: formData.platforms,
+        metacritic: null,
+        rating: null,
+        developer: formData.developer,
+        publisher: formData.publisher,
+        esrbRating: formData.esrbRating,
+        shortDescription: formData.shortDescription,
+        description: formData.description,
+        tags: formData.tags,
+        released: formData.released,
+        videos: formData.videos,
+        screenshots: savedScreenshots,
+        isCustom: true,
+        _source: "custom",
+        inLibrary: true,
+        ...(editState
+          ? {}
+          : { status: "backlog", addedAt: new Date().toISOString() }),
+      };
+
+      await saveGameToLibraryFirestore(user.uid, docId, payload);
+      setSaveStatus("success");
+      setTimeout(
+        () => navigate(editState ? `/game#${docId}` : "/library"),
+        1200,
+      );
+    } catch (err) {
+      console.error("Failed to save custom game:", err);
+      setSaveError("Failed to save. Please try again.");
+      setSaveStatus("error");
+    }
+  }
 
   function handleAddVideo() {
     const parsed = parseVideoUrl(videoInputVal);
@@ -113,7 +247,10 @@ export default function CustomGame() {
   }
 
   function handleAddScreenshots(newShots) {
-    setFormData((prev) => ({ ...prev, screenshots: [...prev.screenshots, ...newShots] }));
+    setFormData((prev) => ({
+      ...prev,
+      screenshots: [...prev.screenshots, ...newShots],
+    }));
   }
 
   function handleDeleteScreenshot(id) {
@@ -143,7 +280,10 @@ export default function CustomGame() {
     const filters = parent.querySelector(".filters");
     if (!filters) return;
     const arrow = parent.querySelector("span");
-    if (arrow.style.transform === "" || arrow.style.transform === "rotate(0deg)") {
+    if (
+      arrow.style.transform === "" ||
+      arrow.style.transform === "rotate(0deg)"
+    ) {
       arrow.style.transform = "rotate(180deg)";
       filters.style.height = "auto";
       parent.querySelector(".toggle").classList.add("active");
@@ -197,7 +337,7 @@ export default function CustomGame() {
   return (
     <div className="cg-shell">
       <div className="cg-container">
-        <h1>Create Custom Game</h1>
+        <h1>{editState ? "Edit Custom Game" : "Create Custom Game"}</h1>
         {/* HERO SECTION */}
         <section className="cg-hero">
           <div className="cg-cover-wrapper">
@@ -209,7 +349,6 @@ export default function CustomGame() {
               <div
                 className="cg-cover-img"
                 style={{ backgroundImage: `url(${coverUrl})` }}
-
               >
                 {!coverUrl && <img src={addImageIcon} alt="Add Image" />}
               </div>
@@ -225,28 +364,38 @@ export default function CustomGame() {
 
           <div className="game-info">
             <div className="cg-title-row">
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Game title"
-                className="cg-title"
-              />
-              <input
-                type="text"
-                name="released"
-                value={formData.released}
-                onChange={handleChange}
-                placeholder="Release year"
-                className="cg-year"
-              />
+              <div className="title-con">
+                <span className="cg-meta-label">Title</span>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="Game title"
+                  className="cg-title"
+                />
+              </div>
+              <div className="year-con">
+                <span className="cg-meta-label">Release Year</span>
+                <input
+                  type="text"
+                  name="released"
+                  value={formData.released}
+                  onChange={handleChange}
+                  placeholder="Release year"
+                  className="cg-year"
+                />
+              </div>
             </div>
 
             <div className="cg-genres">
               <span className="cg-meta-label">Genres</span>
               <FilterDropdown
-                summary={formData.genres.length ? formData.genres.join(", ") : "Select Genres"}
+                summary={
+                  formData.genres.length
+                    ? formData.genres.join(", ")
+                    : "Select Genres"
+                }
                 hasValue={formData.genres.length > 0}
                 filters={GENRE_OPTIONS}
                 isActive={(item) => formData.genres.includes(item.label)}
@@ -259,7 +408,11 @@ export default function CustomGame() {
             <div className="game-platforms">
               <span className="cg-meta-label">Platforms</span>
               <FilterDropdown
-                summary={formData.platforms.length ? formData.platforms.join(", ") : "Select Platforms"}
+                summary={
+                  formData.platforms.length
+                    ? formData.platforms.join(", ")
+                    : "Select Platforms"
+                }
                 hasValue={formData.platforms.length > 0}
                 filters={PLATFORM_OPTIONS}
                 isActive={(item) => formData.platforms.includes(item.label)}
@@ -268,10 +421,10 @@ export default function CustomGame() {
                 onToggle={handleDropdownToggle}
               />
             </div>
-
+            <span className="cg-meta-label">Short Description</span>
             <textarea
-              name="description"
-              value={formData.description}
+              name="shortDescription"
+              value={formData.shortDescription}
               onChange={handleChange}
               placeholder="Short description..."
               className="cg-short-info"
@@ -349,7 +502,11 @@ export default function CustomGame() {
             <div className="game-panel">
               <h2 className="panel-title">Tags</h2>
               <FilterDropdown
-                summary={formData.tags.length ? formData.tags.join(", ") : "Select Tags"}
+                summary={
+                  formData.tags.length
+                    ? formData.tags.join(", ")
+                    : "Select Tags"
+                }
                 hasValue={formData.tags.length > 0}
                 filters={TAG_OPTIONS}
                 isActive={(item) => formData.tags.includes(item.label)}
@@ -368,7 +525,10 @@ export default function CustomGame() {
           showInput={showVideoInput}
           setShowInput={setShowVideoInput}
           inputVal={videoInputVal}
-          setInputVal={(v) => { setVideoInputVal(v); setVideoInputError(""); }}
+          setInputVal={(v) => {
+            setVideoInputVal(v);
+            setVideoInputError("");
+          }}
           inputError={videoInputError}
           onConfirmAdd={handleAddVideo}
         />
@@ -379,6 +539,30 @@ export default function CustomGame() {
           onDeleteScreenshot={handleDeleteScreenshot}
           onOpenScreenshot={openScreenshot}
         />
+
+        <div className="cg-save-bar">
+          {!user && (
+            <p className="cg-save-hint">
+              Sign in to add games to your library.
+            </p>
+          )}
+          <button
+            className={`cg-save-btn${saveStatus === "success" ? " success" : ""}`}
+            onClick={handleAddToLibrary}
+            disabled={saveStatus === "saving" || saveStatus === "success"}
+          >
+            {saveStatus === "saving"
+              ? "Saving..."
+              : saveStatus === "success"
+                ? editState
+                  ? "Changes Saved!"
+                  : "Added to Library!"
+                : editState
+                  ? "Save Changes"
+                  : "Add to Library"}
+          </button>
+          {saveError && <p className="cg-save-error">{saveError}</p>}
+        </div>
       </div>
 
       <VideoModal

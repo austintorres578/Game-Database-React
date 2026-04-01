@@ -19,9 +19,34 @@
 }
 
 .cg-shell .cg-cover {
-  height: 100%;
+  /* height: 100%; */
   border: 1px solid rgba(148, 163, 184, 0.3);
   position: relative;
+}
+
+.cg-container .cg-title-row div{
+  display: flex;
+  flex-direction: column;
+}
+
+.cg-container .cg-title-row div span{
+  margin-bottom: 10px;
+}
+
+.cg-container .cg-title-row  .title-con {
+  width: 76%;
+}
+
+.cg-container .cg-title-row  .title-con input{
+  width: 100%;
+}
+
+.cg-container .cg-title-row  .year-con {
+  width: 22%;
+}
+
+.cg-container .cg-title-row  .year-con input {
+  width: 100%;
 }
 
 .cg-container {
@@ -57,6 +82,8 @@
   flex-direction: column;
   gap: 0.8rem;
   align-self: start;
+  height: 100%;
+  justify-content: center;
 }
 
 .cg-cover {
@@ -442,6 +469,10 @@
   border-radius: 30px;
   background-color: #020617;
   border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.cg-shell .stat-item input.stat-value::placeholder{
+  color: #9ca3af;
 }
 
 .cg-shell .game-tags-cloud {
@@ -867,6 +898,61 @@
   background: rgba(15, 23, 42, 1);
   border-color: #22c55e;
   color: #bbf7d0;
+}
+
+/* ============ SAVE BAR ============ */
+
+.cg-save-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+.cg-save-btn {
+  background: #22c55e;
+  color: #022c22;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.75rem 2.5rem;
+  cursor: pointer;
+  transition: 0.25s;
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+  letter-spacing: 0.03em;
+}
+
+.cg-save-btn:hover:not(:disabled) {
+  background: #16a34a;
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.55);
+  transform: translateY(-1px);
+}
+
+.cg-save-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.cg-save-btn.success {
+  background: #166534;
+  color: #bbf7d0;
+  box-shadow: none;
+}
+
+.cg-save-hint {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.cg-save-error {
+  font-size: 0.82rem;
+  color: #f87171;
+  margin: 0;
 }
 
 /* ============ RESPONSIVE ============ */

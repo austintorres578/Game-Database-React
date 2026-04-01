@@ -101,6 +101,23 @@
     color 0.15s ease;
 }
 
+.library-page .game-card--custom::after{
+      content: "";
+    background: url('../assets/images/custom-icon.png');
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center;
+    position: absolute;
+    right: 0px;
+    background-color: #20c05b;
+    border-radius: 0px 15px 0px 0px;
+    display: block;
+    height: 20px;
+    width: 20px;
+    z-index: 1;
+    padding: 5px;
+}
+
 .library-page .btn-primary {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #0b1120;
@@ -517,12 +534,14 @@
   gap: 25px;
   margin-bottom: 50px;
   padding-top: 15px;
+  position: relative;
+  z-index: 0;
 }
 
 .library-page .game-card {
   width: 100%;
   background: rgba(15, 23, 42, 0.92);
-  border-radius: 0.9rem;
+  border-radius: 15px;
   border: 1px solid rgba(148, 163, 184, 0.28);
   overflow: hidden;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);

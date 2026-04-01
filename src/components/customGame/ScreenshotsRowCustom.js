@@ -24,7 +24,7 @@ export default function ScreenshotsRowCustom({
     const files = Array.from(e.target.files);
     const newShots = files.map((file) => {
       const image = URL.createObjectURL(file);
-      return { id: image, image };
+      return { id: image, image, file };
     });
     onAddScreenshots(newShots);
     e.target.value = "";

@@ -100,6 +100,29 @@ body {
   backdrop-filter: blur(10px);
 }
 
+.game-edit-button{
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background-color: #20c05b;
+  height: 45px;
+  width: 45px;
+  border-radius: 99px;
+  border: none;
+  cursor: pointer;
+}
+
+/* .game-page-container .cg-title-row div{
+  display: flex;
+  flex-direction: column;
+} */
+
+.game-edit-button img{
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
 .game-cover-wrapper {
   display: flex;
   flex-direction: column;
