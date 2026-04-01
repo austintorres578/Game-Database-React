@@ -132,7 +132,7 @@ export default function GamePage({ auth }) {
           );
           await deleteDoc(docRef);
         } else {
-          await updateDoc(docRef, { inLibrary: false });
+          await deleteDoc(docRef);
         }
 
         await removeGameFromAllGroups(user.uid, String(docId));
