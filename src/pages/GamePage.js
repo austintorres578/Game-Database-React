@@ -30,7 +30,7 @@ import {
   sortStoresByPrice,
   dedupeCombinedStores,
 } from "../utils/gamePage/storeUtils";
-import { removeGameFromAllGroups } from "../services/gamePage/groupService";
+import { removeGameFromAllGroups, deleteCustomGameStorageFiles } from "../services/gamePage/groupService";
 
 import { useGameData } from "../hooks/gamePage/useGameData";
 import { useItadData } from "../hooks/gamePage/useItadData";
@@ -125,6 +125,15 @@ export default function GamePage({ auth }) {
       if (isInLibrary) {
         await updateDoc(docRef, { inLibrary: false });
         await removeGameFromAllGroups(user.uid, String(docId));
+
+        if (gameData.isCustom) {
+          await deleteCustomGameStorageFiles(
+            user.uid,
+            docId,
+            gameData.background_image,
+            gameData.screenshots || gameScreenshots
+          );
+        }
 
         setIsInLibrary(false);
 
