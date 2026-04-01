@@ -46,7 +46,7 @@ export default function UserProfile() {
   const selectedGenres = profile?.selectedGenres || [];
   const profileTags = profile?.profileTags || [];
 
-  const avatarSrc = profile?.avatarPreview || userDefaultProfileImage;
+  const avatarSrc = profile?.avatarUrl || userDefaultProfileImage;
 
   // 🔹 Stats
   const totalTracked = libraryGames.length;
