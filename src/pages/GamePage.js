@@ -20,6 +20,7 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteDoc,
   arrayRemove,
   getDoc,
   db,
@@ -122,9 +123,6 @@ export default function GamePage({ auth }) {
       setSavingLibrary(true);
 
       if (isInLibrary) {
-        await updateDoc(docRef, { inLibrary: false });
-        await removeGameFromAllGroups(user.uid, String(docId));
-
         if (gameData.isCustom) {
           await deleteCustomGameStorageFiles(
             user.uid,
@@ -132,7 +130,12 @@ export default function GamePage({ auth }) {
             gameData.background_image,
             gameData.screenshots || gameScreenshots
           );
+          await deleteDoc(docRef);
+        } else {
+          await updateDoc(docRef, { inLibrary: false });
         }
+
+        await removeGameFromAllGroups(user.uid, String(docId));
 
         setIsInLibrary(false);
 
@@ -503,6 +506,7 @@ export default function GamePage({ auth }) {
               setGroupDropdownOpen={setGroupDropdownOpen}
               savingGroupId={savingGroupId}
               onToggleGroup={handleToggleGroup}
+              isCustomGame={isCustomGame}
             />
           </div>
           {isCustomGame && (
