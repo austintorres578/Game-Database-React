@@ -379,23 +379,6 @@ export default function YourLibrary() {
           newFilter,
         );
 
-        setCustomFilters((prev) => {
-          const permanent = prev.filter(
-            (g) => g.id === "all-platforms" || g.id === "ungrouped",
-          );
-          const rest = prev.filter(
-            (g) => g.id !== "all-platforms" && g.id !== "ungrouped",
-          );
-          const updatedRest = [...rest, savedFilter].sort((a, b) =>
-            String(a.name || "").localeCompare(
-              String(b.name || ""),
-              undefined,
-              { sensitivity: "base" },
-            ),
-          );
-          return [...permanent, ...updatedRest];
-        });
-
         setActiveGroups([savedFilter.id]);
       }
 
