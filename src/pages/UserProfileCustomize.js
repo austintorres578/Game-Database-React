@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { auth } from "../firebase/fireAuth";
 
 import {
@@ -21,6 +21,7 @@ import ProfilePreviewCard from "../components/userProfileCustomize/ProfilePrevie
 import ProfileSettingsForm from "../components/userProfileCustomize/ProfileSettingsForm";
 
 export default function UserProfileCustomizer() {
+  const navigate = useNavigate();
 
   console.log(auth.currentUser.displayName)
 
@@ -49,6 +50,21 @@ export default function UserProfileCustomizer() {
 
   // Only one dropdown open at a time
   const [openDropdown, setOpenDropdown] = useState(null);
+
+  // Baseline snapshot of last-saved values — used to detect unsaved changes
+  const savedProfile = useRef(null);
+
+  const sortedJson = (arr) => JSON.stringify([...(arr || [])].sort());
+
+  const isDirty = savedProfile.current !== null && (
+    displayName !== savedProfile.current.displayName ||
+    shortAboutMe !== savedProfile.current.shortAboutMe ||
+    aboutMe !== savedProfile.current.aboutMe ||
+    sortedJson(selectedPlatforms) !== sortedJson(savedProfile.current.selectedPlatforms) ||
+    sortedJson(selectedGenres) !== sortedJson(savedProfile.current.selectedGenres) ||
+    sortedJson(profileTags) !== sortedJson(savedProfile.current.profileTags) ||
+    avatarFile !== null
+  );
 
   const resetFormToDefaults = () => {
     setDisplayName(DEFAULT_DISPLAY_NAME);
@@ -110,6 +126,15 @@ export default function UserProfileCustomizer() {
 
         setExistingAvatarUrl(userData.avatarUrl || null);
         setPreviewSrc(userData.avatarUrl || userDefaultProfile);
+
+        savedProfile.current = {
+          displayName: userData.displayName || DEFAULT_DISPLAY_NAME,
+          shortAboutMe: userData.shortAboutMe || DEFAULT_SHORT_BIO,
+          aboutMe: userData.aboutMe || DEFAULT_ABOUT_ME,
+          selectedPlatforms: Array.isArray(userData.selectedPlatforms) ? userData.selectedPlatforms : [],
+          selectedGenres: Array.isArray(userData.selectedGenres) ? userData.selectedGenres : [],
+          profileTags: Array.isArray(userData.profileTags) ? userData.profileTags.slice(0, 5) : [],
+        };
       } catch (err) {
         console.error("Failed to prepare profile and stats:", err);
 
@@ -172,7 +197,15 @@ export default function UserProfileCustomizer() {
         existingAvatarUrl,
       });
 
-      alert("Profile saved successfully!");
+      savedProfile.current = {
+        displayName,
+        shortAboutMe,
+        aboutMe,
+        selectedPlatforms,
+        selectedGenres,
+        profileTags,
+      };
+      navigate("/profile");
     } catch (err) {
       console.error("Failed to save profile:", err);
       setError(err.message || "Failed to save profile. Please try again.");
@@ -228,12 +261,9 @@ export default function UserProfileCustomizer() {
             onToggleDropdown={toggleDropdown}
             error={error}
             saving={saving}
+            isDirty={isDirty}
             onSave={prepareSave}
-            onDiscard={() => {
-              resetFormToDefaults();
-              setError("");
-              setOpenDropdown(null);
-            }}
+            onDiscard={() => navigate("/profile")}
           />
         </div>
       </div>

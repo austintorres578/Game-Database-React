@@ -22,6 +22,7 @@ export default function ProfileSettingsForm({
   onToggleDropdown,
   error,
   saving,
+  isDirty,
   onSave,
   onDiscard,
 }) {
@@ -196,12 +197,14 @@ export default function ProfileSettingsForm({
 
         <div className="form-actions">
           <button type="button" className="btn btn-ghost" onClick={onDiscard}>
-            Discard
+            Cancel
           </button>
 
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving ? "Saving..." : "Save changes"}
-          </button>
+          {isDirty && (
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? "Saving..." : "Save changes"}
+            </button>
+          )}
         </div>
       </form>
     </section>
