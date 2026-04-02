@@ -31,14 +31,14 @@ export default function CompletedGamesSection({
               <div
                 className="completed-game-cover"
                 style={{
-                  backgroundImage: game.background_image
-                    ? `url(${game.background_image})`
+                  backgroundImage: (game.backgroundImage || game.background_image)
+                    ? `url(${game.backgroundImage || game.background_image})`
                     : "none",
                 }}
               ></div>
               <div className="completed-game-body">
                 <p className="completed-game-title">
-                  {game.name || "Untitled game"}
+                  {game.title || game.name || "Untitled game"}
                 </p>
                 <div className="completed-game-meta">
                   <span>{getPrimaryGenre(game)}</span>
