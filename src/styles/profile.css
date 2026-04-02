@@ -642,6 +642,7 @@
       font-weight: 600;
       color: white;
       font-weight: bold;
+      min-height:40px;
     }
 
     .completed-game-meta {
