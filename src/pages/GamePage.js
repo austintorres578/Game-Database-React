@@ -167,7 +167,7 @@ export default function GamePage({ auth }) {
     }
   }
 
-  // 🟢 Toggle COMPLETED (inside the library)
+  // 🟢 Toggle COMPLETED (independent of library)
   async function handleToggleCompleted(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -179,37 +179,33 @@ export default function GamePage({ auth }) {
     const docId = getLibraryDocId(gameData.id);
     if (!docId) return;
 
-    const docRef = doc(db, "users", user.uid, "library", docId);
+    const completedRef = doc(db, "users", user.uid, "completed", docId);
 
     try {
       setSavingCompleted(true);
 
       if (isCompleted) {
-        await setDoc(
-          docRef,
-          { ...buildBaseGamePayload(), inLibrary: isInLibrary, status: "backlog" },
-          { merge: true },
-        );
+        await deleteDoc(completedRef);
         setIsCompleted(false);
       } else {
-        await setDoc(
-          docRef,
-          { ...buildBaseGamePayload(), inLibrary: isInLibrary, status: "completed" },
-          { merge: true },
-        );
+        await setDoc(completedRef, {
+          rawgId: gameData.id,
+          title: gameData.name,
+          background_image: gameData.background_image || null,
+          backgroundImage: gameData.background_image || null,
+          completedAt: new Date().toISOString(),
+        });
         setIsCompleted(true);
       }
     } catch (error) {
       console.error("Error updating completed status:", error);
-      alert(
-        "There was a problem updating your completed games. Please try again.",
-      );
+      alert("There was a problem updating your completed games. Please try again.");
     } finally {
       setSavingCompleted(false);
     }
   }
 
-  // ⭐ Toggle favorite
+  // ⭐ Toggle favorite (independent of library)
   async function handleToggleFavorite(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -221,23 +217,24 @@ export default function GamePage({ auth }) {
     const docId = getLibraryDocId(gameData.id);
     if (!docId) return;
 
-    const docRef = doc(db, "users", user.uid, "library", docId);
+    const favoriteRef = doc(db, "users", user.uid, "favorites", docId);
 
     try {
       setSavingFavorite(true);
 
-      await setDoc(
-        docRef,
-        {
-          ...buildBaseGamePayload(),
-          inLibrary: isInLibrary,
-          isFavorite: !isFavorite,
-          status: isCompleted ? "completed" : "backlog",
-        },
-        { merge: true },
-      );
-
-      setIsFavorite(!isFavorite);
+      if (isFavorite) {
+        await deleteDoc(favoriteRef);
+        setIsFavorite(false);
+      } else {
+        await setDoc(favoriteRef, {
+          rawgId: gameData.id,
+          title: gameData.name,
+          background_image: gameData.background_image || null,
+          backgroundImage: gameData.background_image || null,
+          favoritedAt: new Date().toISOString(),
+        });
+        setIsFavorite(true);
+      }
     } catch (error) {
       console.error("Error updating favorite:", error);
       alert("There was a problem updating favorites. Please try again.");

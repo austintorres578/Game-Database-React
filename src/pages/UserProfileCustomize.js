@@ -93,6 +93,7 @@ export default function UserProfileCustomizer() {
 
         const userData = data?.[0];
         const games = Array.isArray(data?.[1]) ? data[1] : [];
+        const completedGames = Array.isArray(data?.[2]) ? data[2] : [];
 
         if (!userData) {
           resetFormToDefaults();
@@ -104,9 +105,7 @@ export default function UserProfileCustomizer() {
         setAboutMe(userData.aboutMe || DEFAULT_ABOUT_ME);
 
         setGamesLogged(games.length);
-        setGamesCompleted(
-          games.filter((game) => game.status === "completed").length,
-        );
+        setGamesCompleted(completedGames.length);
 
         setSelectedPlatforms(
           Array.isArray(userData.selectedPlatforms)

@@ -19,6 +19,8 @@ export default function UserProfile() {
 
   // 🔹 Library / tracked games
   const [libraryGames, setLibraryGames] = useState([]);
+  const [completedGames, setCompletedGames] = useState([]);
+  const [favoriteGames, setFavoriteGames] = useState([]);
 
   // 🔹 Pagination for completed games
   const [completedPage, setCompletedPage] = useState(1);
@@ -30,6 +32,8 @@ export default function UserProfile() {
       setAuthUser(data.user);
       setProfile(data.profile);
       setLibraryGames(data.gameLibrary);
+      setCompletedGames(data.completedGames || []);
+      setFavoriteGames(data.favoriteGames || []);
       setLoading(data.loading);
     });
 
@@ -50,15 +54,8 @@ export default function UserProfile() {
 
   // 🔹 Stats
   const totalTracked = libraryGames.length;
-  const completedGames = libraryGames.filter((g) => g.status === "completed");
   const completedCount = completedGames.length;
-
-  // 🧾 Backlog = everything not completed
-  const backlogGames = libraryGames.filter((g) => g.status !== "completed");
-  const backlogCount = backlogGames.length;
-
-  // ⭐ Favorites
-  const favoriteGames = libraryGames.filter((g) => g.isFavorite);
+  const backlogCount = libraryGames.length;
 
   // Pagination
   const totalCompletedPages =

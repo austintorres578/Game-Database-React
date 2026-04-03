@@ -21,10 +21,6 @@ export function useLibraryState(auth, gameData) {
   const [isCompleted, setIsCompleted] = useState(false);
   const [currentUser, setCurrentUser] = useState(() => auth.currentUser);
 
-  // Track auth state so the library check re-runs once the user is resolved.
-  // Custom games load from Firestore quickly and can beat auth restoration
-  // (indexedDB persistence is async), so auth.currentUser may be null on the
-  // first pass — this subscription catches that case.
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
@@ -44,19 +40,15 @@ export function useLibraryState(auth, gameData) {
       }
 
       try {
-        const ref = doc(db, "users", currentUser.uid, "library", docId);
-        const snap = await getDoc(ref);
+        const [librarySnap, completedSnap, favoriteSnap] = await Promise.all([
+          getDoc(doc(db, "users", currentUser.uid, "library", docId)),
+          getDoc(doc(db, "users", currentUser.uid, "completed", docId)),
+          getDoc(doc(db, "users", currentUser.uid, "favorites", docId)),
+        ]);
 
-        if (snap.exists()) {
-          const data = snap.data();
-          setIsInLibrary(data.inLibrary !== false);
-          setIsFavorite(!!data.isFavorite);
-          setIsCompleted(data.status === "completed");
-        } else {
-          setIsInLibrary(false);
-          setIsFavorite(false);
-          setIsCompleted(false);
-        }
+        setIsInLibrary(librarySnap.exists() && librarySnap.data().inLibrary !== false);
+        setIsCompleted(completedSnap.exists());
+        setIsFavorite(favoriteSnap.exists());
       } catch (err) {
         console.error("Error checking library state:", err);
       }

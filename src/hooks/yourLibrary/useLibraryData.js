@@ -26,6 +26,7 @@ export const UNGROUPED_FILTER = {
 export function useLibraryData() {
   const unsubLibraryRef = useRef(null);
   const unsubGroupsRef = useRef(null);
+  const unsubCompletedRef = useRef(null);
   const initializedRef = useRef(false);
 
   const [authUser, setAuthUser] = useState(null);
@@ -35,6 +36,7 @@ export function useLibraryData() {
     backlog: 0,
     playing: 0,
   });
+  const [completedCount, setCompletedCount] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
   const [libraryGames, setLibraryGames] = useState([]);
 
@@ -77,10 +79,12 @@ export function useLibraryData() {
 
       if (unsubLibraryRef.current) { unsubLibraryRef.current(); unsubLibraryRef.current = null; }
       if (unsubGroupsRef.current) { unsubGroupsRef.current(); unsubGroupsRef.current = null; }
+      if (unsubCompletedRef.current) { unsubCompletedRef.current(); unsubCompletedRef.current = null; }
       initializedRef.current = false;
 
       if (!user) {
         setStats({ total: 0, completed: 0, backlog: 0, playing: 0 });
+        setCompletedCount(0);
         setLibraryGames([]);
         setCustomFilters([ALL_PLATFORMS_FILTER, UNGROUPED_FILTER]);
         setActiveGroupIds(["all-platforms"]);
@@ -95,7 +99,7 @@ export function useLibraryData() {
       // --- LIBRARY LISTENER ---
       const libraryRef = query(collection(db, "users", user.uid, "library"));
       unsubLibraryRef.current = onSnapshot(libraryRef, (snapshot) => {
-        let total = 0, completed = 0, backlog = 0, playing = 0;
+        let total = 0, backlog = 0, playing = 0;
         const games = [];
 
         snapshot.forEach((docSnap) => {
@@ -105,8 +109,7 @@ export function useLibraryData() {
           games.push({ id: String(docSnap.id), title, ...data });
 
           const status = data.status?.toLowerCase?.() || "";
-          if (status === "completed") completed++;
-          else if (status === "backlog") backlog++;
+          if (status === "backlog") backlog++;
           else if (status === "playing") playing++;
         });
 
@@ -114,10 +117,20 @@ export function useLibraryData() {
           String(a.title || "").localeCompare(String(b.title || ""), undefined, { sensitivity: "base" })
         );
 
-        setStats({ total, completed, backlog, playing });
+        setStats((prev) => ({ ...prev, total, backlog, playing }));
         setLibraryGames(sortedGames);
       }, (err) => {
         console.error("Library snapshot error:", err);
+      });
+
+      // --- COMPLETED LISTENER ---
+      const completedRef = query(collection(db, "users", user.uid, "completed"));
+      unsubCompletedRef.current = onSnapshot(completedRef, (snapshot) => {
+        const count = snapshot.size;
+        setCompletedCount(count);
+        setStats((prev) => ({ ...prev, completed: count }));
+      }, (err) => {
+        console.error("Completed snapshot error:", err);
       });
 
       // --- GROUPS LISTENER ---
@@ -213,6 +226,7 @@ export function useLibraryData() {
       unsubAuth();
       if (unsubLibraryRef.current) unsubLibraryRef.current();
       if (unsubGroupsRef.current) unsubGroupsRef.current();
+      if (unsubCompletedRef.current) unsubCompletedRef.current();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -8,21 +8,34 @@ export function loadProfileUserData(callback) {
       callback({
         user: null,
         gameLibrary: [],
+        completedGames: [],
+        favoriteGames: [],
         loading: false,
       });
       return;
     }
 
     try {
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
+      const [profileSnap, librarySnap, completedSnap, favoritesSnap] = await Promise.all([
+        getDoc(doc(db, "users", user.uid)),
+        getDocs(collection(db, "users", user.uid, "library")),
+        getDocs(collection(db, "users", user.uid, "completed")),
+        getDocs(collection(db, "users", user.uid, "favorites")),
+      ]);
 
-      const profile = snap.exists() ? snap.data() : null;
-
-      const libraryRef = collection(db, "users", user.uid, "library");
-      const librarySnap = await getDocs(libraryRef);
+      const profile = profileSnap.exists() ? profileSnap.data() : null;
 
       const games = librarySnap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      const completed = completedSnap.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      const favorites = favoritesSnap.docs.map((docSnap) => ({
         id: docSnap.id,
         ...docSnap.data(),
       }));
@@ -31,6 +44,8 @@ export function loadProfileUserData(callback) {
         user,
         profile,
         gameLibrary: games,
+        completedGames: completed,
+        favoriteGames: favorites,
         loading: false,
       });
     } catch (err) {
@@ -38,4 +53,3 @@ export function loadProfileUserData(callback) {
     }
   });
 }
-
