@@ -189,10 +189,8 @@ export default function GamePage({ auth }) {
         setIsCompleted(false);
       } else {
         await setDoc(completedRef, {
-          rawgId: gameData.id,
-          title: gameData.name,
-          background_image: gameData.background_image || null,
-          backgroundImage: gameData.background_image || null,
+          ...buildBaseGamePayload(),
+          inLibrary: false,
           completedAt: new Date().toISOString(),
         });
         setIsCompleted(true);
@@ -227,10 +225,8 @@ export default function GamePage({ auth }) {
         setIsFavorite(false);
       } else {
         await setDoc(favoriteRef, {
-          rawgId: gameData.id,
-          title: gameData.name,
-          background_image: gameData.background_image || null,
-          backgroundImage: gameData.background_image || null,
+          ...buildBaseGamePayload(),
+          inLibrary: false,
           favoritedAt: new Date().toISOString(),
         });
         setIsFavorite(true);
