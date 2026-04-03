@@ -315,14 +315,13 @@
       padding: 0.65rem 0.75rem 0.7rem;
     }
 
-
-
     .favorite-game-title {
       font-size: 0.92rem;
       margin: 0 0 10px;
       font-weight: 600;
       color: white;
       font-weight: bold;
+      height:40px;
     }
 
     .favorite-game-meta {
