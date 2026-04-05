@@ -785,23 +785,18 @@
 }
 
 .library-page .custom-filter-settings-con {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform:translate(-50%,-50%);
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background-color: rgba(0, 0, 0, 0.506);
-  height: 100%;
-  width: 100%;
   pointer-events: none;
   opacity: 0;
-  max-width: 100%;
+  z-index: 1000;
 }
 
 .library-page .custom-filter-settings {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   display: flex;
   min-height: 500px;
   width: 600px;
