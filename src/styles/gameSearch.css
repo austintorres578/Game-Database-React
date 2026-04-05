@@ -639,6 +639,7 @@ ease-out;
 .search-sort-con {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     padding: 10px 15px 0;
     max-width: 1125px;
