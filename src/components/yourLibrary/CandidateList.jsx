@@ -50,6 +50,7 @@ export default function CandidateList({
             border: "1px solid rgba(255,255,255,0.15)",
             background: "rgba(0,0,0,0.25)",
             color: "white",
+            height: "135px"
           }}
           placeholder="Paste or edit games here (one per line)..."
         />
@@ -192,7 +193,7 @@ export default function CandidateList({
                     display: "flex",
                     flexDirection: "column",
                     gap: "8px",
-                    padding: "10px",
+                    padding: "5px 10px",
                     borderRadius: "10px",
                     background: "rgba(255,255,255,0.06)",
                   }}

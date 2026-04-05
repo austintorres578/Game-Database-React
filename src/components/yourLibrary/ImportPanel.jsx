@@ -54,16 +54,20 @@ export default function ImportPanel({
       />
 
       <div className="image-scan">
-        <p>Import from Image</p>
+        {!(scanCleanText && scanPreviewUrls.length === 0) && (
+          <>
+            <p>Import from Image</p>
 
-        <button
-          className="btn btn-primary"
-          type="button"
-          onClick={onOpenScanFilePicker}
-          disabled={scanLoading}
-        >
-          {scanLoading ? "Scanning..." : "Upload"}
-        </button>
+            <button
+              className="btn btn-primary"
+              type="button"
+              onClick={onOpenScanFilePicker}
+              disabled={scanLoading}
+            >
+              {scanLoading ? "Scanning..." : "Upload"}
+            </button>
+          </>
+        )}
 
         {scanPreviewUrls.length > 0 && (
           <div

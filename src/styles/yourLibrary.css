@@ -835,7 +835,7 @@
 
 .library-page .scanned-text-grid{
   display: block !important;
-  height: 300px;
+  height: 250px;
   overflow-y: scroll;
 }
 
