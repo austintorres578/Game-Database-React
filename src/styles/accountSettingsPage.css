@@ -10,6 +10,7 @@
 
   body .account-setting-page .new-password-con>div{
     width: 100%;
+    margin-bottom: 10px;
   }
 
   body .account-setting-page .email-section{

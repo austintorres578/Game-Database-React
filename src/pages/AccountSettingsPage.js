@@ -309,7 +309,7 @@ export default function AccountSettingsPage() {
           <div>
             <span className='label'>Confirm new password</span>
             <input type='password' className='text-input' placeholder='Repeat new password' value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)}></input>
-            <span className='sub-label'></span>
+            <span className='sub-label' style={{ height: '12.8px' }}></span>
           </div>
         </div>
         {passwordError && <p style={{ color: '#f87171', fontSize: '13px', marginBottom: '8px' }}>{passwordError}</p>}
