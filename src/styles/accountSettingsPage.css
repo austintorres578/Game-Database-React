@@ -1,3 +1,19 @@
+@media(max-width:765px){
+  body .account-setting-page{
+    padding-left: 25px;
+    padding-right: 25px;
+  }
+
+  body .account-setting-page .new-password-con{
+    flex-direction: column;
+  }
+
+  body .account-setting-page .new-password-con>div{
+    width: 100%;
+  }
+
+}
+
 .account-setting-page {
   max-width: 1250px;
   margin: 50px auto;
@@ -8,7 +24,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
+
+.account-setting-page .account-page-header h1{
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.account-setting-page .account-page-header a{
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 
 .account-setting-page .account-page-header button {
   font-size: 13px;
@@ -43,6 +71,7 @@
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  flex-wrap: wrap;
 }
 
 .header-label {
@@ -150,6 +179,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .account-setting-page .danger-zone-header h3 {
@@ -207,6 +237,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .account-setting-page .connected-account-row {
@@ -304,6 +335,7 @@
 .account-setting-page .email-header{
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
   align-items:center ;
       border-bottom: 1px solid rgba(148, 163, 184, 0.12);
       margin-bottom: 20px;
