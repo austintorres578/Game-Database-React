@@ -1,7 +1,7 @@
 @media(max-width:765px){
   body .account-setting-page{
-    padding-left: 25px;
-    padding-right: 25px;
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   body .account-setting-page .new-password-con{
@@ -10,6 +10,22 @@
 
   body .account-setting-page .new-password-con>div{
     width: 100%;
+  }
+
+  body .account-setting-page .email-section{
+    padding:22px 15px
+  }
+
+  body .account-setting-page .password-section{
+    padding:22px 15px
+  }
+
+   body .account-setting-page .danger-zone-con{
+    padding:22px 15px
+  }
+
+  body .account-setting-page .connected-account-section{
+    padding:22px 15px
   }
 
 }
@@ -295,7 +311,7 @@
   cursor: pointer;
   font-family: inherit;
   transition: .2s;
-  margin-right: 10px;
+  margin-right: 5px;
   pointer-events: none;
 }
 
