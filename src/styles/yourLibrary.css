@@ -794,6 +794,7 @@
   pointer-events: none;
   opacity: 0;
   z-index: 1000;
+  padding: 0px;
 }
 
 .library-page .custom-filter-settings {
@@ -833,14 +834,19 @@
     margin-right: auto;
 }   
 
+/* .library-page .scan-results{
+  margin-top: 0px;
+} */
+
 .library-page .scanned-text-grid{
   display: block !important;
-  height: 250px;
+  height: 160px;
   overflow-y: scroll;
 }
 
 .library-page .candidate-btn{
   width: 152px;
+  height: 38px;
 }
 
 .library-page .sort-con{

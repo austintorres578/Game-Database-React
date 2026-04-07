@@ -47,6 +47,9 @@ export default function Header() {
               <NavLink to="/profile" className={navClass}>
                 Profile
               </NavLink>
+              <NavLink to="/account-settings" className={navClass}>
+                Account Settings
+              </NavLink>
               <a href="#" onClick={handleLogout} className="nav-link logout-link">
                 Log Out
               </a>
@@ -101,6 +104,10 @@ export default function Header() {
 
               <NavLink to="/profile" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
                 Profile
+              </NavLink>
+
+              <NavLink to="/account-settings" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+                Account Settings
               </NavLink>
 
               <a href="#" onClick={handleLogout} className="nav-link logout-link">

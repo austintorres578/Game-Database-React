@@ -31,8 +31,8 @@ export default function CandidateList({
   if (!scanCleanText) return null;
 
   return (
-    <div className="scan-results" style={{ marginTop: "12px" }}>
-      <p className="scan-results-title" style={{ marginBottom: "6px" }}>
+    <div className="scan-results" style={{ marginTop: "0px" }}>
+      <p className="scan-results-title" style={{ marginBottom: "6px",marginTop:"0px" }}>
         {title}
       </p>
 
@@ -70,18 +70,7 @@ export default function CandidateList({
       {candidates.length > 0 && (
         <div className="candidate-section" style={{ marginTop: "14px" }}>
           {showCandidatesHeading ? (
-            <p
-              className="candidate-section-title"
-              style={{ marginBottom: "8px" }}
-            >
-              Candidates (A–Z) — edit + uncheck junk:
-              <span
-                className="candidate-found"
-                style={{ marginLeft: "10px", opacity: 0.9 }}
-              >
-                Imported: {scanImportedCount} / {selectedCandidateIds.size}
-              </span>
-            </p>
+            <></>
           ) : (
             <p
               className="candidate-section-title"
