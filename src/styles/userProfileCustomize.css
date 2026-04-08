@@ -1,3 +1,9 @@
+@media(max-width:550px){
+  body .card{
+    padding:20px 10px;
+  }
+}
+ 
  .profile-settings-shell {
       max-width: 1200px;
       margin: 35px auto;
@@ -12,6 +18,7 @@
       align-items: center;
       gap: 1rem;
       margin-bottom: 1.8rem;
+      flex-wrap: wrap;
     }
 
     .profile-settings-header-title h1 {
@@ -48,6 +55,7 @@
       align-items: baseline;
       margin-bottom: 1.2rem;
       gap: 1rem;
+      flex-wrap: wrap;
     }
 
     .card-header h2 {
@@ -198,6 +206,7 @@
       justify-content: space-between;
       align-items: baseline;
       gap: 0.75rem;
+      flex-wrap: wrap;
     }
 
     .text-input,

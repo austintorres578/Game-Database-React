@@ -115,6 +115,7 @@ body {
   height: 45px;
   color: white;
   padding: 0.7rem 0.9rem;
+  text-align: left;
 }
 
 .toggle-button > p {

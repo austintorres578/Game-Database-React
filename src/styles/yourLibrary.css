@@ -48,7 +48,10 @@
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
-    padding-bottom: 55px;
+  }
+
+  body .library-page .sort-by-con{
+    justify-content: center;
   }
 
   body .library-page .add-to-group-con{
