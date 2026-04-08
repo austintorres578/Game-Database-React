@@ -6,8 +6,8 @@ import { BACKEND_BASE } from "../../constants/apiConfig";
  * Builds the Steam OAuth URL that redirects the user through the backend
  * and attaches their Firebase UID so the backend can link the accounts.
  */
-export function steamAuthUrl(uid) {
-  return `${BACKEND_BASE}/auth/steam?uid=${encodeURIComponent(uid)}`;
+export function steamAuthUrl(uid, returnTo = '/library') {
+  return `${BACKEND_BASE}/auth/steam?uid=${encodeURIComponent(uid)}&returnTo=${encodeURIComponent(returnTo)}`;
 }
 
 /**

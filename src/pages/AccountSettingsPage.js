@@ -95,7 +95,7 @@ export default function AccountSettingsPage() {
 
   function handleSteamConnect() {
     if (!authUser?.uid) return
-    window.location.href = steamAuthUrl(authUser.uid)
+    window.location.href = steamAuthUrl(authUser.uid, '/account-settings')
   }
 
   const [clearing, setClearing] = useState(false)
