@@ -97,6 +97,14 @@ export default function UserProfileCustomizer() {
 
         if (!userData) {
           resetFormToDefaults();
+          savedProfile.current = {
+            displayName: DEFAULT_DISPLAY_NAME,
+            shortAboutMe: DEFAULT_SHORT_BIO,
+            aboutMe: DEFAULT_ABOUT_ME,
+            selectedPlatforms: [],
+            selectedGenres: [],
+            profileTags: [],
+          };
           return;
         }
 
