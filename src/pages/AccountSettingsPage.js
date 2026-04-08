@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { reauthenticateWithCredential, EmailAuthProvider, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth'
 import { getStorage, ref, deleteObject } from 'firebase/storage'
 import { app } from '../firebase/firebase'
-import { auth, signOut, onAuthStateChanged } from '../firebase/fireAuth'
+import { auth, onAuthStateChanged } from '../firebase/fireAuth'
 import { db, doc, collection, getDocs, deleteDoc } from '../firebase/firestore'
 import { checkSteamSession, logoutSteamSession } from '../services/yourLibrary/steamService'
 import { steamAuthUrl, stripSteamQueryParam } from '../utils/yourLibrary/steamUtils'
@@ -240,7 +240,12 @@ export default function AccountSettingsPage() {
       await deleteObject(avatarRef).catch(() => {})
 
       await user.delete()
-      await signOut(auth)
+
+      // Clear stored Firebase auth key so useAuth's grace timer doesn't delay the redirect
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('firebase:authUser:'))
+        .forEach(k => localStorage.removeItem(k))
+
       navigate('/')
     } catch (err) {
       if (err.code === 'auth/requires-recent-login') {
