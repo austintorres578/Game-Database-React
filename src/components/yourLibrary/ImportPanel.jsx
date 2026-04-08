@@ -54,7 +54,7 @@ export default function ImportPanel({
       />
 
       <div className="image-scan">
-        {!(scanCleanText && scanPreviewUrls.length === 0) && (
+        {!scanCleanText && (
           <>
             <p>Import from Image</p>
 
@@ -69,7 +69,7 @@ export default function ImportPanel({
           </>
         )}
 
-        {scanPreviewUrls.length > 0 && (
+        {scanPreviewUrls.length > 0 && !scanCleanText && (
           <div
             className="game-images-con"
             style={{ marginTop: "10px" }}
