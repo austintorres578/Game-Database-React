@@ -795,6 +795,7 @@
   opacity: 0;
   z-index: 1000;
   padding: 0px;
+  max-width:100%
 }
 
 .library-page .custom-filter-settings {
@@ -1066,6 +1067,7 @@
 .library-page .custom-filter-settings h2 {
   text-align: center;
   margin-bottom: 0px;
+  margin-top: 10px;
 }
 
 .library-page .custom-filter-settings p {
