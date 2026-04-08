@@ -796,7 +796,7 @@
   background-color: rgba(0, 0, 0, 0.506);
   pointer-events: none;
   opacity: 0;
-  z-index: 1000;
+  z-index: 10;
   padding: 0px;
   max-width:100%
 }
