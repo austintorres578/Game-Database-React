@@ -606,11 +606,10 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  /* .game-page-container {
-    padding-top: 1.8rem;
+  .game-page-container {
     padding-left: 15px;
     padding-right: 15px;
-  } */
+  }
 }
 
 .game-genres .genres {
