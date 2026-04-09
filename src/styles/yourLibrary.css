@@ -10,7 +10,9 @@
 }
 
 @media(max-width:765px){
-
+  body .library-page .library-header-card{
+    margin-top: 0px;
+  }
   
 }
 
