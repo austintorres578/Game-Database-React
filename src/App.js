@@ -10,6 +10,7 @@ import UserProfile from "./pages/UserProfile";
 import SearchPage from "./pages/SearchPage";
 import YourLibrary from "./pages/YourLibrary";
 import UserProfileCustomizer from "./pages/UserProfileCustomize";
+import AccountSettingsPage from "./pages/AccountSettingsPage";
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -81,6 +82,15 @@ function App() {
             element={
               <ProtectedRoute user={user} authLoading={authLoading}>
                 <YourLibrary />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/account-settings"
+            element={
+              <ProtectedRoute user={user} authLoading={authLoading}>
+                <AccountSettingsPage />
               </ProtectedRoute>
             }
           />
