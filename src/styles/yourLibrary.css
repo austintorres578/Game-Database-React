@@ -57,11 +57,17 @@
   }
 
   body .library-page .add-to-group-con{
-        position: absolute;
-    width: 150px;
+   position: relative;
+        width: 150px;
+        top: auto;
+        right: auto;
+        bottom: auto;
+  }
+
+  body .library-page .add-to-group{
+    position:relative;
     top: auto;
     right: auto;
-    bottom: 10px;
   }
 }
 
