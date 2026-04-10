@@ -13,6 +13,7 @@ import UserProfileCustomizer from "./pages/UserProfileCustomize";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ScrollProgressBar from './components/ScrollProgressBar';
 
 import { auth } from "./firebase/fireAuth";
 import { useAuth } from "./hooks/useAuth";
@@ -47,6 +48,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollProgressBar />
       <ScrollToTop />
       <Header />
         <Routes>
