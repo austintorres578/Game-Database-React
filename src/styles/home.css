@@ -2,6 +2,92 @@
   height: 100%;
 } */
 
+@media(max-width:765px){
+  body .home-hero-wrapper{
+    flex-direction: column;
+  }
+
+  body .header-wrapper{
+    padding-top:0px;
+    padding-bottom:0px;
+  }
+
+  body .home-cta h2{
+    font-size:40px;
+    line-height:40px;
+  }
+
+  body .home-hero .home-hero-wrapper > div{
+    width: 100%;
+    margin-bottom: 30px;
+  }
+
+  body .stat-counter-con{
+    width: 100%;
+    max-width:100%
+  }
+
+  body .home-hero-games{
+    justify-content: center;
+  }
+
+  body .home-preview-grid h2{
+    max-width: 100%;
+  }
+
+  body .home-hero-games > div{
+    margin-right: auto;
+  }
+
+  body .home-hero .second-game{
+    margin-right: auto;
+  }
+
+  body .stat-counter-con div{
+    width: 33.3%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: 0px;
+  }
+
+  body .stat-counter-con h3{
+    text-align: center;
+  }
+
+  body .stat-counter-con p{
+    text-align: center;
+  }
+
+  /* body .feature-grid > div{
+    width:100%
+  } */
+}
+
+@media(max-width:650px){
+  body .feature-grid > div{
+    width:100%
+  }
+}
+
+@media(max-width:600px){
+  body .home-page .stat-grid{
+    flex-direction: column;
+  }
+
+  body .home-page .stat-grid > div{
+    width: 100%;
+  }
+
+
+  body .stat-grid .center{
+    border-top:solid 1px #94a3b81f;
+    border-bottom: solid 1px #94a3b81f;
+    border-left: none;
+      border-right: none;
+  }
+}
+
 @media (max-width: 550px) {
   body .home-hero div h1 {
     font-size: 40px;
@@ -441,7 +527,8 @@ body {
 
 .feature-grid > div{
   height:224.8px;
-  width: 291.8px;
+  width: 271.8px;
+  margin:30px 10px;
 }
 
 .feature-card {
@@ -504,19 +591,19 @@ body {
 }
 
 .home-page .stat-grid {
-  display: grid;
-  grid-template-columns: 33.3% 33.3% 33.3%;
+  display:flex;
   background-color: #94a3b81f;
   border-radius: 20px;
   margin-top: 30px;
 }
 
-.home-page .stat-grid div {
+.home-page .stat-grid > div {
   text-align: center;
   height: 150px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  width: 33.3%;
 }
 
 .stat-grid .center {
@@ -678,11 +765,4 @@ body {
 
 .stat-grid h3.counting {
   color: #22c55e;
-}
-
-@media (max-width: 600px) {
-  .feature-grid {
-    display: flex;
-    flex-direction: column;
-  }
 }
