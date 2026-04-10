@@ -1,8 +1,5 @@
  .footer {
-        background:
-            radial-gradient(circle at top left, rgba(59, 130, 246, 0.25), transparent 55%),
-            radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.25), transparent 55%),
-            linear-gradient(to bottom, #020617, #020617 65%, #020617);
+        background: #0b1120;
         padding: 3rem 1.5rem;
         border-top: 1px solid rgba(255,255,255,0.1);
     }
@@ -17,7 +14,7 @@
         text-transform: uppercase;
         font-weight: 800;
         letter-spacing: 1px;
-        margin-bottom: 2rem;
+        margin-bottom: 0px;
         color: #f3f4f6;
     }
 
@@ -29,16 +26,17 @@
     }
 
     .footer-column h3 {
-        font-size: 1.1rem;
+        font-size: 14px;
         margin-bottom: 0.75rem;
-        color: #93c5fd;
+        color: #9ca3af;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        font-family: 'Syne';
     }
 
     .footer-column p,
     .footer-column a {
-        color: #9ca3af;
+        color: #6b7280;
         text-decoration: none;
         font-size: 0.95rem;
         line-height: 1.6;
@@ -72,7 +70,7 @@
     }
 
     .footer-bottom {
-        text-align: center;
+        text-align: left;
         font-size: 0.9rem;
         padding-top: 2rem;
         border-top: 1px solid rgba(255,255,255,0.08);

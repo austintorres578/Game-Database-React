@@ -3,38 +3,37 @@
    (used by <Header />)
    ========================================= */
 
-@media(max-width:765px){
-  body .mobile-nav-button{
+@media (max-width: 765px) {
+  body .mobile-nav-button {
     display: block;
   }
 
-  body .header-wrapper nav a{
+  body .header-wrapper nav a {
     display: none;
   }
 
-  body .header-logo img{
+  body .header-logo img {
     height: 45px;
   }
 
-  body .header-wrapper{
+  body .header-wrapper {
     height: 60px;
   }
 
-  body .mobile-nav-button img{
+  body .mobile-nav-button img {
     width: 25px;
     height: 35px;
     object-fit: contain;
   }
+}
 
-}  
-
-@media(max-width:620px){
-  body .header-wrapper{
+@media (max-width: 620px) {
+  body .header-wrapper {
     padding-left: 10px;
     padding-right: 10px;
   }
 }
-   
+
 .site-header {
   position: fixed;
   top: 0;
@@ -45,8 +44,9 @@
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);
 }
 
-.site-header .is-active{
+.site-header .is-active {
   color: #22c55e;
+  background: rgba(34, 197, 94, 0.12);
 }
 
 .header-wrapper {
@@ -70,27 +70,50 @@
   display: flex;
   align-items: center;
   gap: 1.3rem;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.header-logo {
+  margin-right: 20px;
 }
 
 .header-nav a {
-  color: #e5e7eb;
   text-decoration: none;
+  transition: 0.25s;
+  margin: 10px 10px 10px 0px;
+  padding: 5px 15px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #9ca3af;
+  border-radius: 5px;
+  transition:
+    color 0.15s,
+    background 0.15s;
   font-weight: 500;
-  font-size: 0.95rem;
-  transition: opacity 0.2s ease, color 0.2s ease;
+  text-decoration: none;
 }
 
 .header-nav a:hover {
-  color: #22c55e;
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .header-cta {
   padding: 0.45rem 1rem;
-  border-radius: 999px;
+  border-radius: 999px !important;
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #0b1120 !important;
   font-weight: 600;
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+  position: relative;
+  top: 0px;
+}
+
+.header-cta:hover {
+  top: -1px;
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  color: #0b1120 !important;
 }
 
 .header-cta:hover {
@@ -106,14 +129,14 @@
   }
 }
 
-.mobile-nav-wrapper{
-  position:fixed;
+.mobile-nav-wrapper {
+  position: fixed;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.508);
   height: 100vh;
   opacity: 0;
   pointer-events: none;
-  transition: .25s; 
+  transition: 0.25s;
   top: 0px;
   /* right: -500px; */
   /* top: 0px; */
@@ -126,59 +149,59 @@
   transition: .25s; */
 }
 
-#revealed-mobile-nav{
+#revealed-mobile-nav {
   opacity: 1;
   pointer-events: all;
 }
 
-#revealed-mobile-nav nav{
+#revealed-mobile-nav nav {
   right: 0px;
 }
 
-.mobile-nav-wrapper nav{
+.mobile-nav-wrapper nav {
   position: absolute;
   right: -500px;
   display: flex;
-    flex-direction: column;
-    justify-content: left;
-    height: 100%;
-    margin-left: auto;
-    width: 315px;
-    padding: 91px 15px 0px 15px;
-    background-color: rgb(6, 16, 44);
-    box-shadow: 0px 10px 20px rgb(16 13 13 / 50%);
-    transition: .35s;
+  flex-direction: column;
+  justify-content: left;
+  height: 100%;
+  margin-left: auto;
+  width: 315px;
+  padding: 91px 15px 0px 15px;
+  background-color: rgb(6, 16, 44);
+  box-shadow: 0px 10px 20px rgb(16 13 13 / 50%);
+  transition: 0.35s;
 }
 
-.mobile-nav-wrapper nav a{
+.mobile-nav-wrapper nav a {
   padding-bottom: 5px;
   padding-top: 5px;
   color: white;
   font-weight: bold;
   text-decoration: none;
   font-size: 20px;
-  border-bottom: solid .5px lightgray;
+  border-bottom: solid 0.5px lightgray;
 }
 
-.mobile-nav-wrapper .close-mobile-nav-button{
-    position: absolute;
-    height: 35px;
-    width: 35px;
-    right: 19px;
-    top: 18px;
-    background-color: transparent;
-    border: none;
-    cursor: pointer;
+.mobile-nav-wrapper .close-mobile-nav-button {
+  position: absolute;
+  height: 35px;
+  width: 35px;
+  right: 19px;
+  top: 18px;
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
 }
 
-.mobile-nav-wrapper .close-mobile-nav-button img{
+.mobile-nav-wrapper .close-mobile-nav-button img {
   height: 100%;
   width: 100%;
   object-fit: contain;
   transform: rotate(45deg);
 }
 
-.mobile-nav-button{
+.mobile-nav-button {
   height: 36px;
   width: 36px;
   background-color: transparent;
@@ -187,13 +210,12 @@
   cursor: pointer;
 }
 
-.mobile-nav-button img{
+.mobile-nav-button img {
   height: 100%;
   width: 100%;
   object-fit: contain;
 }
 
-.revealed-mobile-nav{
+.revealed-mobile-nav {
   right: 0px;
-
 }

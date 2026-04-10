@@ -2,16 +2,26 @@
   height: 100%;
 } */
 
-@media(max-width:550px){
-  body .home-hero div h1{
+@media (max-width: 550px) {
+  body .home-hero div h1 {
     font-size: 40px;
     line-height: 40px;
   }
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
   margin: 0;
   height: 100%;
 }
@@ -30,14 +40,16 @@ body {
   position: relative;
   min-height: 600px;
   padding: 90px 20px 60px 20px;
-      background-image: linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
-    background-size: 60px 60px;
-    /* mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 100%); */
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 60px 60px;
+  /* mask-image: radial-gradient(ellipse 70% 70% at 50% 40%, black 20%, transparent 100%); */
   flex-direction: row;
 }
 
-.home-hero .second-game{
-  margin-right: -25px;
+.home-hero .second-game {
+  margin-right: 25px;
 }
 
 /* 
@@ -63,7 +75,7 @@ body {
   width: 100%;
 }
 
-.home-hero-games{
+.home-hero-games {
   display: flex;
   justify-content: flex-end;
   flex-direction: column;
@@ -71,9 +83,9 @@ body {
   margin-right: 20px;
 }
 
-.home-hero-games > div{
+.home-hero-games > div {
   width: 350px;
-  border:solid 1px rgba(15, 23, 42, 0.85);
+  border: solid 1px rgba(15, 23, 42, 0.85);
   border-radius: 10px;
   overflow: hidden;
   margin-left: auto;
@@ -81,60 +93,61 @@ body {
   background: rgba(15, 23, 42, 0.85);
   margin-top: 5px;
   margin-bottom: 10px;
-  transition:.35s;
+  transition: 0.35s;
   position: relative;
   right: 0px;
   cursor: pointer;
 }
 
-.home-hero-games > div:hover{
+.home-hero-games > div:hover {
   border: solid 1px #22c55e;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(34, 197, 94, 0.15);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(34, 197, 94, 0.15);
   right: 10px;
 }
 
-.home-hero-game-content{
+.home-hero-game-content {
   display: flex;
   flex-direction: column;
   justify-content: center;
   padding-left: 20px;
-
 }
 
-.home-hero-game-content .rating{
+.home-hero-game-content .rating {
   color: black;
   background-color: #22c55e;
-  padding:2px 4px;
+  padding: 2px 4px;
   border-radius: 3px;
   font-weight: bold;
 }
 
-.home-hero-game-content .game-info{
-  margin-top:5px;
+.home-hero-game-content .game-info {
+  margin-top: 5px;
   font-size: 12px;
 }
 
-.home-hero-game-content .genre{
-  color:#9ca3af;
+.home-hero-game-content .genre {
+  color: #9ca3af;
   margin-right: 5px;
 }
 
-.home-hero-game-content .game-info{
+.home-hero-game-content .game-info {
   display: flex;
   align-items: center;
 }
 
-.home-hero-game-content p{
+.home-hero-game-content p {
   margin-top: 0px;
   margin-bottom: 0px;
 }
 
-.home-hero-games div svg{
+.home-hero-games div svg {
   height: 90px;
 }
 
-.home-hero-wrapper{
-  width:1250px;
+.home-hero-wrapper {
+  width: 1250px;
   margin-left: auto;
   margin-right: auto;
   display: flex;
@@ -142,54 +155,58 @@ body {
 }
 
 .home-kicker {
-      display: block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-        background: #22c55e1f;
-    margin-bottom: 0.75rem;
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.3);
-    margin-right: auto;
-    width: fit-content;
+  display: block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #22c55e1f;
+  margin-bottom: 0.75rem;
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  margin-right: auto;
+  width: fit-content;
 }
 
 .hero-noise {
-    position: absolute;
-    inset: 0;
-    background-image: url('../assets/images/grid.svg');
-    opacity: 0.4;
-    pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image: url("../assets/images/grid.svg");
+  opacity: 0.4;
+  pointer-events: none;
 }
 
 .hero-glow {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(90px);
-    pointer-events: none;
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
 }
 
 .hero-glow-1 {
-    width: 600px;
-    height: 600px;
-    top: -100px;
-    left: -150px;
-    background: radial-gradient(circle, rgba(34, 197, 94, 0.18), transparent 70%);
-    animation: glowPulse 8s ease-in-out infinite;
+  width: 600px;
+  height: 600px;
+  top: -100px;
+  left: -150px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.18), transparent 70%);
+  animation: glowPulse 8s ease-in-out infinite;
 }
 
 .hero-glow-2 {
-    width: 500px;
-    height: 500px;
-    bottom: -80px;
-    right: 5%;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.14), transparent 70%);
-    animation: glowPulse 10s ease-in-out infinite reverse;
+  width: 500px;
+  height: 500px;
+  bottom: -80px;
+  right: 5%;
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.14),
+    transparent 70%
+  );
+  animation: glowPulse 10s ease-in-out infinite reverse;
 }
 
-.stat-counter-con{
+.stat-counter-con {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -199,22 +216,22 @@ body {
   max-width: 400px;
 }
 
-.stat-counter-con div{
+.stat-counter-con div {
   border-left: 1px solid #94a3b81f;
   padding-left: 20px;
 }
 
-.stat-counter-con h3{
+.stat-counter-con h3 {
   margin: 0px;
   text-align: left;
   font-size: 30px;
 }
 
-.stat-counter-con p{
+.stat-counter-con p {
   margin-top: 0px;
   text-align: left;
   font-size: 14px;
-  color:#6b7280
+  color: #6b7280;
 }
 
 .home-hero-inner h1 {
@@ -282,12 +299,13 @@ body {
 
 /* SECTION BASE */
 .home-section {
-  padding: 120px 0px
+  padding: 120px 0px;
 }
 
 .home-section-inner {
   max-width: 1250px;
   margin: 0 auto;
+  padding: 0px 20px;
 }
 
 .home-page .ticker-section {
@@ -305,12 +323,11 @@ body {
   will-change: transform;
 }
 
-
 .home-page .ticker-track span {
   color: #6b7280;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-family: 'Syne';
+  font-family: "Syne";
   font-style: normal;
   font-weight: 400;
   font-size: 12px;
@@ -334,35 +351,64 @@ body {
   left: 0px;
 }
 
-.home-page .pre-header{
-  color:#22c55e;
+.home-page .pre-header {
+  color: #22c55e;
   text-transform: uppercase;
   font-size: 12px;
   letter-spacing: 2px;
   display: flex;
   align-items: center;
-  font-family: 'Syne';
+  font-family: "Syne";
   font-style: normal;
   font-weight: 400;
 }
 
-.home-page .feature-card .icon{
+.home-page .feature-card .icon {
   font-size: 35px;
   color: #22c55e;
 }
 
-.home-page .pre-header:before{
-  content:"";
+.home-page .pre-header:before {
+  content: "";
   height: 1px;
   width: 20px;
   background-color: #22c55e;
   margin-right: 10px;
-  font-family: ;
+}
+
+.game-page-preview {
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-16px); }
+}
+
+.game-page-preview img {
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+  border-radius: 32px;
+  height: 300px;
+  width: auto;
+  object-fit: contain;
+  margin-left: auto;
+  margin-right: auto;
+  display: block;
+  transition: .25s;
+}
+
+.game-page-preview img:hover{
+  transform: translateY(-6px) rotate(-1deg);
+  box-shadow: 0 22px 40px rgba(34, 197, 94, 0.2);
 }
 
 @keyframes ticker-scroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .home-section h2 {
@@ -387,9 +433,15 @@ body {
 }
 
 .feature-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.feature-grid > div{
+  height:224.8px;
+  width: 291.8px;
 }
 
 .feature-card {
@@ -407,7 +459,7 @@ body {
   height: 100%;
 }
 
-.feature-card:hover{
+.feature-card:hover {
   top: -5px;
 }
 
@@ -437,7 +489,7 @@ body {
   align-items: center;
 }
 
-.home-preview-grid h2{
+.home-preview-grid h2 {
   max-width: 300px;
 }
 
@@ -451,7 +503,7 @@ body {
   margin: 1rem 0 1.75rem;
 }
 
-.home-page .stat-grid{
+.home-page .stat-grid {
   display: grid;
   grid-template-columns: 33.3% 33.3% 33.3%;
   background-color: #94a3b81f;
@@ -459,7 +511,7 @@ body {
   margin-top: 30px;
 }
 
-.home-page .stat-grid div{
+.home-page .stat-grid div {
   text-align: center;
   height: 150px;
   display: flex;
@@ -467,26 +519,26 @@ body {
   justify-content: center;
 }
 
-.stat-grid .center{
+.stat-grid .center {
   border-left: solid 1px #94a3b81f;
   border-right: solid 1px #94a3b81f;
 }
 
-.home-page .stat-grid div h3{
+.home-page .stat-grid div h3 {
   margin-top: 0px;
   margin-bottom: 10px;
   font-size: 26px;
   color: #22c55e;
 }
 
-.home-page .stat-grid div span{
-  color:#9ca3af;
+.home-page .stat-grid div span {
+  color: #9ca3af;
   letter-spacing: 2px;
   text-transform: uppercase;
-  font-family: 'Syne';
-    font-style: normal;
-    font-weight: 400;
-    font-size: 14px;
+  font-family: "Syne";
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
 }
 
 .home-list li {
@@ -497,17 +549,17 @@ body {
   color: #e5e7eb;
 }
 
-.home-hero div h1{
-    font-size: 60px;
-    line-height: 60px;
-    margin-top: 0px;
-    color: white;
-    max-width: 705px;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-    text-align: left;
+.home-hero div h1 {
+  font-size: 60px;
+  line-height: 60px;
+  margin-top: 0px;
+  color: white;
+  max-width: 705px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  text-align: left;
 }
 
-.home-hero .home-hero-wrapper > div{
+.home-hero .home-hero-wrapper > div {
   width: 50%;
 }
 
@@ -537,7 +589,7 @@ body {
   justify-content: center;
   color: #6b7280;
   font-size: 0.9rem;
-  background-image: url('../assets/images/redDeadPreview.jpg');
+  background-image: url("../assets/images/redDeadPreview.jpg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -548,10 +600,10 @@ body {
 }
 
 .home-preview-label {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 0.4rem;
-    color: #f9fafb;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  color: #f9fafb;
 }
 
 .home-preview-caption {
@@ -566,29 +618,32 @@ body {
   position: relative;
 }
 
-.home-cta h2{
-  font-size:50px;
-  text-align:center;
+.home-cta h2 {
+  font-size: 50px;
+  text-align: center;
   max-width: 500px;
   margin-left: auto;
   margin-right: auto;
 }
 
-.home-cta a{
+.home-cta a {
   margin: 10px;
 }
 
-.home-cta .cta-glow{
+.home-cta .cta-glow {
   position: absolute;
-    width: 500px;
-    height: 300px;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: radial-gradient(ellipse, rgba(34, 197, 94, 0.12), transparent 70%);
-    pointer-events: none;
-    z-index: 0;
-
+  width: 500px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    ellipse,
+    rgba(34, 197, 94, 0.12),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
 .home-cta-inner p {
@@ -598,9 +653,9 @@ body {
 }
 
 .home-page .game-meta {
-        font-size: 0.85rem;
-        color: #9ca3af;
-    }
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
@@ -617,9 +672,16 @@ body {
   }
 }
 
+.stat-grid h3 {
+  transition: color 0.3s ease;
+}
 
-@media (max-width: 600px){
-  .feature-grid{
+.stat-grid h3.counting {
+  color: #22c55e;
+}
+
+@media (max-width: 600px) {
+  .feature-grid {
     display: flex;
     flex-direction: column;
   }

@@ -24,7 +24,8 @@ export default function Header() {
     setIsMobileNavOpen(false);
   };
 
-  const navClass = ({ isActive }) => (isActive ? "nav-link is-active" : "nav-link");
+  const navClass = ({ isActive }) =>
+    isActive ? "nav-link is-active" : "nav-link";
 
   return (
     <header className="site-header">
@@ -35,40 +36,53 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="header-nav">
-          <NavLink to="/search" className={navClass}>
+          <div>
+            <NavLink to="/" className={navClass}>
+              Home
+            </NavLink>
+            <NavLink to="/search" className={navClass}>
+              Search For Games
+            </NavLink>
+          </div>
+          {/* <NavLink to="/search" className={navClass}>
             Search For Games
-          </NavLink>
-
-          {user ? (
-            <>
-              <NavLink to="/library" className={navClass}>
-                Game Library
-              </NavLink>
-              <NavLink to="/profile" className={navClass}>
-                Profile
-              </NavLink>
-              <NavLink to="/account-settings" className={navClass}>
-                Account Settings
-              </NavLink>
-              <a href="#" onClick={handleLogout} className="nav-link logout-link">
-                Log Out
-              </a>
-            </>
-          ) : (
-            <>
-              <NavLink to="/signin" className={navClass}>
-                Log In
-              </NavLink>
-              <NavLink
-                to="/signup"
-                className={({ isActive }) =>
-                  isActive ? "header-cta is-active" : "header-cta"
-                }
-              >
-                Sign Up
-              </NavLink>
-            </>
-          )}
+          </NavLink> */}
+          <div>
+            {user ? (
+              <>
+                <NavLink to="/library" className={navClass}>
+                  Game Library
+                </NavLink>
+                <NavLink to="/profile" className={navClass}>
+                  Profile
+                </NavLink>
+                <NavLink to="/account-settings" className={navClass}>
+                  Account Settings
+                </NavLink>
+                <a
+                  href="#"
+                  onClick={handleLogout}
+                  className="nav-link logout-link"
+                >
+                  Log Out
+                </a>
+              </>
+            ) : (
+              <>
+                <NavLink to="/signin" className={navClass}>
+                  Log In
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  className={({ isActive }) =>
+                    isActive ? "header-cta is-active" : "header-cta"
+                  }
+                >
+                  Sign Up
+                </NavLink>
+              </>
+            )}
+          </div>
 
           <button
             className="mobile-nav-button"
@@ -92,35 +106,63 @@ export default function Header() {
             <img src={plusIcon} alt="Close menu" />
           </button>
 
-          <NavLink to="/search" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+          <NavLink
+            to="/search"
+            className={navClass}
+            onClick={() => setIsMobileNavOpen(false)}
+          >
             Search For Games
           </NavLink>
 
           {user ? (
             <>
-              <NavLink to="/library" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/library"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Game Library
               </NavLink>
 
-              <NavLink to="/profile" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/profile"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Profile
               </NavLink>
 
-              <NavLink to="/account-settings" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/account-settings"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Account Settings
               </NavLink>
 
-              <a href="#" onClick={handleLogout} className="nav-link logout-link">
+              <a
+                href="#"
+                onClick={handleLogout}
+                className="nav-link logout-link"
+              >
                 Log Out
               </a>
             </>
           ) : (
             <>
-              <NavLink to="/signin" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/signin"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Log In
               </NavLink>
 
-              <NavLink to="/signup" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/signup"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Sign Up
               </NavLink>
             </>
