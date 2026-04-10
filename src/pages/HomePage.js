@@ -1,99 +1,241 @@
 import { Link } from 'react-router-dom';
 
-import '../styles/home.css'
+import '../styles/home.css';
+import { RevealWrapper } from '../components/RevealWrapper';
 
-export default function HomePage({user}) {
+export default function HomePage({ user }) {
 
   return (
     <div className='home-page'>
 
       <section className="home-hero">
-        <div className="home-hero-inner">
-          <p className="home-kicker">Video Game Backlog Tracker</p>
-          <h1>Find your next game to play and never lose track again.</h1>
-          <p className="home-subtitle">
-            This is a visual mockup of your homepage layout. In your real app, this hero
-            will sit over your background image.
-          </p>
+        <div class="hero-glow hero-glow-1"></div>
+        <div class="hero-glow hero-glow-2"></div>
+        <div class="hero-noise"></div>
+        <div className='home-hero-wrapper'>
+          <RevealWrapper direction="up">
+            <div className="home-hero-inner">
+              <p className="home-kicker">Video Game Backlog Tracker</p>
+              <h1>Find your next
+                game to play.</h1>
+              <p className="home-subtitle">
+                Search 500,000+ titles across every platform. Track your backlog, rate what you've finished, and never lose your place in a series again.
+              </p>
 
-          <div className="home-hero-actions">
-            <Link to="/search" className="btn btn-primary">Start Searching</Link>
+              <div className="home-hero-actions">
+                <Link to="/search" className="btn btn-primary">Start Searching</Link>
 
-            {user ? (
-              <Link to="/profile" className="btn btn-ghost">View Profile</Link>
-            ) : (
-              <Link to="/signup" className="btn btn-ghost">Create an account</Link>
-            )}
+                {user ? (
+                  <Link to="/profile" className="btn btn-ghost">View Profile</Link>
+                ) : (
+                  <Link to="/signup" className="btn btn-ghost">Create an account</Link>
+                )}
+              </div>
+              <div className='stat-counter-con'>
+                <div>
+                  <h3>500k+</h3>
+                  <p>Games</p>
+                </div>
+                <div>
+                  <h3>All</h3>
+                  <p>Platforms</p>
+                </div>
+                <div>
+                  <h3>30+</h3>
+                  <p>Genres</p>
+                </div>
+              </div>
+            </div>
+          </RevealWrapper>
+          <RevealWrapper direction="right" delay={150}>
+          <div className='home-hero-games'>
+
+            <div>
+              <svg viewBox="0 0 80 110" fill="none"><rect width="80" height="110" fill="url(#g1)"></rect><defs><linearGradient id="g1" x1="0" y1="0" x2="80" y2="110" gradientUnits="userSpaceOnUse"><stop stop-color="#7c3aed"></stop><stop offset="1" stop-color="#1e1b4b"></stop></linearGradient></defs><text x="40" y="60" font-size="36" text-anchor="middle" fill="rgba(255,255,255,0.15)">◈</text></svg>
+              <div className='home-hero-game-content'>
+                <p className='game-title'><strong>Baldur's Gate 3</strong></p>
+                <div className='game-info'>
+                  <p className='genre'>Action</p>
+                  <p className='rating'>99</p>
+                </div>
+              </div>
+            </div>
+
+            <div className='second-game'>
+              <svg viewBox="0 0 80 110" fill="none"><rect width="80" height="110" fill="url(#g2)"></rect><defs><linearGradient id="g2" x1="0" y1="0" x2="80" y2="110" gradientUnits="userSpaceOnUse"><stop stop-color="#b45309"></stop><stop offset="1" stop-color="#1c0a00"></stop></linearGradient></defs><text x="40" y="60" font-size="36" text-anchor="middle" fill="rgba(255,255,255,0.15)">◈</text></svg>
+              <div className='home-hero-game-content'>
+                <p className='game-title'><strong>Baldur's Gate 3</strong></p>
+                <div className='game-info'>
+                  <p className='genre'>Action</p>
+                  <p className='rating'>99</p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <svg viewBox="0 0 80 110" fill="none"><rect width="80" height="110" fill="url(#g3)"></rect><defs><linearGradient id="g3" x1="0" y1="0" x2="80" y2="110" gradientUnits="userSpaceOnUse"><stop stop-color="#065f46"></stop><stop offset="1" stop-color="#022c22"></stop></linearGradient></defs><text x="40" y="60" font-size="36" text-anchor="middle" fill="rgba(255,255,255,0.15)">◈</text></svg>
+              <div className='home-hero-game-content'>
+                <p className='game-title'><strong>Baldur's Gate 3</strong></p>
+                <div className='game-info'>
+                  <p className='genre'>Action</p>
+                  <p className='rating'>99</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          </RevealWrapper>
+        </div>
+      </section>
+      <div class="ticker-section">
+        <div class="ticker-track">
+          <span class="ticker-item">Action</span>
+          <span class="ticker-item">RPG</span>
+          <span class="ticker-item">Open World</span>
+          <span class="ticker-item">Indie</span>
+          <span class="ticker-item">Adventure</span>
+          <span class="ticker-item">Strategy</span>
+          <span class="ticker-item">Shooter</span>
+          <span class="ticker-item">Platformer</span>
+          <span class="ticker-item">Horror</span>
+          <span class="ticker-item">Co-op</span>
+          <span class="ticker-item">Racing</span>
+          <span class="ticker-item">Roguelike</span>
+          <span class="ticker-item" aria-hidden="true">Action</span>
+          <span class="ticker-item" aria-hidden="true">RPG</span>
+          <span class="ticker-item" aria-hidden="true">Open World</span>
+          <span class="ticker-item" aria-hidden="true">Indie</span>
+          <span class="ticker-item" aria-hidden="true">Adventure</span>
+          <span class="ticker-item" aria-hidden="true">Strategy</span>
+          <span class="ticker-item" aria-hidden="true">Shooter</span>
+          <span class="ticker-item" aria-hidden="true">Platformer</span>
+          <span class="ticker-item" aria-hidden="true">Horror</span>
+          <span class="ticker-item" aria-hidden="true">Co-op</span>
+          <span class="ticker-item" aria-hidden="true">Racing</span>
+          <span class="ticker-item" aria-hidden="true">Roguelike</span>
+        </div>
+      </div>
+
+      <section className="home-section home-features">
+        <div className="home-section-inner">
+          <RevealWrapper direction="up">
+            <span className='pre-header'>What you get</span>
+            <h2>Everything you need in one place</h2>
+          </RevealWrapper>
+
+          <div className="feature-grid">
+            <RevealWrapper direction="up" delay={0}>
+              <div className="feature-card">
+                <p className='icon'>⌕</p>
+                <h3>Powerful search</h3>
+                <p>Filter by platform, genre, release year, Metacritic score, and custom tags.</p>
+              </div>
+            </RevealWrapper>
+            <RevealWrapper direction="up" delay={100}>
+              <div className="feature-card">
+                <p className='icon'>⌕</p>
+                <h3>Personal Library</h3>
+                <p>Track playing, backlogged, and beaten games. Organise into custom groups.</p>
+              </div>
+            </RevealWrapper>
+            <RevealWrapper direction="up" delay={200}>
+              <div className="feature-card">
+                <p className='icon'>⌕</p>
+                <h3>Rich Game Pages</h3>
+                <p>Cover art, screenshots, ratings, store links and full release details.</p>
+              </div>
+            </RevealWrapper>
+            <RevealWrapper direction="up" delay={300}>
+              <div className="feature-card">
+                <p className='icon'>⌕</p>
+                <h3>User Profiles</h3>
+                <p>Showcase favourites, share library stats, and track your accomplishments.</p>
+              </div>
+            </RevealWrapper>
           </div>
         </div>
       </section>
 
-      <section className="home-section home-features">
-        <div className="home-section-inner">
-          <h2>Everything you need in one place</h2>
-          <p className="home-section-subtitle">
-            Simple, modern layout showing three key benefits of your app.
-          </p>
-
-          <div className="feature-grid">
-            <div className="feature-card">
-              <h3>Powerful search</h3>
-              <p>Quickly find games by genre, platform, or rating.</p>
+      <section className='home-section'>
+        <div className='home-section-inner'>
+          <RevealWrapper direction="up">
+            <span className='pre-header'>By the numbers</span>
+            <h2>Built for serious gamers</h2>
+          </RevealWrapper>
+          <RevealWrapper direction="scale" delay={100}>
+            <div className='stat-grid'>
+              <div>
+                <h3>500000+</h3>
+                <span>Games in database</span>
+              </div>
+              <div className='center'>
+                <h3>50+</h3>
+                <span>Platforms supported</span>
+              </div>
+              <div>
+                <h3>30+</h3>
+                <span>Genres covered</span>
+              </div>
             </div>
-            <div className="feature-card">
-              <h3>Clean backlog</h3>
-              <p>Track what you're playing, finished, or planning.</p>
-            </div>
-            <div className="feature-card">
-              <h3>At-a-glance info</h3>
-              <p>Cover art and ratings right in the list.</p>
-            </div>
-          </div>
+          </RevealWrapper>
         </div>
       </section>
 
       <section className="home-section home-preview">
         <div className="home-section-inner home-preview-grid">
-          <div className="home-preview-text">
-            <h2>See your games the way they deserve to be seen</h2>
-            <p>
-              This section visually pairs copy on the left with a mock “card” on the right.
-            </p>
-            <ul className="home-list">
-              <li>Wide hero at the top</li>
-              <li>Three feature cards in the middle</li>
-              <li>Visual game card preview on the right</li>
-            </ul>
-            <Link to="/search" className="btn btn-ghost">Try the search page</Link>
-          </div>
+          <RevealWrapper direction="left">
+            <div className="home-preview-text">
+              <span className='pre-header'>Game Pages</span>
+              <h2>See your games
+                the way they
+                deserve</h2>
+              <p>
+                Every game has a dedicated page with cover art, screenshots, community scores, developer info, and every available store link.
+              </p>
+              <ul className="home-list">
+                <li>Metacritic & community ratings</li>
+                <li>Full screenshot gallery</li>
+                <li>Store price comparison links</li>
+                <li>Genre & tag browsing</li>
+              </ul>
+              <Link to="/search" className="btn btn-ghost">Search for a game →</Link>
+            </div>
+          </RevealWrapper>
 
-          <div className="home-preview-card">
-            <div className="home-preview-image">
+          <RevealWrapper direction="right" delay={100}>
+            <div className="home-preview-card">
+              <div className="home-preview-image">
+              </div>
+              <div className="home-preview-meta">
+                <p className="home-preview-label">Red Dead Redemption 2</p>
+                <p className="game-meta">Action • 87 Metascore</p>
+              </div>
             </div>
-            <div className="home-preview-meta">
-              <p className="home-preview-label">Red Dead Redemption 2</p>
-              <p className="game-meta">Action • 87 Metascore</p>
-            </div>
-          </div>
+          </RevealWrapper>
         </div>
       </section>
 
+
       <section className="home-section home-cta">
         <div className="home-section-inner home-cta-inner">
-          <h2>Ready to clean up your backlog?</h2>
-          <p>
-            This final band is your call-to-action, encouraging users to search or sign up.
-          </p>
+          <div class="cta-glow"></div>
+          <RevealWrapper direction="up">
+            <h2>Ready to clean up
+              your backlog?</h2>
+            <p>
+              Free to use. No credit card required.
+            </p>
 
-          <div className="home-hero-actions">
-            <Link to="/search" className="btn btn-primary">Search games</Link>
+            <div className="home-hero-actions">
+              <Link to="/search" className="btn btn-primary">Search games</Link>
 
-            {user ? (
-              <Link to="/profile" className="btn btn-ghost">View Profile</Link>
-            ) : (
-              <Link to="/signup" className="btn btn-ghost">Create free account</Link>
-            )}
-          </div>
+              {user ? (
+                <Link to="/profile" className="btn btn-ghost">View Profile</Link>
+              ) : (
+                <Link to="/signup" className="btn btn-ghost">Create free account</Link>
+              )}
+            </div>
+          </RevealWrapper>
         </div>
       </section>
 

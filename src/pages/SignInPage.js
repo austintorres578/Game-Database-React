@@ -92,7 +92,7 @@ export default function SignInPage(props) {
 
   if (checkingAuth) {
     return (
-      <main className="auth-shell">
+      <main className="auth-shell sign-in-page">
         <section className="auth-card">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <img
@@ -109,7 +109,7 @@ export default function SignInPage(props) {
   }
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell sign-in-page">
 
       {user ? (
         <section className="sucessful-signin-block">

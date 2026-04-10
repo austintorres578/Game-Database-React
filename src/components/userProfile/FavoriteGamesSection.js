@@ -5,7 +5,7 @@ export default function FavoriteGamesSection({ favoriteGames }) {
   return (
     <article className="profile-panel">
       <div className="profile-panel-header">
-        <h2>Top Games</h2>
+        <h2>Favorite Games</h2>
         <span>Click a game to view details.</span>
       </div>
 

@@ -1,15 +1,8 @@
-@media (max-width: 525px) {
-  body .auth-card {
-    margin-left: 15px;
-    margin-right: 15px;
-  }
-}
-
-* {
+.sign-in-page * {
   box-sizing: border-box;
 }
 
-body {
+.sign-in-page {
   margin: 0;
   font-family:
     system-ui,
@@ -17,30 +10,19 @@ body {
     BlinkMacSystemFont,
     "Segoe UI",
     sans-serif;
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(59, 130, 246, 0.35),
-      transparent 55%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(236, 72, 153, 0.35),
-      transparent 55%
-    ),
-    #020617;
   color: #e5e7eb;
-  min-height: 100vh;
+  padding-top: 90px;
+  padding-bottom: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.auth-shell {
+.sign-in-page .auth-shell {
   padding-top: 90px;
 }
 
-.auth-card {
+.sign-in-page .auth-card {
   background: radial-gradient(
     circle at top left,
     rgba(15, 23, 42, 0.98),
@@ -56,15 +38,16 @@ body {
   margin-right: auto;
   margin-top: 75px;
   margin-bottom: 75px;
+  width: 100%;
 }
 
-.auth-logo {
+.sign-in-page .auth-logo {
   display: flex;
   justify-content: center;
   margin-bottom: 1rem;
 }
 
-.auth-logo-circle {
+.sign-in-page .auth-logo-circle {
   height: 52px;
   width: 52px;
   border-radius: 999px;
@@ -78,35 +61,34 @@ body {
   color: #022c22;
 }
 
-.auth-header {
+.sign-in-page .auth-header {
   text-align: center;
   margin-bottom: 1.5rem;
 }
 
-.auth-header h1 {
+.sign-in-page .auth-header h1 {
   margin: 0 0 0.4rem;
   font-size: 1.6rem;
 }
 
-.auth-header p {
+.sign-in-page .auth-header p {
   margin: 0;
   font-size: 0.9rem;
   color: #9ca3af;
 }
 
-.auth-form {
+.sign-in-page .auth-form {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
   margin-bottom: 1.1rem;
 }
 
-.toggle-button {
+.sign-in-page .toggle-button {
   display: flex;
   align-items: center;
   border: 1px solid rgba(30, 64, 175, 0.7);
   background-color: #020617;
-  /* margin-bottom: 20px; */
   border-radius: 10px;
   position: relative;
   transition: 0.25s;
@@ -118,21 +100,21 @@ body {
   text-align: left;
 }
 
-.toggle-button > p {
+.sign-in-page .toggle-button > p {
   pointer-events: none;
 }
 
-.toggle-con .chip-group {
+.sign-in-page .toggle-con .chip-group {
   display: none;
   transition: 0.25s;
   padding-top: 20px;
 }
 
-.toggle-con .reveal {
+.sign-in-page .toggle-con .reveal {
   display: flex;
 }
 
-.toggle-button:after {
+.sign-in-page .toggle-button:after {
   content: "▾";
   position: absolute;
   color: white;
@@ -141,53 +123,53 @@ body {
   transition: 0.25s;
 }
 
-.toggle-button.active {
+.sign-in-page .toggle-button.active {
   border: solid 1px #22c55e;
 }
 
-.toggle-button.active:after {
+.sign-in-page .toggle-button.active:after {
   transform: rotate(180deg);
 }
 
-.toggle-button:hover {
+.sign-in-page .toggle-button:hover {
   border-color: #19ad50;
 }
 
-.toggle-button p {
+.sign-in-page .toggle-button p {
   margin: 10px;
 }
 
-.auth-field {
+.sign-in-page .auth-field {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 }
 
-.auth-label-row {
+.sign-in-page .auth-label-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   font-size: 0.8rem;
 }
 
-.auth-label-row label {
+.sign-in-page .auth-label-row label {
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-size: 0.75rem;
   color: #9ca3af;
 }
 
-.auth-label-row a {
+.sign-in-page .auth-label-row a {
   color: #a5b4fc;
   text-decoration: none;
   font-size: 0.8rem;
 }
 
-.auth-label-row a:hover {
+.sign-in-page .auth-label-row a:hover {
   color: #818cf8;
 }
 
-.auth-input {
+.sign-in-page .auth-input {
   width: 100%;
   padding: 0.7rem 0.85rem;
   border-radius: 0.75rem;
@@ -202,17 +184,17 @@ body {
     background 0.2s ease;
 }
 
-.auth-input::placeholder {
+.sign-in-page .auth-input::placeholder {
   color: #6b7280;
 }
 
-.auth-input:focus {
+.sign-in-page .auth-input:focus {
   border-color: #22c55e;
   box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.7);
   background: #020617;
 }
 
-.auth-remember-row {
+.sign-in-page .auth-remember-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -222,19 +204,19 @@ body {
   margin-top: 0.2rem;
 }
 
-.auth-remember-left {
+.sign-in-page .auth-remember-left {
   display: flex;
   align-items: center;
   gap: 0.4rem;
 }
 
-.auth-remember-left input[type="checkbox"] {
+.sign-in-page .auth-remember-left input[type="checkbox"] {
   accent-color: #22c55e;
   width: 14px;
   height: 14px;
 }
 
-.auth-submit-btn {
+.sign-in-page .auth-submit-btn {
   width: 100%;
   margin-top: 0.4rem;
   border-radius: 999px;
@@ -252,49 +234,56 @@ body {
     opacity 0.15s ease;
 }
 
-.auth-submit-btn:hover {
+.sign-in-page .auth-submit-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 24px 54px rgba(34, 197, 94, 0.6);
 }
 
-.auth-submit-btn:active {
+.sign-in-page .auth-submit-btn:active {
   transform: translateY(0);
   box-shadow: 0 18px 40px rgba(34, 197, 94, 0.5);
 }
 
-.auth-footer {
+.sign-in-page .auth-footer {
   text-align: center;
   font-size: 0.82rem;
   color: #9ca3af;
   margin-top: 0.6rem;
 }
 
-.auth-footer a {
+.sign-in-page .auth-footer a {
   color: #a5b4fc;
   text-decoration: none;
   font-weight: 500;
 }
 
-.auth-footer a:hover {
+.sign-in-page .auth-footer a:hover {
   color: #818cf8;
 }
 
+@media (max-width: 525px) {
+  .sign-in-page .auth-card {
+    margin-left: 15px;
+    margin-right: 15px;
+  }
+}
+
 @media (max-width: 480px) {
-  .auth-card {
+  .sign-in-page .auth-card {
     padding: 1.6rem 1.2rem 1.4rem;
   }
 
-  .auth-header h1 {
+  .sign-in-page .auth-header h1 {
     font-size: 1.45rem;
   }
 }
 
-.auth-error {
+.sign-in-page .auth-error {
   color: red;
   margin-bottom: 5px;
 }
 
-.sucessful-signin-block {
+.sign-in-page .sucessful-signin-block {
   text-align: center;
   background: radial-gradient(
     circle at top left,
@@ -314,12 +303,12 @@ body {
   overflow: hidden;
 }
 
-.sucessful-signin-block h2 {
+.sign-in-page .sucessful-signin-block h2 {
   margin-top: 0px;
   margin-bottom: 30px;
 }
 
-.sucessful-signin-block a {
+.sign-in-page .sucessful-signin-block a {
   width: 100%;
   border-radius: 999px;
   border: none;
@@ -337,7 +326,7 @@ body {
   text-decoration: none;
 }
 
-.sucessful-signin-block a:hover {
+.sign-in-page .sucessful-signin-block a:hover {
   transform: translateY(-1px);
   box-shadow: 0 24px 54px rgba(34, 197, 94, 0.6);
 }
