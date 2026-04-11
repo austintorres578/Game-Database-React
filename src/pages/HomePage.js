@@ -8,13 +8,12 @@ import { RevealWrapper } from "../components/RevealWrapper";
 
 export default function HomePage({ user }) {
   const statGridRef = useRef(null);
+  const statCounterRef = useRef(null);
+  const headersRef = useRef(null);
+  const headerConRef = useRef(null);
+  const carouselIndexRef = useRef(0);
 
   useEffect(() => {
-    const statGrid = statGridRef.current;
-    if (!statGrid) return;
-
-    const counters = statGrid.querySelectorAll('h3[data-target]');
-
     const animateCounter = (el) => {
       const target = +el.dataset.target;
       const suffix = el.dataset.suffix || '';
@@ -33,18 +32,84 @@ export default function HomePage({ user }) {
       }, 16);
     };
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          counters.forEach(animateCounter);
-          observer.disconnect();
-        }
-      });
-    }, { threshold: 0.3 });
+    const observers = [];
 
-    observer.observe(statGrid);
+    [statGridRef, statCounterRef].forEach((ref) => {
+      const el = ref.current;
+      if (!el) return;
 
-    return () => observer.disconnect();
+      const counters = el.querySelectorAll('h3[data-target]');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            counters.forEach(animateCounter);
+            observer.disconnect();
+          }
+        });
+      }, { threshold: 0.3 });
+
+      observer.observe(el);
+      observers.push(observer);
+    });
+
+    return () => observers.forEach(o => o.disconnect());
+  }, []);
+
+  useEffect(() => {
+    const headersEl = headersRef.current;
+    if (!headersEl) return;
+
+    const interval = setInterval(() => {
+      const h1s = headersEl.querySelectorAll('h1');
+      if (h1s.length === 0) return;
+
+      const nextIndex = (carouselIndexRef.current + 1) % h1s.length;
+
+      if (nextIndex === 0) {
+        headersEl.style.top = '0px';
+        h1s.forEach(h => { h.style.opacity = '1'; });
+      } else {
+        const currentTop = parseFloat(headersEl.style.top) || 0;
+        headersEl.style.top = `${currentTop - h1s[carouselIndexRef.current].offsetHeight}px`;
+        h1s[carouselIndexRef.current].style.opacity = '0';
+      }
+
+      carouselIndexRef.current = nextIndex;
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const headersEl = headersRef.current;
+    const headerConEl = headerConRef.current;
+    if (!headersEl || !headerConEl) return;
+
+    const firstH1 = headersEl.querySelector('h1');
+    if (!firstH1) return;
+
+    const syncHeight = () => {
+      headerConEl.style.height = `${firstH1.offsetHeight}px`;
+    };
+
+    syncHeight();
+
+    const observer = new ResizeObserver(syncHeight);
+    observer.observe(firstH1);
+
+    const resetCarousel = () => {
+      headersEl.style.top = '0px';
+      headersEl.querySelectorAll('h1').forEach(h => { h.style.opacity = '1'; });
+      carouselIndexRef.current = 0;
+      syncHeight();
+    };
+
+    window.addEventListener('resize', resetCarousel);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', resetCarousel);
+    };
   }, []);
 
   return (
@@ -57,9 +122,13 @@ export default function HomePage({ user }) {
           <RevealWrapper direction="up">
             <div className="home-hero-inner">
               <p className="home-kicker">Video Game Backlog Tracker</p>
-              <h1>Find your next game to play.</h1>
-              {/* <h1>Import in minutes, and start tracking backlog</h1>
-              <h1>Group your library using custom groups</h1> */}
+              <div className="header-con" ref={headerConRef}>
+                <div className="headers" ref={headersRef}>
+                  <h1>Find your next<br></br> game to play.</h1>
+                  <h1>Import your <br></br>library in minutes.</h1>
+                  <h1>Group games <br></br>your way.</h1>
+                </div>
+              </div>
               <p className="home-subtitle">
                 Search 500,000+ titles across every platform. Track your
                 backlog, rate what you've finished, and never lose your place in
@@ -81,9 +150,9 @@ export default function HomePage({ user }) {
                   </Link>
                 )}
               </div>
-              <div className="stat-counter-con">
+              <div className="stat-counter-con" ref={statCounterRef}>
                 <div>
-                  <h3>500k+</h3>
+                  <h3 data-target="500" data-suffix="k+">0</h3>
                   <p>Games</p>
                 </div>
                 <div>
@@ -91,7 +160,7 @@ export default function HomePage({ user }) {
                   <p>Platforms</p>
                 </div>
                 <div>
-                  <h3>30+</h3>
+                  <h3 data-target="30" data-suffix="+">0</h3>
                   <p>Genres</p>
                 </div>
               </div>
@@ -164,7 +233,7 @@ export default function HomePage({ user }) {
                 </svg>
                 <div className="home-hero-game-content">
                   <p className="game-title">
-                    <strong>Baldur's Gate 3</strong>
+                    <strong>Red Dead Redemption 2</strong>
                   </p>
                   <div className="game-info">
                     <p className="genre">Action</p>
@@ -201,10 +270,10 @@ export default function HomePage({ user }) {
                 </svg>
                 <div className="home-hero-game-content">
                   <p className="game-title">
-                    <strong>Baldur's Gate 3</strong>
+                    <strong>Animal Crossing: New Horizons</strong>
                   </p>
                   <div className="game-info">
-                    <p className="genre">Action</p>
+                    <p className="genre">Simulation</p>
                     <p className="rating">99</p>
                   </div>
                 </div>
