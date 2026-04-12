@@ -585,6 +585,7 @@ export default function SearchPage({ user }) {
       <div className="search-page-container">
         <form onSubmit={handleSubmit}>
           <div className="search-box-wrapper">
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"></circle><path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
             <input
               className="search-box"
               type="text"
@@ -596,6 +597,8 @@ export default function SearchPage({ user }) {
               {loading ? "Searching..." : "Search"}
             </button>
           </div>
+
+          <div className="platform-flex">
 
           {/* PLATFORMS */}
           <FilterDropdown
@@ -637,10 +640,13 @@ export default function SearchPage({ user }) {
           >
             Reset Search
           </button>
+
+          </div>
+
         </form>
 
         {/* SORT */}
-        {hasResults && <div className="search-sort-con" ref={sortDropdownRef}>
+        {/* {hasResults && <div className="search-sort-con" ref={sortDropdownRef}>
           <p>Sort by</p>
           <div className="sorting">
             <button type="button" onClick={() => setIsSortDropdownOpen((prev) => !prev)}>
@@ -666,7 +672,7 @@ export default function SearchPage({ user }) {
               ))}
             </div>
           </div>
-        </div>}
+        </div>} */}
 
         {loading && (
           <div className="loading-wrapper">

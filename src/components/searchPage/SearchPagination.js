@@ -17,7 +17,7 @@ export default function SearchPagination({
         onClick={onPrevPage}
         disabled={pageNumber <= 1}
       >
-        ‹ Prev
+        ← Prev
       </button>
 
       <div
@@ -29,7 +29,7 @@ export default function SearchPagination({
           type="button"
           onClick={() => setIsPageDropdownOpen((v) => !v)}
         >
-          Page {pageNumber} of {totalPages} ▾
+          Page {pageNumber} of {totalPages} <span className="chevron">▾</span>
         </button>
 
         {isPageDropdownOpen && (
@@ -55,7 +55,7 @@ export default function SearchPagination({
         onClick={onNextPage}
         disabled={pageNumber >= totalPages}
       >
-        Next ›
+        Next →
       </button>
     </div>
   );

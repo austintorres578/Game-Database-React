@@ -4,23 +4,23 @@
    ========================================= */
 
 @media (max-width: 765px) {
-  body .mobile-nav-button {
+  body .site-header .mobile-nav-button {
     display: block;
   }
 
-  body .header-wrapper nav a {
+  body .site-header .header-wrapper nav a {
     display: none;
   }
 
-  body .header-logo img {
+  body .site-header .header-logo img {
     height: 45px;
   }
 
-  body .header-wrapper {
+  body .site-header .header-wrapper {
     height: 60px;
   }
 
-  body .mobile-nav-button img {
+  body .site-header .mobile-nav-button img {
     width: 25px;
     height: 35px;
     object-fit: contain;
@@ -28,7 +28,7 @@
 }
 
 @media (max-width: 620px) {
-  body .header-wrapper {
+  body .site-header .header-wrapper {
     padding-left: 10px;
     padding-right: 10px;
   }
@@ -49,7 +49,7 @@
   background: rgba(34, 197, 94, 0.12);
 }
 
-.header-wrapper {
+.site-header .header-wrapper {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0.8rem 1.5rem;
@@ -59,14 +59,14 @@
   height: 70px;
 }
 
-.header-logo img {
+.site-header .header-logo img {
   height: 50px;
   width: auto;
   display: block;
   filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
 }
 
-.header-nav {
+.site-header .header-nav {
   display: flex;
   align-items: center;
   gap: 1.3rem;
@@ -74,11 +74,11 @@
   width: 100%;
 }
 
-.header-logo {
+.site-header .header-logo {
   margin-right: 20px;
 }
 
-.header-nav a {
+.site-header .header-nav a {
   text-decoration: none;
   transition: 0.25s;
   margin: 10px 10px 10px 0px;
@@ -94,12 +94,12 @@
   text-decoration: none;
 }
 
-.header-nav a:hover {
+.site-header .header-nav a:hover {
   color: white;
   background: rgba(255, 255, 255, 0.05);
 }
 
-.header-cta {
+.site-header .header-cta {
   padding: 0.45rem 1rem;
   border-radius: 999px !important;
   background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -110,26 +110,27 @@
   top: 0px;
 }
 
-.header-cta:hover {
+.site-header .header-cta:hover {
   top: -1px;
   background: linear-gradient(135deg, #22c55e, #16a34a) !important;
   color: #0b1120 !important;
 }
 
-.header-cta:hover {
+.site-header .header-cta:hover {
   opacity: 0.9;
 }
 
 @media (max-width: 720px) {
-  .header-nav {
+  .site-header .header-nav {
     gap: 0.9rem;
   }
-  .header-logo img {
+
+  .site-header .header-logo img {
     height: 50px;
   }
 }
 
-.mobile-nav-wrapper {
+.site-header .mobile-nav-wrapper {
   position: fixed;
   width: 100%;
   background-color: rgba(0, 0, 0, 0.508);
@@ -138,27 +139,18 @@
   pointer-events: none;
   transition: 0.25s;
   top: 0px;
-  /* right: -500px; */
-  /* top: 0px; */
-  /* right: -500px;
-  top: 0px;
-  padding-top: 35px;
-  padding-left: 10px;
-  padding-right: 10px;
-  background-color: white;
-  transition: .25s; */
 }
 
-#revealed-mobile-nav {
+.site-header #revealed-mobile-nav {
   opacity: 1;
   pointer-events: all;
 }
 
-#revealed-mobile-nav nav {
+.site-header #revealed-mobile-nav nav {
   right: 0px;
 }
 
-.mobile-nav-wrapper nav {
+.site-header .mobile-nav-wrapper nav {
   position: absolute;
   right: -500px;
   display: flex;
@@ -173,7 +165,7 @@
   transition: 0.35s;
 }
 
-.mobile-nav-wrapper nav a {
+.site-header .mobile-nav-wrapper nav a {
   padding-bottom: 5px;
   padding-top: 5px;
   color: white;
@@ -183,7 +175,7 @@
   border-bottom: solid 0.5px lightgray;
 }
 
-.mobile-nav-wrapper .close-mobile-nav-button {
+.site-header .mobile-nav-wrapper .close-mobile-nav-button {
   position: absolute;
   height: 35px;
   width: 35px;
@@ -194,14 +186,14 @@
   cursor: pointer;
 }
 
-.mobile-nav-wrapper .close-mobile-nav-button img {
+.site-header .mobile-nav-wrapper .close-mobile-nav-button img {
   height: 100%;
   width: 100%;
   object-fit: contain;
   transform: rotate(45deg);
 }
 
-.mobile-nav-button {
+.site-header .mobile-nav-button {
   height: 36px;
   width: 36px;
   background-color: transparent;
@@ -210,12 +202,12 @@
   cursor: pointer;
 }
 
-.mobile-nav-button img {
+.site-header .mobile-nav-button img {
   height: 100%;
   width: 100%;
   object-fit: contain;
 }
 
-.revealed-mobile-nav {
+.site-header .revealed-mobile-nav {
   right: 0px;
 }

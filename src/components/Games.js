@@ -27,12 +27,7 @@ export default function Games(props) {
   const hasRating =
     typeof props.rating === "number" && !Number.isNaN(props.rating);
 
-  const hasRawgRating =
-    typeof props.rawgRating === "number" && !Number.isNaN(props.rawgRating);
-
-  const metaText = hasRating ? `${props.rating} Metacritic` : "No Score";
-
-  const rawgText = hasRawgRating ? `${Math.round(props.rawgRating)}/5 RAWG` : "";
+  const metaText = hasRating ? `${props.rating}` : "No Score";
 
   // ✅ OLD doc-id convention (pre rawg_):
   // Firestore doc id === RAWG id as a string, e.g. "3498"
@@ -181,6 +176,7 @@ export default function Games(props) {
       {/* ✅ Keep RAWG id in the hash (game page fetches by RAWG id) */}
       <Link to={"/game#" + props.id} className="game-link">
         <div className="game-card">
+          <div className="metacritic-rating">{metaText}</div>
           <div
             className="game-img"
             style={{ backgroundImage: `url('${img}')` }}
@@ -190,7 +186,7 @@ export default function Games(props) {
 
             <div className="game-sub-info">
               <p className="game-genre">{primaryGenre} •</p>
-              <p className="game-meta">{metaText} {hasRawgRating && <span>• {rawgText}</span>}</p>
+              {/* <p className="game-meta">{metaText}</p> */}
             </div>
           </div>
         </div>

@@ -94,13 +94,10 @@
 }
 
 .library-page .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   border-radius: 999px;
-  padding: 0.6rem 1.3rem;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 14px;
   border: 1px solid transparent;
   text-decoration: none;
   cursor: pointer;
@@ -110,6 +107,8 @@
     background 0.15s ease,
     border-color 0.15s ease,
     color 0.15s ease;
+  text-align: center;
+  text-decoration: none;
 }
 
 .library-page .game-card--custom::after{
@@ -606,6 +605,10 @@
   font-size: 0.78rem;
 }
 
+.library-page .add-button-con{
+  display: none;
+}
+
 .library-page .game-meta-pill {
   display: inline-flex;
   align-items: center;
@@ -822,7 +825,7 @@
   padding: 10px;
 }
 
-.custom-filters{
+.library-page .custom-filters{
   position: relative;
 }
 
@@ -1037,20 +1040,20 @@
   color:#757575;
 }
 
-.game-images-con{
+.library-page .game-images-con{
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
 }
 
-.game-images-con .game-image{
+.library-page .game-images-con .game-image{
   height: 100px;
   width: 100px;
   margin: 10px;
   border: solid .5px lightgray;
 }
 
-.game-images-con .game-image img{
+.library-page .game-images-con .game-image img{
   height: 100%;
   width: 100%;
   object-fit: contain;

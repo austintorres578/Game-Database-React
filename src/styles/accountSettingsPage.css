@@ -91,7 +91,7 @@
   flex-wrap: wrap;
 }
 
-.header-label {
+.account-setting-page .header-label {
   display: block;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -112,7 +112,7 @@
   margin-bottom: 6px;
 }
 
-.sub-label{
+.account-setting-page .sub-label{
   display: block;
   font-size: 10px;
   /* text-transform: uppercase; */

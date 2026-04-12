@@ -43,11 +43,6 @@ export default function Header() {
             <NavLink to="/search" className={navClass}>
               Search For Games
             </NavLink>
-          </div>
-          {/* <NavLink to="/search" className={navClass}>
-            Search For Games
-          </NavLink> */}
-          <div>
             {user ? (
               <>
                 <NavLink to="/library" className={navClass}>
@@ -59,6 +54,17 @@ export default function Header() {
                 <NavLink to="/account-settings" className={navClass}>
                   Account Settings
                 </NavLink>
+              </>
+            ) : (
+              <></>
+            )}
+          </div>
+          {/* <NavLink to="/search" className={navClass}>
+            Search For Games
+          </NavLink> */}
+          <div>
+            {user ? (
+              <>
                 <a
                   href="#"
                   onClick={handleLogout}
@@ -83,7 +89,6 @@ export default function Header() {
               </>
             )}
           </div>
-
           <button
             className="mobile-nav-button"
             onClick={() => setIsMobileNavOpen(true)}
