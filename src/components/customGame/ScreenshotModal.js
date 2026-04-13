@@ -24,7 +24,7 @@ export default function ScreenshotModal({ screenshots, activeIndex, onClose, onP
     <div className="video-modal-overlay" ref={overlayRef} onClick={handleOverlayClick}>
       <div className="video-modal">
         <button className="screenshot-close-btn video-modal-close" onClick={onClose}>
-          X
+          ✕
         </button>
         <div className="video-modal-iframe-wrap">
           <img
@@ -35,8 +35,8 @@ export default function ScreenshotModal({ screenshots, activeIndex, onClose, onP
         </div>
         {screenshots.length > 1 && (
           <div className="screenshot-buttons">
-            <button onClick={onPrev}>Prev</button>
-            <button onClick={onNext}>Next</button>
+            <button onClick={onPrev}>‹</button>
+            <button onClick={onNext}>›</button>
           </div>
         )}
       </div>

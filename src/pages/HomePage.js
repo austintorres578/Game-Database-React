@@ -12,7 +12,6 @@ export default function HomePage({ user }) {
   const headersRef = useRef(null);
   const headerConRef = useRef(null);
   const carouselIndexRef = useRef(0);
-
   useEffect(() => {
     const animateCounter = (el) => {
       const target = +el.dataset.target;
@@ -342,7 +341,7 @@ export default function HomePage({ user }) {
             <h2>Everything you need in one place</h2>
           </RevealWrapper>
 
-          <div className="feature-grid">
+          <div className="feature-grid scroll-container">
             <RevealWrapper direction="up" delay={0}>
               <div className="feature-card">
                 <p className="icon">⌕</p>

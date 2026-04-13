@@ -1,18 +1,29 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { auth, onAuthStateChanged, signOut } from "../firebase/fireAuth";
+import { doc, getDoc, db } from "../firebase/firestore";
+import userDefaultProfileImage from "../assets/images/defaultUser.png";
 
 import headerLogo from "../assets/images/gameDatabase-nav-logo.png";
 import mobileNavIcon from "../assets/images/ham-menu-icon.png";
 import plusIcon from "../assets/images/plus-icon.png";
 
 export default function Header() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [headerSearch, setHeaderSearch] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        const profileSnap = await getDoc(doc(db, "users", currentUser.uid));
+        setAvatarUrl(profileSnap.exists() ? profileSnap.data().avatarUrl || null : null);
+      } else {
+        setAvatarUrl(null);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -22,6 +33,14 @@ export default function Header() {
     await signOut(auth);
     setUser(null);
     setIsMobileNavOpen(false);
+  };
+
+  const handleHeaderSearch = (e) => {
+    e.preventDefault();
+    const term = headerSearch.trim();
+    if (!term) return;
+    setHeaderSearch("");
+    navigate("/search", { state: { headerSearch: term } });
   };
 
   const navClass = ({ isActive }) =>
@@ -36,7 +55,30 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="header-nav">
-          <div>
+          <form className="mobile-search-con" onSubmit={handleHeaderSearch}>
+            <input
+              type="text"
+              placeholder="Search"
+              value={headerSearch}
+              onChange={(e) => setHeaderSearch(e.target.value)}
+            />
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+              <circle
+                cx="8.5"
+                cy="8.5"
+                r="5.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              ></circle>
+              <path
+                d="M13 13l3.5 3.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              ></path>
+            </svg>
+          </form>
+          <div className="desk-nav">
             <NavLink to="/" className={navClass}>
               Home
             </NavLink>
@@ -62,7 +104,7 @@ export default function Header() {
           {/* <NavLink to="/search" className={navClass}>
             Search For Games
           </NavLink> */}
-          <div>
+          <div className="desk-nav">
             {user ? (
               <>
                 <a
@@ -89,12 +131,25 @@ export default function Header() {
               </>
             )}
           </div>
-          <button
+
+          {/* <button
             className="mobile-nav-button"
             onClick={() => setIsMobileNavOpen(true)}
           >
             <img src={mobileNavIcon} alt="Open menu" />
-          </button>
+          </button> */}
+
+          <div className="mobile-dyn-buttons">
+            {user ? (
+              <NavLink className={'profile-con'} to="/profile">
+                <img src={avatarUrl || userDefaultProfileImage} alt="Profile" />
+              </NavLink>
+            ) : (
+              <NavLink to="/signin">
+                <button>Login</button>
+              </NavLink>
+            )}
+          </div>
         </nav>
       </div>
 

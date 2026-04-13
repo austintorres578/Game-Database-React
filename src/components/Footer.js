@@ -93,7 +93,7 @@ export default function Footer() {
             {installPrompt && (
               <button onClick={handleInstallClick}>Install</button>
             )}
-            <span onClick={handleDismiss}>X</span>
+            <span onClick={handleDismiss}>✕</span>
           </div>
         )}
         <div className="mobile-footer-nav-links">

@@ -14,6 +14,7 @@ import AccountSettingsPage from "./pages/AccountSettingsPage";
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollProgressBar from './components/ScrollProgressBar';
+import CursorEffect from './components/CursorEffect';
 
 import { auth } from "./firebase/fireAuth";
 import { useAuth } from "./hooks/useAuth";
@@ -48,6 +49,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <CursorEffect />
       <ScrollProgressBar />
       <ScrollToTop />
       <Header />

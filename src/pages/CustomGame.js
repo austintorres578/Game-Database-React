@@ -1,7 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import defaultBackground from "../assets/images/noGameBackground.jpg";
 import addImageIcon from "../../src/assets/images/add-image-icon.svg";
 import "../styles/customGame.css";
 

@@ -26,7 +26,7 @@ export default function VideoModal({ videos, activeIndex, onClose, onPrev, onNex
     <div className="video-modal-overlay" ref={overlayRef} onClick={handleOverlayClick}>
       <div className="video-modal">
         <button className="screenshot-close-btn video-modal-close" onClick={onClose}>
-          X
+          ✕
         </button>
         <div className="video-modal-iframe-wrap">
           <iframe
@@ -39,8 +39,8 @@ export default function VideoModal({ videos, activeIndex, onClose, onPrev, onNex
         </div>
         {videos.length > 1 && (
           <div className="screenshot-buttons">
-            <button onClick={onPrev}>Prev</button>
-            <button onClick={onNext}>Next</button>
+            <button onClick={onPrev}>‹</button>
+            <button onClick={onNext}>›</button>
           </div>
         )}
       </div>

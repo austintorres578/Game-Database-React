@@ -3,7 +3,7 @@ import { useState } from "react";
 import loadingCircle from "../assets/images/loading.gif";
 import editIcon from '../assets/images/edit.png'
 
-import defaultBackground from "../assets/images/noGameBackground.jpg";
+import placeholderSvg from "../assets/images/placeholder.svg";
 import "../styles/gamePage.css";
 
 import { useNavigate } from "react-router-dom";
@@ -321,15 +321,15 @@ export default function GamePage({ auth }) {
 
   const heroCoverUrl = gameData
     ? isCustomGame
-      ? gameData.background_image || defaultBackground
+      ? gameData.background_image || placeholderSvg
       : itadCoverUrl
         ? itadCoverUrl
         : !itadChecked
-          ? defaultBackground
-          : gameData.background_image || defaultBackground
-    : defaultBackground;
+          ? placeholderSvg
+          : gameData.background_image || placeholderSvg
+    : placeholderSvg;
 
-  const { coverLoaded } = useCoverImageLoader(gameData, heroCoverUrl, defaultBackground);
+  const { coverLoaded } = useCoverImageLoader(gameData, heroCoverUrl, placeholderSvg);
 
   const {
     containerRef: screenshotsRowRef,
@@ -409,6 +409,9 @@ export default function GamePage({ auth }) {
 
   return (
     <div className="game-page-shell">
+      <div className="top-buttons-con">
+        <button className="back-button" onClick={() => navigate(-1)}>← Go back</button>
+      </div>
       <div className="game-page-container">
         {/* HERO SECTION */}
         <section className="game-hero">
