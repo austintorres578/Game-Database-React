@@ -821,6 +821,8 @@
   justify-content: center;
   z-index: 1000;
   backdrop-filter: blur(4px);
+  padding-left: 50px;
+  padding-right: 50px;
 }
 
 .video-modal {
@@ -831,10 +833,11 @@
     rgba(15, 23, 42, 0.96),
     rgba(15, 23, 42, 0.9)
   );
-  border-radius: 1.5rem;
+  border-radius: 20px;
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 26px 70px rgba(15, 23, 42, 0.95);
-  padding: 1.4rem 1.5rem 1.8rem;
+  /* padding-left: 15px;
+  padding-right: 15px; */
 }
 
 .video-modal-close {
@@ -848,9 +851,10 @@
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 0.9rem;
+  border-radius: 20px;
   overflow: hidden;
   background: #000;
+  overflow: hidden;
 }
 
 .video-modal-iframe-wrap iframe {
@@ -859,6 +863,7 @@
   width: 100%;
   height: 100%;
   border: none;
+  z-index: 2;
 }
 
 .screenshot-close-btn {

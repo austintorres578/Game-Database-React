@@ -4,7 +4,7 @@
     line-height: 20px;
   }
 
-  body .footer .mobile-footer-nav > .mobile-footer-nav-links {
+  body .footer .mobile-footer-nav>.mobile-footer-nav-links {
     display: flex;
   }
 
@@ -108,13 +108,14 @@
   justify-content: center;
   padding-left: 10px;
   padding-right: 10px;
-  display: none;
   transform: translate(-50%, -50%);
-  top: 92%;
   left: 50%;
   max-width: 345px;
   width: 100%;
   border-radius: 5px;
+  bottom: 10px;
+  /* display: flex; */
+  display: none;
 }
 
 .footer .mobile-install-banner span {
@@ -125,7 +126,7 @@
   top: 1px;
 }
 
-.footer .mobile-install-banner > p {
+.footer .mobile-install-banner>p {
   font-size: 18px;
   text-align: center;
 }
@@ -155,7 +156,7 @@
   font-size: 10px;
 }
 
-.footer .mobile-footer-nav > .mobile-footer-nav-links {
+.footer .mobile-footer-nav>.mobile-footer-nav-links {
   height: 40px;
   background: rgba(3, 7, 18, 0.6);
   -webkit-backdrop-filter: blur(16px);
@@ -171,7 +172,7 @@
   display: none;
 }
 
-.footer .mobile-footer-nav > .mobile-footer-nav-links a {
+.footer .mobile-footer-nav>.mobile-footer-nav-links a {
   width: 20%;
   height: 100%;
   text-align: center;
@@ -181,18 +182,18 @@
   position: relative;
 }
 
-.footer .mobile-footer-nav > .mobile-footer-nav-links a img {
+.footer .mobile-footer-nav>.mobile-footer-nav-links a img {
   height: 23.5px;
   width: auto;
   object-fit: contain;
 }
 
-.footer .mobile-footer-nav > .mobile-footer-nav-links a svg {
+.footer .mobile-footer-nav>.mobile-footer-nav-links a svg {
   height: 23.5px;
   width: auto;
 }
 
-.footer .mobile-footer-nav > .mobile-footer-nav-links a.active:before {
+.footer .mobile-footer-nav>.mobile-footer-nav-links a.active:before {
   content: "";
   position: absolute;
   display: block;

@@ -4,6 +4,14 @@
     padding-left: 0px;
     padding-right: 0px;
   }
+
+  body .profile-shell .completed-container{
+    justify-content: center;
+  }
+
+  body .profile-shell .favorite-games-row{
+    justify-content: center;
+  }
 }
 
 /* @media(max-width:620px){
@@ -22,7 +30,7 @@
 .profile-shell .profile {
   max-width: 1250px;
   margin: 0px auto;
-  padding: 90px 50px 0px 50px;
+  padding: 120px 50px 0px 50px;
 }
 
 /* ======================

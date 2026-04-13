@@ -3,17 +3,83 @@
    (used by <Header />)
    ========================================= */
 
+/* ---- CUSTOM CURSOR ---- */
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(34, 197, 94, 0.5);
+  pointer-events: none;
+  z-index: 10000;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition:
+    opacity 0.3s,
+    width 0.2s ease,
+    height 0.2s ease,
+    border-color 0.2s ease;
+}
+
+body:hover .cursor-dot,
+body:hover .cursor-ring {
+  opacity: 1;
+}
+
+.cursor-ring.hovering {
+  width: 44px;
+  height: 44px;
+  border-color: rgba(34, 197, 94, 0.7);
+}
+
+@media (pointer: coarse) {
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
+}
+
 @media (max-width: 765px) {
   body .site-header .mobile-nav-button {
     display: block;
   }
 
-  body .site-header .header-wrapper nav a {
+  body .site-header .mobile-dyn-buttons {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  body .site-header .mobile-search-con {
+    display: flex;
+  }
+
+  body .site-header .header-logo {
+    margin-right: 10px;
+  }
+
+  body .site-header .header-wrapper nav .desk-nav a {
     display: none;
   }
 
   body .site-header .header-logo img {
-    height: 45px;
+    height: 35px;
   }
 
   body .site-header .header-wrapper {
@@ -25,14 +91,23 @@
     height: 35px;
     object-fit: contain;
   }
-}
 
-@media (max-width: 620px) {
   body .site-header .header-wrapper {
     padding-left: 10px;
     padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
   }
 }
+
+/* @media (max-width: 620px) {
+  body .site-header .header-wrapper {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+  }
+} */
 
 .site-header {
   position: fixed;
@@ -69,8 +144,7 @@
 .site-header .header-nav {
   display: flex;
   align-items: center;
-  gap: 1.3rem;
-  justify-content: space-between;
+  justify-content: flex-end;
   width: 100%;
 }
 
@@ -78,7 +152,7 @@
   margin-right: 20px;
 }
 
-.site-header .header-nav a {
+.site-header .header-nav .desk-nav a {
   text-decoration: none;
   transition: 0.25s;
   margin: 10px 10px 10px 0px;
@@ -121,9 +195,9 @@
 }
 
 @media (max-width: 720px) {
-  .site-header .header-nav {
+  /* .site-header .header-nav {
     gap: 0.9rem;
-  }
+  } */
 
   .site-header .header-logo img {
     height: 50px;
@@ -210,4 +284,74 @@
 
 .site-header .revealed-mobile-nav {
   right: 0px;
+}
+
+.site-header .mobile-search-con {
+  display: none;
+  position: relative;
+  width: 80%;
+}
+
+.site-header .mobile-dyn-buttons {
+  width: 100%;
+  max-width: 70px;
+}
+
+.site-header .mobile-search-con input {
+  background: #0f172a;
+  border: 1px solid #94a3b840;
+  padding: 7px 30px 7px 10px;
+  border-radius: 999px;
+  color: white;
+  transition: 0.25s;
+  width: 100%;
+}
+
+.site-header .mobile-search-con svg {
+  position: absolute;
+  height: 20px;
+  width: auto;
+  object-fit: contain;
+  right: 10px;
+  bottom: 6px;
+}
+
+.site-header .mobile-search-con input:hover {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.12);
+}
+
+.site-header .mobile-dyn-buttons {
+  display: none;
+}
+
+.site-header .mobile-dyn-buttons .profile-con {
+  height: 40px;
+  width: 40px;
+  display: block;
+  border: 3px solid rgba(148, 163, 184, 0.35);
+}
+
+.site-header .mobile-dyn-buttons a img {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+
+.site-header .mobile-dyn-buttons a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.site-header .mobile-dyn-buttons button {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #0b1120;
+  padding: 5px 0px;
+  border-radius: 999px;
+  width: 55px;
+  border: none;
+  font-weight: 500;
 }

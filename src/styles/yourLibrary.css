@@ -90,7 +90,7 @@
 }
 
 .library-page{
-  padding-top: 90px;
+  padding-top: 120px;
 }
 
 .library-page .btn {
@@ -564,7 +564,7 @@
 
 .library-page .game-img{
   height: 67%;
-  background: url('../assets/images/noGameBackground.jpg');
+  background: url('../assets/images/noGameBackground.svg');
 }
 
 .library-page .game-grid .game-wrapper{
