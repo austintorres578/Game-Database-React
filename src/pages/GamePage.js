@@ -1,7 +1,7 @@
 // GamePage.jsx
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import loadingCircle from "../assets/images/loading.gif";
-import editIcon from '../assets/images/edit.png'
+import editIcon from "../assets/images/edit.png";
 
 import placeholderSvg from "../assets/images/placeholder.svg";
 import "../styles/gamePage.css";
@@ -31,8 +31,12 @@ import {
   sortStoresByPrice,
   dedupeCombinedStores,
 } from "../utils/gamePage/storeUtils";
-import { removeGameFromAllGroups, deleteCustomGameStorageFiles } from "../services/gamePage/groupService";
+import {
+  removeGameFromAllGroups,
+  deleteCustomGameStorageFiles,
+} from "../services/gamePage/groupService";
 
+import { RevealWrapper } from "../components/RevealWrapper";
 import { useGameData } from "../hooks/gamePage/useGameData";
 import { useItadData } from "../hooks/gamePage/useItadData";
 import { useRawgStores } from "../hooks/gamePage/useRawgStores";
@@ -46,10 +50,19 @@ export default function GamePage({ auth }) {
   const navigate = useNavigate();
 
   // --- Data hooks ---
-  const { loading, gameData, gameScreenshots, gameVideos, isCustomGame } = useGameData();
-  const { itadCoverUrl, itadChecked, itadStores, itadStoresChecked } = useItadData(gameData);
+  const { loading, gameData, gameScreenshots, gameVideos, isCustomGame } =
+    useGameData();
+  const { itadCoverUrl, itadChecked, itadStores, itadStoresChecked } =
+    useItadData(gameData);
   const { rawgStores, rawgStoresChecked } = useRawgStores(gameData);
-  const { isInLibrary, setIsInLibrary, isFavorite, setIsFavorite, isCompleted, setIsCompleted } = useLibraryState(auth, gameData);
+  const {
+    isInLibrary,
+    setIsInLibrary,
+    isFavorite,
+    setIsFavorite,
+    isCompleted,
+    setIsCompleted,
+  } = useLibraryState(auth, gameData);
   const { userGroups, setUserGroups } = useUserGroups(auth, gameData);
 
   // --- Local UI state ---
@@ -59,6 +72,15 @@ export default function GamePage({ auth }) {
   const [groupDropdownOpen, setGroupDropdownOpen] = useState(false);
   const [savingGroupId, setSavingGroupId] = useState(null);
   const [activeVideoIndex, setActiveVideoIndex] = useState(null);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descOverflows, setDescOverflows] = useState(false);
+  const descRef = useRef(null);
+
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    setDescOverflows(el.scrollHeight > el.clientHeight);
+  }, [gameData?.description_raw]);
 
   function requireAuth(actionLabel) {
     const user = auth.currentUser;
@@ -128,7 +150,7 @@ export default function GamePage({ auth }) {
             user.uid,
             docId,
             gameData.background_image,
-            gameData.screenshots || gameScreenshots
+            gameData.screenshots || gameScreenshots,
           );
           await deleteDoc(docRef);
         } else {
@@ -197,7 +219,9 @@ export default function GamePage({ auth }) {
       }
     } catch (error) {
       console.error("Error updating completed status:", error);
-      alert("There was a problem updating your completed games. Please try again.");
+      alert(
+        "There was a problem updating your completed games. Please try again.",
+      );
     } finally {
       setSavingCompleted(false);
     }
@@ -329,7 +353,11 @@ export default function GamePage({ auth }) {
           : gameData.background_image || placeholderSvg
     : placeholderSvg;
 
-  const { coverLoaded } = useCoverImageLoader(gameData, heroCoverUrl, placeholderSvg);
+  const { coverLoaded } = useCoverImageLoader(
+    gameData,
+    heroCoverUrl,
+    placeholderSvg,
+  );
 
   const {
     containerRef: screenshotsRowRef,
@@ -410,135 +438,158 @@ export default function GamePage({ auth }) {
   return (
     <div className="game-page-shell">
       <div className="top-buttons-con">
-        <button className="back-button" onClick={() => navigate(-1)}>← Go back</button>
+        <button className="back-button" onClick={() => navigate(-1)}>
+          ← Go back
+        </button>
       </div>
       <div className="game-page-container">
         {/* HERO SECTION */}
+        <RevealWrapper direction="up">
         <section className="game-hero">
-          <div className="game-cover-wrapper">
-            <div className={`game-cover${coverLoaded ? " loaded" : ""}`}>
-              <div
-                className="game-cover-img"
-                style={{ backgroundImage: `url(${heroCoverUrl})` }}
-                title={
-                  isCustomGame
-                    ? "Custom game cover"
-                    : itadCoverUrl
-                      ? "Cover source: IsThereAnyDeal"
-                      : itadChecked && gameData.background_image
-                        ? "Cover source: RAWG"
-                        : "Cover source: placeholder"
-                }
-              ></div>
-            </div>
-          </div>
-
-          <div className="game-info">
-            <div className="game-title-row">
-              <h1 className="game-page-title">{gameData.name}</h1>
-              <span className="game-year">
-                {gameData.released ? `(${gameData.released.slice(0, 4)})` : ""}
-              </span>
-            </div>
-
-            {!isCustomGame && (
-              <div className="game-meta-row">
-                <div>
-                  <span className="meta-label">Metascore</span>
-                  <span className="score-pill">
-                    {gameData.metacritic ?? "N/A"}
-                  </span>
+          <div className="game-hero-con">
+            <div className="col-wrapper">
+              <div className="left-col">
+                <div className="game-art-con">
+                  <div className={`game-cover${coverLoaded ? " loaded" : ""}`}>
+                    <div
+                      className="game-cover-img"
+                      style={{ backgroundImage: `url(${heroCoverUrl})` }}
+                      title={
+                        isCustomGame
+                          ? "Custom game cover"
+                          : itadCoverUrl
+                            ? "Cover source: IsThereAnyDeal"
+                            : itadChecked && gameData.background_image
+                              ? "Cover source: RAWG"
+                              : "Cover source: placeholder"
+                      }
+                    ></div>
+                  </div>
                 </div>
-                <div className="meta-divider"></div>
-                <div>
-                  <span className="meta-label">RAWG User score</span>
-                  <span className="score-pill"> {gameData.rating ?? "N/A"} / 5</span>
+                <div className="platform-con">
+                  {platformNames.length ? (
+                    platformNames.map((name) => <p key={name}>{name}</p>)
+                  ) : (
+                    <p>Unlisted</p>
+                  )}
                 </div>
               </div>
-            )}
-
-            <div className="game-genres">
-              <span className="meta-label">Genres</span>
-              <br />
-              <div className="genres">
-                {genreNames.length ? (
-                  genreNames.map((name) => <p key={name}>{name}</p>)
-                ) : (
-                  <p>Unlisted</p>
+              <div className="right-col">
+                <div className="genres">
+                  {genreNames.length ? (
+                    genreNames.map((name) => <p key={name}>{name}</p>)
+                  ) : (
+                    <p>Unlisted</p>
+                  )}
+                </div>
+                <h1 className="game-title">{gameData.name}</h1>
+                <p className="year">{gameData.released?.slice(0, 4)}</p>
+                <div className="rating-con">
+                  {!isCustomGame && (
+                    <>
+                      <div>
+                        <p className="score">{gameData.metacritic ?? "N/A"}</p>
+                        <p className="review-platform">Metacritic</p>
+                      </div>
+                      <div>
+                        <p className="score">{gameData.rating ?? "N/A"} / 5</p>
+                        <p className="review-platform">User Score</p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <p ref={descRef} className={`game-desc${descExpanded ? " expanded" : ""}`}>
+                  {gameData.description_raw || "No description available."}
+                </p>
+                {descOverflows && (
+                  <button className="desc-toggle" onClick={() => setDescExpanded((v) => !v)}>
+                    {descExpanded ? "View less" : "View more"}
+                  </button>
+                )}
+                <GameHeroActions
+                  gameData={gameData}
+                  auth={auth}
+                  isInLibrary={isInLibrary}
+                  isCompleted={isCompleted}
+                  isFavorite={isFavorite}
+                  savingLibrary={savingLibrary}
+                  savingCompleted={savingCompleted}
+                  savingFavorite={savingFavorite}
+                  onToggleLibrary={handleToggleLibrary}
+                  onToggleCompleted={handleToggleCompleted}
+                  onToggleFavorite={handleToggleFavorite}
+                  userGroups={userGroups}
+                  groupDropdownOpen={groupDropdownOpen}
+                  setGroupDropdownOpen={setGroupDropdownOpen}
+                  savingGroupId={savingGroupId}
+                  onToggleGroup={handleToggleGroup}
+                  isCustomGame={isCustomGame}
+                />
+                {isCustomGame && (
+                  <button
+                    className="game-edit-button"
+                    onClick={() =>
+                      navigate("/custom-game", {
+                        state: {
+                          editMode: true,
+                          docId: gameData.id,
+                          gameData,
+                          gameScreenshots,
+                          gameVideos,
+                        },
+                      })
+                    }
+                    title="Edit this custom game"
+                  >
+                    <img src={editIcon} alt="Edit" />
+                  </button>
                 )}
               </div>
             </div>
-
-            <div className="game-platforms">
-              <span className="meta-label">Platforms</span>
-              <br />
-              <div className="platforms">
-                {platformNames.length ? (
-                  platformNames.map((name) => <p key={name}>{name}</p>)
-                ) : (
-                  <p>Unlisted</p>
-                )}
-              </div>
+            <div className="storefronts">
+              <p>Available On</p>
+              <StorePills
+                storesChecked={storesChecked}
+                combinedStores={combinedStores}
+              />
             </div>
-
-            <p className="game-short-info">
-              {gameData.description_raw || "No description available."}
-            </p>
-
-            <GameHeroActions
-              gameData={gameData}
-              auth={auth}
-              isInLibrary={isInLibrary}
-              isCompleted={isCompleted}
-              isFavorite={isFavorite}
-              savingLibrary={savingLibrary}
-              savingCompleted={savingCompleted}
-              savingFavorite={savingFavorite}
-              onToggleLibrary={handleToggleLibrary}
-              onToggleCompleted={handleToggleCompleted}
-              onToggleFavorite={handleToggleFavorite}
-              userGroups={userGroups}
-              groupDropdownOpen={groupDropdownOpen}
-              setGroupDropdownOpen={setGroupDropdownOpen}
-              savingGroupId={savingGroupId}
-              onToggleGroup={handleToggleGroup}
-              isCustomGame={isCustomGame}
-            />
           </div>
-          {isCustomGame && (
-            <button
-              className="game-edit-button"
-              onClick={() =>
-                navigate("/custom-game", {
-                  state: { editMode: true, docId: gameData.id, gameData, gameScreenshots, gameVideos },
-                })
-              }
-              title="Edit this custom game"
-            >
-              <img src={editIcon} alt="Edit" />
-            </button>
-          )}
         </section>
+        </RevealWrapper>
 
         {/* MAIN LAYOUT */}
+        <RevealWrapper direction="up" delay={100}>
         <section className="game-main-layout">
-          <article className="game-panel game-description">
-            <h2 className="panel-title">About this game</h2>
-            <p>{gameData.description_raw}</p>
-
-            {/* ✅ ITAD (AnyDeal) + RAWG store pills — hidden for custom games */}
-            {!isCustomGame && (
-              <div className="digital-stores">
-                <h3 style={{ marginTop: 16 }}>Digital Stores</h3>
-                <p className="digital-store-dis">
-                  Store links come from IsThereAnyDeal (when available) and RAWG
-                  as a fallback, and may be incomplete. This game may be available
-                  on other stores/platforms not listed here.
-                </p>
-                <StorePills storesChecked={storesChecked} combinedStores={combinedStores} />
-              </div>
-            )}
-          </article>
+          <div className="left-col">
+            {/* <article className="game-panel game-description">
+              <h2 className="panel-title">About this game</h2>
+              <p>{gameData.description_raw}</p>
+              {!isCustomGame && (
+                <div className="digital-stores">
+                  <h3>Digital Stores</h3>
+                  <p className="digital-store-dis">
+                    Store links come from IsThereAnyDeal (when available) and RAWG
+                    as a fallback, and may be incomplete. This game may be available
+                    on other stores/platforms not listed here.
+                  </p>
+                  <StorePills storesChecked={storesChecked} combinedStores={combinedStores} />
+                </div>
+              )}
+            </article> */}
+            <ScreenshotsRow
+              gameScreenshots={gameScreenshots}
+              isDragging={isDragging}
+              containerRef={screenshotsRowRef}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={stopDragging}
+              onMouseLeave={stopDragging}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={stopDraggingTouch}
+              onOpenScreenshot={openScreenshot}
+            />
+          </div>
 
           <GameDetailsPanel
             gameData={gameData}
@@ -549,54 +600,79 @@ export default function GamePage({ auth }) {
             }
           />
         </section>
+        </RevealWrapper>
 
         {playableVideos.length > 0 && (
-          <section className="game-screenshots-section">
-            <div className="screenshots-header">
-              <h2>Videos</h2>
-            </div>
-            <div
-              ref={videosRowRef}
-              className={`screenshots-row${isVideoDragging ? " is-dragging" : ""}`}
-              onMouseDown={handleVideoMouseDown}
-              onMouseMove={handleVideoMouseMove}
-              onMouseUp={stopVideoDragging}
-              onMouseLeave={stopVideoDragging}
-              onTouchStart={handleVideoTouchStart}
-              onTouchMove={handleVideoTouchMove}
-              onTouchEnd={stopVideoDraggingTouch}
-            >
-              {playableVideos.map((video, index) => (
-                <div
-                  key={video.videoId || index}
-                  className="screenshot-card video-card"
-                  onClick={() => !isVideoDragging && setActiveVideoIndex(index)}
-                >
+          <RevealWrapper direction="up" delay={150}>
+            <section className="game-screenshots-section">
+              <div className="screenshots-header">
+                <h2>Videos</h2>
+              </div>
+              <div
+                ref={videosRowRef}
+                className={`screenshots-row${isVideoDragging ? " is-dragging" : ""}`}
+                onMouseDown={handleVideoMouseDown}
+                onMouseMove={handleVideoMouseMove}
+                onMouseUp={stopVideoDragging}
+                onMouseLeave={stopVideoDragging}
+                onTouchStart={handleVideoTouchStart}
+                onTouchMove={handleVideoTouchMove}
+                onTouchEnd={stopVideoDraggingTouch}
+              >
+                {playableVideos.map((video, index) => (
                   <div
-                    className="screenshot-img video-thumb"
-                    style={{ backgroundImage: `url(${video.thumbnailUrl})` }}
+                    key={video.videoId || index}
+                    className="screenshot-card video-card"
+                    onClick={() => !isVideoDragging && setActiveVideoIndex(index)}
                   >
-                    <div className="video-play-icon">▶</div>
+                    <div
+                      className="screenshot-img video-thumb"
+                      style={{ backgroundImage: `url(${video.thumbnailUrl})` }}
+                    >
+                      <div className="video-play-icon">▶</div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
+                ))}
+              </div>
+            </section>
+          </RevealWrapper>
         )}
 
-        <ScreenshotsRow
-          gameScreenshots={gameScreenshots}
-          isDragging={isDragging}
-          containerRef={screenshotsRowRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={stopDragging}
-          onMouseLeave={stopDragging}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={stopDraggingTouch}
-          onOpenScreenshot={openScreenshot}
-        />
+        <h3>You might also like</h3>
+        <div className="related-con">
+          <a href="#">
+            <div className="related-art"></div>
+            <div className="related-content">
+              <p className="title">The Witcher 3</p>
+              <div className="related-meta">
+                <p className="genre">RPG</p>
+                <p className="score">97</p>
+              </div>
+            </div>
+          </a>
+
+          <a href="#">
+            <div className="related-art"></div>
+            <div className="related-content">
+              <p className="title">The Witcher 3</p>
+              <div className="related-meta">
+                <p className="genre">RPG</p>
+                <p className="score">97</p>
+              </div>
+            </div>
+          </a>
+
+          <a href="#">
+            <div className="related-art"></div>
+            <div className="related-content">
+              <p className="title">The Witcher 3</p>
+              <div className="related-meta">
+                <p className="genre">RPG</p>
+                <p className="score">97</p>
+              </div>
+            </div>
+          </a>
+        </div>
       </div>
 
       <ScreenshotModal

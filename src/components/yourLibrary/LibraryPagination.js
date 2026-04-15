@@ -15,7 +15,7 @@ export default function LibraryPagination({
         disabled={safeCurrentPage === 1}
         onClick={onPrevPage}
       >
-        ‹ Prev
+        ← Prev
       </button>
 
       <div className={`dropdown ${isPageDropdownOpen ? "open" : ""}`}>
@@ -50,7 +50,7 @@ export default function LibraryPagination({
         disabled={safeCurrentPage === totalPages}
         onClick={onNextPage}
       >
-        Next ›
+        Next →
       </button>
     </div>
   );

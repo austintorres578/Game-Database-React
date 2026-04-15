@@ -19,6 +19,13 @@
     #030712;
 }
 
+.search-container .no-results-message {
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
 .search-container .search-title {
   text-align: center;
   margin-bottom: 0px;
@@ -75,7 +82,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  height: 212px;
+  max-height: 212px;
   bottom: 45px;
   border-radius: 10px;
   overflow: hidden;
@@ -492,11 +499,11 @@
     grid-gap: 1%;
   }
 
-  .home-page .stat-counter-con h3{
+  .home-page .stat-counter-con h3 {
     font-size: 24px;
   }
 
-  .search-container{
+  .search-container {
     padding-top: 90px;
   }
 
@@ -578,7 +585,7 @@
     display: none;
   }
 
-  .search-container .game-title{
+  .search-container .game-title {
     font-size: 14px;
   }
 }

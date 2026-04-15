@@ -13,7 +13,6 @@ import "../styles/yourLibrary.css";
 import LibraryStatsHeader from "../components/yourLibrary/LibraryStatsHeader";
 import StatusFiltersBar from "../components/yourLibrary/StatusFiltersBar";
 import LibrarySearchBar from "../components/yourLibrary/LibrarySearchBar";
-import SortSelector from "../components/yourLibrary/SortSelector";
 import GameGrid from "../components/yourLibrary/GameGrid";
 import LibraryPagination from "../components/yourLibrary/LibraryPagination";
 import GroupPanel from "../components/yourLibrary/GroupPanel";
@@ -24,6 +23,8 @@ import { safeText, compareByTitle, compareByMetacritic, compareByRawg } from "..
 
 import { useLibraryData } from "../hooks/yourLibrary/useLibraryData";
 import { useSteamSync } from "../hooks/yourLibrary/useSteamSync";
+
+import { RevealWrapper } from "../components/RevealWrapper";
 import { useImportFlow } from "../hooks/yourLibrary/useImportFlow";
 
 /* =============================================================================
@@ -567,79 +568,84 @@ export default function YourLibrary() {
   return (
     <main className="library-page">
 
-      <LibraryStatsHeader
-        total={total}
-        completed={completed}
-        loadingStats={loadingStats}
-        onOpenImportPanel={openImportPanel}
-        onOpenTextImportPanel={openTextImportPanel}
-      />
+      <RevealWrapper direction="up">
+        <LibraryStatsHeader
+          total={total}
+          completed={completed}
+          loadingStats={loadingStats}
+          onOpenImportPanel={openImportPanel}
+          onOpenTextImportPanel={openTextImportPanel}
+        />
+      </RevealWrapper>
 
-      <StatusFiltersBar
-        statusFilter={statusFilter}
-        onStatusFilterChange={handleStatusFilterChange}
-        loadingStats={loadingStats}
-        groupStats={groupStats}
-        customFilters={customFilters}
-        safeActiveGroupIds={safeActiveGroupIds}
-        onToggleGroup={handleToggleGroup}
-        realSelectedGroupIds={realSelectedGroupIds}
-        onHeaderAddToGroup={handleHeaderAddToGroup}
-        onOpenNewGroupPanel={openNewGroupPanel}
-      />
+      <RevealWrapper direction="up" delay={100}>
+        <StatusFiltersBar
+          statusFilter={statusFilter}
+          onStatusFilterChange={handleStatusFilterChange}
+          loadingStats={loadingStats}
+          groupStats={groupStats}
+          customFilters={customFilters}
+          safeActiveGroupIds={safeActiveGroupIds}
+          onToggleGroup={handleToggleGroup}
+          realSelectedGroupIds={realSelectedGroupIds}
+          onHeaderAddToGroup={handleHeaderAddToGroup}
+          onOpenNewGroupPanel={openNewGroupPanel}
+        />
+      </RevealWrapper>
 
-      <LibrarySearchBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-          setIsPageDropdownOpen(false);
-        }}
-        onClear={() => {
-          setSearchTerm("");
-          setCurrentPage(1);
-          setIsPageDropdownOpen(false);
-        }}
-      />
-
-      <section className="library-grid">
-        <SortSelector
-          sortBy={sortBy}
+      <RevealWrapper direction="up" delay={200}>
+        <LibrarySearchBar
           searchTerm={searchTerm}
+          onSearchChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+            setIsPageDropdownOpen(false);
+          }}
+          onClear={() => {
+            setSearchTerm("");
+            setCurrentPage(1);
+            setIsPageDropdownOpen(false);
+          }}
+          sortBy={sortBy}
           sortedGamesCount={sortedGames.length}
           onRevealDrop={revealSortingDrop}
           onSortOptionClick={handleSortingOptionClick}
         />
+      </RevealWrapper>
 
-        <GameGrid
-          loadingStats={loadingStats}
-          pageGames={pageGames}
-          customFilters={customFilters}
-          onAddToGroup={handleAddToGroupFromGame}
-        />
+      <RevealWrapper direction="up" delay={300}>
+        <section className="library-grid">
 
-        {!loadingStats && sortedGames.length > 0 && (
-          <LibraryPagination
-            safeCurrentPage={safeCurrentPage}
-            totalPages={totalPages}
-            isPageDropdownOpen={isPageDropdownOpen}
-            setIsPageDropdownOpen={setIsPageDropdownOpen}
-            dropdownPages={dropdownPages}
-            onPrevPage={() => {
-              setCurrentPage((prev) => Math.max(1, prev - 1));
-              setIsPageDropdownOpen(false);
-            }}
-            onNextPage={() => {
-              setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-              setIsPageDropdownOpen(false);
-            }}
-            onGoToPage={(pageNumber) => {
-              setCurrentPage(pageNumber);
-              setIsPageDropdownOpen(false);
-            }}
+          <GameGrid
+            loadingStats={loadingStats}
+            pageGames={pageGames}
+            customFilters={customFilters}
+            onAddToGroup={handleAddToGroupFromGame}
           />
-        )}
-      </section>
+
+          {!loadingStats && sortedGames.length > 0 && (
+            <LibraryPagination
+              safeCurrentPage={safeCurrentPage}
+              totalPages={totalPages}
+              isPageDropdownOpen={isPageDropdownOpen}
+              setIsPageDropdownOpen={setIsPageDropdownOpen}
+              dropdownPages={dropdownPages}
+              onPrevPage={() => {
+                setCurrentPage((prev) => Math.max(1, prev - 1));
+                setIsPageDropdownOpen(false);
+              }}
+              onNextPage={() => {
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                setIsPageDropdownOpen(false);
+              }}
+              onGoToPage={(pageNumber) => {
+                setCurrentPage(pageNumber);
+                setIsPageDropdownOpen(false);
+              }}
+            />
+          )}
+        </section>
+      </RevealWrapper>
 
       {/* ===========================
           GROUP / IMPORT MODAL

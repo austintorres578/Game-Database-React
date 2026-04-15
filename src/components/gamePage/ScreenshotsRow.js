@@ -15,7 +15,7 @@ export default function ScreenshotsRow({
     <section className="game-screenshots-section">
       <div className="screenshots-header">
         <h2>Screenshots</h2>
-        <span>Scroll horizontally or drag to view more.</span>
+        {/* <span>Scroll horizontally or drag to view more.</span> */}
       </div>
 
       <div

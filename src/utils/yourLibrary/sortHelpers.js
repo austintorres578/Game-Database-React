@@ -118,10 +118,6 @@ export function getSortLabel(sortValue) {
       return "Metacritic (High-Low)";
     case "meta_asc":
       return "Metacritic (Low-High)";
-    case "rawg_desc":
-      return "RAWG (High-Low)";
-    case "rawg_asc":
-      return "RAWG (Low-High)";
     case "name_asc":
     default:
       return "Name (A-Z)";

@@ -11,7 +11,6 @@ export default function LibraryStatsHeader({
     <section className="library-header-card">
       <div className="library-header-main">
         <div className="library-kicker">
-          <span className="library-kicker-dot"></span>
           <span>Your Library</span>
         </div>
         <h1>All your games in one place.</h1>

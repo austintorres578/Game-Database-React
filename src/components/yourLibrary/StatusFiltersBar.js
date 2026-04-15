@@ -57,11 +57,25 @@ export default function StatusFiltersBar({
           </button>
         </div>
 
-        <a href="#filter-settings">
+        <div className="group-man-con">
+          <a href="#filter-settings">
+            <button className="btn btn-primary" onClick={onOpenNewGroupPanel}>
+              Create New Group
+            </button>
+          </a>
+          <button
+            type="button"
+            className="add-to-group btn btn-primary"
+            onClick={onHeaderAddToGroup}
+          >
+            Manage Group
+          </button>
+        </div>
+        {/* <a href="#filter-settings">
           <button className="btn btn-primary" onClick={onOpenNewGroupPanel}>
             Create New Group
           </button>
-        </a>
+        </a> */}
       </div>
 
       <div className="custom-filters-con">
@@ -77,7 +91,7 @@ export default function StatusFiltersBar({
             </button>
           ))}
 
-          {realSelectedGroupIds.length === 1 && (
+          {/* {realSelectedGroupIds.length === 1 && (
             <a href="#filter-settings" className="add-to-group-con">
               <button
                 type="button"
@@ -87,7 +101,7 @@ export default function StatusFiltersBar({
                 Manage Group
               </button>
             </a>
-          )}
+          )} */}
         </div>
       </div>
     </section>
