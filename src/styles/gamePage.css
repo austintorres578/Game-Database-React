@@ -100,6 +100,11 @@
 
   body .game-page-shell .game-hero-con .genres {
     justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  body .game-page-shell .game-hero-con .genres p{
+    margin: 10px;
   }
 
   body .game-page-shell .game-hero-con .col-wrapper {

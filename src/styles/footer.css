@@ -4,7 +4,7 @@
     line-height: 20px;
   }
 
-  body .footer .mobile-footer-nav>.mobile-footer-nav-links {
+  body .footer .mobile-footer-nav > .mobile-footer-nav-links {
     display: flex;
   }
 
@@ -119,14 +119,15 @@
 }
 
 .footer .mobile-install-banner span {
-  color: white;
+  color: #6b7280;
   text-align: center;
   position: absolute;
   right: 6px;
   top: 1px;
 }
 
-.footer .mobile-install-banner>p {
+
+.footer .mobile-install-banner > p {
   font-size: 18px;
   text-align: center;
 }
@@ -156,8 +157,8 @@
   font-size: 10px;
 }
 
-.footer .mobile-footer-nav>.mobile-footer-nav-links {
-  height: 40px;
+.footer .mobile-footer-nav > .mobile-footer-nav-links {
+  height: 52px;
   background: rgba(3, 7, 18, 0.6);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
@@ -172,7 +173,33 @@
   display: none;
 }
 
-.footer .mobile-footer-nav>.mobile-footer-nav-links a {
+.footer .mobile-footer-nav > .mobile-footer-nav-links span {
+  text-align: center;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.footer .mobile-footer-nav .add-review-con {
+  background: linear-gradient(135deg, rgb(34 197 94), rgb(22 163 74));
+  width: 50px;
+  height: 50px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 99px;
+  position: relative;
+  top: -10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.footer .mobile-footer-nav .add-review-con p {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  color:#0b1120;
+}
+
+.footer .mobile-footer-nav > .mobile-footer-nav-links a {
   width: 20%;
   height: 100%;
   text-align: center;
@@ -180,20 +207,32 @@
   color: white;
   text-decoration: none;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+ 
 }
 
-.footer .mobile-footer-nav>.mobile-footer-nav-links a img {
+.footer .mobile-footer-nav > .mobile-footer-nav-links a span{
+ color:#6b7280;
+}
+
+.footer .mobile-footer-nav > .mobile-footer-nav-links a svg{
+ color:#6b7280;
+}
+
+.footer .mobile-footer-nav > .mobile-footer-nav-links a img {
   height: 23.5px;
   width: auto;
   object-fit: contain;
 }
 
-.footer .mobile-footer-nav>.mobile-footer-nav-links a svg {
-  height: 23.5px;
+.footer .mobile-footer-nav > .mobile-footer-nav-links a svg {
+  height: 20px;
   width: auto;
 }
 
-.footer .mobile-footer-nav>.mobile-footer-nav-links a.active:before {
+.footer .mobile-footer-nav > .mobile-footer-nav-links a.active:before {
   content: "";
   position: absolute;
   display: block;
@@ -201,4 +240,13 @@
   height: 2px;
   top: -6px;
   background-color: #22c55e;
+}
+
+
+.footer .mobile-footer-nav > .mobile-footer-nav-links a.active span{
+  color: #22c55e;
+}
+
+.footer .mobile-footer-nav > .mobile-footer-nav-links a.active svg{
+  color: #22c55e;
 }
