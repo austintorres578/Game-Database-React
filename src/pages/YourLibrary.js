@@ -41,6 +41,7 @@ export default function YourLibrary() {
     stats,
     loadingStats,
     libraryGames,
+    completedGames,
     setLibraryGames,
     statusFilter,
     setStatusFilter,
@@ -164,14 +165,9 @@ export default function YourLibrary() {
 
       if (groupId === "all-platforms") {
         nextIds = ["all-platforms"];
-      } else if (groupId === "ungrouped") {
-        nextIds = ["ungrouped"];
       } else {
         const prevArr = Array.isArray(prev) ? prev : ["all-platforms"];
-        const hasPermanent =
-          prevArr.includes("all-platforms") || prevArr.includes("ungrouped");
-
-        const current = hasPermanent ? [] : [...prevArr];
+        const current = prevArr.includes("all-platforms") ? [] : [...prevArr];
 
         const index = current.indexOf(groupId);
         if (index >= 0) current.splice(index, 1);
@@ -190,22 +186,25 @@ export default function YourLibrary() {
   /* -----------------------------------------------------------------------
     DERIVED VALUES: GROUP + STATUS + SEARCH FILTER + SORT + PAGINATION
   ----------------------------------------------------------------------- */
-  const { total, completed } = stats;
+  const { total, completed, backlog } = stats;
 
   const safeActiveGroupIds = Array.isArray(activeGroupIds)
     ? activeGroupIds
     : ["all-platforms"];
 
-  const onlyUngroupedSelected =
-    safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "ungrouped";
+  const ungroupedSelected = safeActiveGroupIds.includes("ungrouped");
 
   const realSelectedGroupIds = safeActiveGroupIds.filter(
     (id) => id !== "all-platforms" && id !== "ungrouped",
   );
 
-  let groupFilteredGames = libraryGames;
+  const allGames = [...libraryGames, ...completedGames];
+  const customCount = allGames.filter((g) => g.isCustom).length;
 
-  if (onlyUngroupedSelected) {
+  let groupFilteredGames = allGames;
+
+  if (ungroupedSelected || realSelectedGroupIds.length > 0) {
+    // Build set of all game IDs that belong to any real group
     const groupedIdSet = new Set();
     customFilters.forEach((g) => {
       if (g.id === "all-platforms" || g.id === "ungrouped") return;
@@ -213,22 +212,25 @@ export default function YourLibrary() {
         g.gameIds.forEach((id) => groupedIdSet.add(String(id)));
       }
     });
-    groupFilteredGames = libraryGames.filter(
-      (game) => !groupedIdSet.has(String(game.id)),
-    );
-  } else if (realSelectedGroupIds.length > 0) {
-    const selectedGroups = customFilters.filter((g) =>
-      realSelectedGroupIds.includes(g.id),
-    );
-    const gameIdSet = new Set();
-    selectedGroups.forEach((g) => {
-      if (Array.isArray(g.gameIds)) {
-        g.gameIds.forEach((id) => gameIdSet.add(String(id)));
-      }
+
+    // Build set of game IDs from the selected real groups
+    const selectedGroupGameIds = new Set();
+    if (realSelectedGroupIds.length > 0) {
+      customFilters
+        .filter((g) => realSelectedGroupIds.includes(g.id))
+        .forEach((g) => {
+          if (Array.isArray(g.gameIds)) {
+            g.gameIds.forEach((id) => selectedGroupGameIds.add(String(id)));
+          }
+        });
+    }
+
+    groupFilteredGames = allGames.filter((game) => {
+      const id = String(game.id);
+      if (ungroupedSelected && !groupedIdSet.has(id)) return true;
+      if (realSelectedGroupIds.length > 0 && selectedGroupGameIds.has(id)) return true;
+      return false;
     });
-    groupFilteredGames = libraryGames.filter((game) =>
-      gameIdSet.has(String(game.id)),
-    );
   }
 
   const groupStats = groupFilteredGames.reduce(
@@ -572,6 +574,8 @@ export default function YourLibrary() {
         <LibraryStatsHeader
           total={total}
           completed={completed}
+          backlog={backlog}
+          custom={customCount}
           loadingStats={loadingStats}
           onOpenImportPanel={openImportPanel}
           onOpenTextImportPanel={openTextImportPanel}

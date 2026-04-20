@@ -82,6 +82,9 @@ export default function Header() {
             <NavLink to="/" className={navClass}>
               Home
             </NavLink>
+            <NavLink to="/dev/mobile-library" className={navClass}>
+              [DEV] Mobile Library
+            </NavLink>
             <NavLink to="/search" className={navClass}>
               Search For Games
             </NavLink>

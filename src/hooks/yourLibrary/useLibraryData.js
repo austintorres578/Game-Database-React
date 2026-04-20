@@ -37,6 +37,7 @@ export function useLibraryData() {
     playing: 0,
   });
   const [completedCount, setCompletedCount] = useState(0);
+  const [completedGames, setCompletedGames] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [libraryGames, setLibraryGames] = useState([]);
 
@@ -127,7 +128,13 @@ export function useLibraryData() {
       const completedRef = query(collection(db, "users", user.uid, "completed"));
       unsubCompletedRef.current = onSnapshot(completedRef, (snapshot) => {
         const count = snapshot.size;
+        const games = snapshot.docs.map((docSnap) => ({
+          id: String(docSnap.id),
+          status: "completed",
+          ...docSnap.data(),
+        }));
         setCompletedCount(count);
+        setCompletedGames(games);
         setStats((prev) => ({ ...prev, completed: count }));
       }, (err) => {
         console.error("Completed snapshot error:", err);
@@ -258,6 +265,7 @@ export function useLibraryData() {
     stats,
     loadingStats,
     libraryGames,
+    completedGames,
     setLibraryGames,
     statusFilter,
     setStatusFilter,

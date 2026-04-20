@@ -3,11 +3,11 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { auth, onAuthStateChanged } from "../firebase/fireAuth";
 
 import libraryIcon from "../assets/images/library-icon.png";
+import plusIcon from "../assets/images/plus-icon.svg";
 
 import "../styles/footer.css";
 
-const isIos = () =>
-  /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
 
 const isInStandaloneMode = () =>
   window.matchMedia("(display-mode: standalone)").matches ||
@@ -18,7 +18,7 @@ export default function Footer() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showIosBanner, setShowIosBanner] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(
-    localStorage.getItem("pwa-banner-dismissed") === "true"
+    localStorage.getItem("pwa-banner-dismissed") === "true",
   );
 
   useEffect(() => {
@@ -83,9 +83,14 @@ export default function Footer() {
           <div className="mobile-install-banner">
             <p>🎮</p>
             <div className="mobile-install-banner-text">
-              <p><strong>Install Save Room</strong></p>
+              <p>
+                <strong>Install Save Room</strong>
+              </p>
               {showIosBanner ? (
-                <p>Tap the Share button in Safari, then <strong>Add to Home Screen</strong></p>
+                <p>
+                  Tap the Share button in Safari, then{" "}
+                  <strong>Add to Home Screen</strong>
+                </p>
               ) : (
                 <p>Add to your home screen for the full app experience</p>
               )}
@@ -99,30 +104,65 @@ export default function Footer() {
         <div className="mobile-footer-nav-links">
           <NavLink to="/" end>
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
-              fill="white"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z" />
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
             </svg>
+            <span>Home</span>
           </NavLink>
           <NavLink to="/search">
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
-              fill="white"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
+              <circle cx="11" cy="11" r="8"></circle>
+              <path d="m21 21-4.35-4.35"></path>
             </svg>
+            <span>Search</span>
           </NavLink>
-          <NavLink to="/library" onClick={(e) => handleProtectedNav(e, "/library")}>
-            <img src={libraryIcon} alt="Library" />
+          <NavLink
+            to="/"
+            onClick={(e) => handleProtectedNav(e, "/")}
+            className={() => ""}
+          >
+            <div className="add-review-con">
+              <p>+</p>
+            </div>
           </NavLink>
-          <NavLink to="/profile" onClick={(e) => handleProtectedNav(e, "/profile")}>
+          <NavLink
+            to="/library"
+            onClick={(e) => handleProtectedNav(e, "/library")}
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <span>Library</span>
+          </NavLink>
+          {/* <NavLink to="/profile" onClick={(e) => handleProtectedNav(e, "/profile")}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -132,17 +172,25 @@ export default function Footer() {
             >
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
             </svg>
-          </NavLink>
-          <NavLink to="/account-settings" onClick={(e) => handleProtectedNav(e, "/account-settings")}>
+          </NavLink> */}
+          <NavLink
+            to="/account-settings"
+            onClick={(e) => handleProtectedNav(e, "/account-settings")}
+          >
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
+              width="20"
+              height="20"
               viewBox="0 0 24 24"
-              fill="white"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z" />
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
             </svg>
+            <span>Settings</span>
           </NavLink>
         </div>
       </nav>

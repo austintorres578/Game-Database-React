@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 export default function LibraryStatsHeader({
   total,
   completed,
+  backlog,
+  custom,
   loadingStats,
   onOpenImportPanel,
   onOpenTextImportPanel,
@@ -48,6 +50,16 @@ export default function LibraryStatsHeader({
           <div className="library-stat-value">{loadingStats ? "…" : total}</div>
           <div className="library-stat-sub">
             {loadingStats ? "Loading…" : `${completed} completed`}
+          </div>
+          <div className="stats">
+            <div>
+              <h4>{loadingStats ? "…" : backlog}</h4>
+              <p>Backlog</p>
+            </div>
+            <div>
+              <h4>{loadingStats ? "…" : custom}</h4>
+              <p>Custom</p>
+            </div>
           </div>
         </div>
       </div>
