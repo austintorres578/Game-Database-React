@@ -165,7 +165,7 @@
   border-top: 1px solid rgba(148, 163, 184, 0.15);
   position: fixed;
   bottom: 0px;
-  width: 100%;
+  width: 100vw;
   left: 0px;
   justify-content: space-between;
   align-items: center;
@@ -197,6 +197,7 @@
   margin-top: 0px;
   margin-bottom: 0px;
   color:#0b1120;
+  line-height: 0px;
 }
 
 .footer .mobile-footer-nav > .mobile-footer-nav-links a {

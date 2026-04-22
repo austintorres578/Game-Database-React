@@ -26,6 +26,7 @@ import xboxLogo from '../assets/images/xboxLogo.webp';
 import playstationLogo from '../assets/images/playstationLogo.png'
 
 import "../styles/accountSettingsPage.css";
+import { RevealWrapper } from "../components/RevealWrapper";
 
 const LIBRARY_SUBCOLLECTIONS = ["library", "completed", "favorites", "groups"];
 
@@ -38,14 +39,14 @@ async function deleteCustomGameFiles(userId, docId, data) {
     data.backgroundImage.includes("firebasestorage.googleapis.com")
   ) {
     const coverRef = ref(storage, `users/${userId}/customGameCovers/${docId}`);
-    deletions.push(deleteObject(coverRef).catch(() => {}));
+    deletions.push(deleteObject(coverRef).catch(() => { }));
   }
 
   if (Array.isArray(data.screenshots)) {
     for (const screenshot of data.screenshots) {
       if (screenshot?.storagePath) {
         deletions.push(
-          deleteObject(ref(storage, screenshot.storagePath)).catch(() => {}),
+          deleteObject(ref(storage, screenshot.storagePath)).catch(() => { }),
         );
       }
     }
@@ -324,7 +325,7 @@ export default function AccountSettingsPage() {
 
       const storage = getStorage(app);
       const avatarRef = ref(storage, `users/${user.uid}/avatar`);
-      await deleteObject(avatarRef).catch(() => {});
+      await deleteObject(avatarRef).catch(() => { });
 
       await user.delete();
 
@@ -589,6 +590,7 @@ export default function AccountSettingsPage() {
           </div>
         </div>
         <div className="account-settings">
+          <RevealWrapper direction="up" delay={0}>
           <section id="email">
             <div className="setting-header">
               <div>
@@ -611,7 +613,10 @@ export default function AccountSettingsPage() {
                 </h3>
                 <p>Update the email address linked to your account.</p>
               </div>
-              <span className="required">⚠ Requires password</span>
+              <div>
+                <span className="required">⚠ Requires password</span>
+              </div>
+
             </div>
             <div className="sub-header">
               <span className="title">Current Email</span>
@@ -662,6 +667,8 @@ export default function AccountSettingsPage() {
               </div>
             </form>
           </section>
+          </RevealWrapper>
+          <RevealWrapper direction="up" delay={100}>
           <section id="password">
             <div className="setting-header">
               <div>
@@ -690,7 +697,10 @@ export default function AccountSettingsPage() {
                 </h3>
                 <p>Use a strong, unique password you don't use elsewhere.</p>
               </div>
-              <span className="required">⚠ Requires password</span>
+              <div>
+                <span className="required">⚠ Requires password</span>
+              </div>
+
             </div>
             <form onSubmit={(e) => e.preventDefault()}>
               <label>
@@ -762,6 +772,8 @@ export default function AccountSettingsPage() {
               </div>
             </form>
           </section>
+          </RevealWrapper>
+          <RevealWrapper direction="up" delay={200}>
           <section id="connected">
             <div className="setting-header">
               <div>
@@ -784,7 +796,9 @@ export default function AccountSettingsPage() {
                 </h3>
                 <p>Manage third-party services linked to your GameDB account.</p>
               </div>
-              <span className="required">⚠ Requires password</span>
+              <div>
+                <span className="required">⚠ Requires password</span>
+              </div>
             </div>
             <div className={`con-acc-row${steamLinked ? " connected" : ""}`}>
               <div>
@@ -890,6 +904,8 @@ export default function AccountSettingsPage() {
                 </div>
               </div>
           </section> */}
+          </RevealWrapper>
+          <RevealWrapper direction="up" delay={300}>
           <section id="danger" className="danger-con">
             <div className="setting-header">
               <div>
@@ -914,27 +930,35 @@ export default function AccountSettingsPage() {
                 </h3>
                 <p>These actions are permanent and cannot be undone.</p>
               </div>
-              <span className="danger">⚠ Irreversible</span>
+              <div>
+                <span className="danger">⚠ Irreversible</span>
+              </div>
+
             </div>
             <div className="danger-row">
               <div className="danger-content">
                 <h3>Clear Library</h3>
                 <span>Removes all games, groups, and import history from your account. Your profile and settings are kept.</span>
               </div>
-              <button onClick={handleClearLibrary} disabled={busy}>
-                {clearing ? "Clearing..." : "Clear Library"}
-              </button>
+              <div>
+                <button onClick={handleClearLibrary} disabled={busy}>
+                  {clearing ? "Clearing..." : "Clear Library"}
+                </button>
+              </div>
             </div>
             <div className="danger-row">
               <div className="danger-content">
                 <h3>Delete Account</h3>
                 <span>Permanently deletes your account and all associated data. This cannot be reversed.</span>
               </div>
-              <button onClick={handleDeleteAccount} disabled={busy}>
-                {deleting ? "Deleting..." : "Delete Account"}
-              </button>
+              <div>
+                <button onClick={handleDeleteAccount} disabled={busy}>
+                  {deleting ? "Deleting..." : "Delete Account"}
+                </button>
+              </div>
             </div>
           </section>
+          </RevealWrapper>
         </div>
       </section>
     </main>

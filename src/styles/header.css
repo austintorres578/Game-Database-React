@@ -113,7 +113,7 @@ body:hover .cursor-ring {
   position: fixed;
   top: 0;
   z-index: 5;
-  width: 100%;
+  width: 100vw;
   backdrop-filter: blur(16px);
   background: rgba(3, 7, 18, 0.6);
   border-bottom: 1px solid rgba(148, 163, 184, 0.15);

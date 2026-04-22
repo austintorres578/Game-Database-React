@@ -198,7 +198,14 @@ export default function YourLibrary() {
     (id) => id !== "all-platforms" && id !== "ungrouped",
   );
 
-  const allGames = [...libraryGames, ...completedGames];
+  const completedGameIds = new Set(completedGames.map((g) => String(g.id)));
+
+  // Dedupe library (strip entries already in the completed subcollection), then
+  // append completed games with a guaranteed status so the backlog filter can't match them.
+  const allGames = [
+    ...libraryGames.filter((g) => !completedGameIds.has(String(g.id))),
+    ...completedGames.map((g) => ({ ...g, status: "completed" })),
+  ];
   const customCount = allGames.filter((g) => g.isCustom).length;
 
   let groupFilteredGames = allGames;
@@ -227,10 +234,12 @@ export default function YourLibrary() {
 
     groupFilteredGames = allGames.filter((game) => {
       const id = String(game.id);
+      if (completedGameIds.has(id)) return false;
       if (ungroupedSelected && !groupedIdSet.has(id)) return true;
       if (realSelectedGroupIds.length > 0 && selectedGroupGameIds.has(id)) return true;
       return false;
     });
+
   }
 
   const groupStats = groupFilteredGames.reduce(

@@ -1,3 +1,47 @@
+@media(max-width:765px){
+  body .account-wrapper{
+    flex-direction: column;
+  }
+
+  body .account-setting-page .fixed-nav{
+    position: relative;
+    top: 0px;
+    width: stretch;
+    margin-bottom: 20px;
+    margin-right: 0px;
+  }
+
+  body .account-setting-page{
+    padding-top: 90px;
+  }
+}
+
+@media(max-width:600px){
+  body .account-setting-page .setting-header{
+    flex-direction: column-reverse;
+  }
+
+  body .account-setting-page .setting-header div:first-of-type{
+    margin-top: 15px;
+  }
+}
+
+@media(max-width:550px){
+  body .danger-con .danger-row{
+    flex-direction: column;
+  }
+
+  body .danger-con .danger-row div{
+    width: 100%;
+  }
+
+  body .danger-con .danger-row div button{
+    margin-left: 0px;
+    width: 100%;
+    margin-top: 15px;
+  }
+}
+
 /* @media (max-width: 765px) {
   body .account-setting-page {
     padding-left: 10px;
@@ -727,7 +771,8 @@
   border-radius: 99px;
   font-weight: bold;
   cursor: pointer;
-  width: 133px;
+  width: 135px;
+  margin-left: 10px;
   transition: 0.25s;
 }
 
@@ -869,6 +914,8 @@
   font-size: 14px;
   letter-spacing: 1px;
   text-align: center;
+  display: block;
+  width: 215px;
 }
 
 .account-setting-page .danger {
