@@ -201,7 +201,7 @@
 }
 
 .profile-settings-shell .name-con>div {
-  width: 49%;
+  width: 100%;
   position: relative;
   padding-bottom: 15px;
 }
@@ -372,6 +372,7 @@
   height: fit-content;
   padding: 8px 12px;
   margin-bottom: 15px;
+  min-height: 30px;
 }
 
 .profile-settings-shell .selected-tags-list button {
@@ -381,6 +382,8 @@
   border-radius: 99px;
   padding: 3px 10px;
   font-weight: bold;
+  margin: 2.5px 5px 2.5px 0px;
+  cursor: pointer;
 }
 
 .profile-settings-shell .selected-tags-list button span {
@@ -394,6 +397,7 @@
   padding: 8px 12px;
   width: stretch;
   border-radius: 10px;
+  position: relative;
 }
 
 .profile-settings-shell .selected-tags-con .tag-results {
@@ -468,6 +472,8 @@
   border-radius: 99px;
   padding: 3px 10px;
   font-weight: bold;
+  margin: 2.5px 5px 2.5px 0px;
+  cursor: pointer;
 }
 
 .profile-settings-shell .selected-genres-list button span {
@@ -556,6 +562,8 @@
   border-radius: 99px;
   padding: 3px 10px;
   font-weight: bold;
+  margin: 2.5px 5px 2.5px 0px;
+  cursor: pointer;
 }
 
 .profile-settings-shell .selected-platforms-list button span {
@@ -635,7 +643,7 @@
 }
 
 .profile-settings-shell .preview-banner {
-  background: linear-gradient(135deg, #0f2027, #1a3a2a 40%, #0b2218);
+
   height: 100px;
 }
 
@@ -740,6 +748,17 @@
   width: 10px;
   border-radius: 99px;
   background-color: #1aae50;
+  margin-right: 5px;
+}
+
+
+.profile-settings-shell .actions-con span.changed:before {
+  content: "";
+  display: block;
+  height: 10px;
+  width: 10px;
+  border-radius: 99px;
+  background-color: #fbbf24;
   margin-right: 5px;
 }
 

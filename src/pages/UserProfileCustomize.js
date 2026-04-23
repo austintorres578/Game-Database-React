@@ -7,6 +7,7 @@ import {
   DEFAULT_SHORT_BIO,
   DEFAULT_ABOUT_ME,
 } from "../constants/profileDefaultCopy";
+import { allProfileTags, allPlatforms, allGenres } from "../constants/profileTagOptions";
 
 import { handleSaveSubmit } from "../services/profileCustomization/saveProfile";
 import { loadCustomizeProfileAndStats } from "../services/profileCustomization/loadStats";
@@ -22,6 +23,15 @@ import "../styles/userProfileCustomize.css";
 
 import ProfilePreviewCard from "../components/userProfileCustomize/ProfilePreviewCard";
 import ProfileSettingsForm from "../components/userProfileCustomize/ProfileSettingsForm";
+
+const BANNER_GRADIENTS = [
+  "linear-gradient(135deg,#0f2027,#1a3a2a 40%,#0b2218)",
+  "linear-gradient(135deg,#1a0a2e,#2d1b4e,#0a1628)",
+  "linear-gradient(135deg,#1a0a0a,#3a1515,#0a0a1a)",
+  "linear-gradient(135deg,#0a1a2e,#0d2b4a,#061018)",
+  "linear-gradient(135deg,#1a1a0a,#2e2a0a,#0a0a05)",
+  "linear-gradient(135deg,#0a0a1a,#1a0a2e,#050510)",
+];
 
 export default function UserProfileCustomizer() {
   const navigate = useNavigate();
@@ -43,6 +53,11 @@ export default function UserProfileCustomizer() {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [profileTags, setProfileTags] = useState([]);
 
+  const [selectedBanner, setSelectedBanner] = useState(BANNER_GRADIENTS[0]);
+  const [tagSearch, setTagSearch] = useState("");
+  const [platformSearch, setPlatformSearch] = useState("");
+  const [genreSearch, setGenreSearch] = useState("");
+
   // UX state
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -56,6 +71,8 @@ export default function UserProfileCustomizer() {
 
   // Baseline snapshot of last-saved values — used to detect unsaved changes
   const savedProfile = useRef(null);
+  const avatarInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
 
   const sortedJson = (arr) => JSON.stringify([...(arr || [])].sort());
 
@@ -153,6 +170,7 @@ export default function UserProfileCustomizer() {
           profileTags: Array.isArray(userData.profileTags)
             ? userData.profileTags.slice(0, 5)
             : [],
+          selectedBanner: BANNER_GRADIENTS[0],
         };
       } catch (err) {
         console.error("Failed to prepare profile and stats:", err);
@@ -194,8 +212,53 @@ export default function UserProfileCustomizer() {
 
     if (!file) return;
 
+    const allowedTypes = ["image/png", "image/jpeg", "image/gif"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Only PNG, JPEG, and GIF images are allowed.");
+      return;
+    }
+
+    if (file.size > 4 * 1024 * 1024) {
+      setError("Image must be smaller than 4MB.");
+      return;
+    }
+
+    setError("");
     setAvatarFile(file);
     setPreviewSrc(URL.createObjectURL(file));
+  };
+
+  const handleDiscardChanges = () => {
+    const saved = savedProfile.current;
+    if (!saved) return;
+
+    setDisplayName(saved.displayName);
+    setShortAboutMe(saved.shortAboutMe);
+    setAboutMe(saved.aboutMe);
+    setSelectedPlatforms(saved.selectedPlatforms);
+    setSelectedGenres(saved.selectedGenres);
+    setProfileTags(saved.profileTags);
+    setSelectedBanner(saved.selectedBanner);
+    setPreviewSrc(existingAvatarUrl || userDefaultProfile);
+    setAvatarFile(null);
+  };
+
+  const handleSaveChanges = () => {
+    const saved = savedProfile.current;
+    if (!saved) return;
+
+    const changes = {};
+
+    if (displayName !== saved.displayName) changes.displayName = { from: saved.displayName, to: displayName };
+    if (shortAboutMe !== saved.shortAboutMe) changes.shortAboutMe = { from: saved.shortAboutMe, to: shortAboutMe };
+    if (aboutMe !== saved.aboutMe) changes.aboutMe = { from: saved.aboutMe, to: aboutMe };
+    if (sortedJson(selectedPlatforms) !== sortedJson(saved.selectedPlatforms)) changes.selectedPlatforms = { from: saved.selectedPlatforms, to: selectedPlatforms };
+    if (sortedJson(selectedGenres) !== sortedJson(saved.selectedGenres)) changes.selectedGenres = { from: saved.selectedGenres, to: selectedGenres };
+    if (sortedJson(profileTags) !== sortedJson(saved.profileTags)) changes.profileTags = { from: saved.profileTags, to: profileTags };
+    if (avatarFile !== null) changes.avatar = { file: avatarFile.name, size: avatarFile.size };
+    if (selectedBanner !== saved.selectedBanner) changes.selectedBanner = { from: saved.selectedBanner, to: selectedBanner };
+
+    console.log("Changed fields:", changes);
   };
 
   const prepareSave = async (e) => {
@@ -253,11 +316,18 @@ export default function UserProfileCustomizer() {
             <div className="avatar-con">
               <span>Avatar</span>
               <div className="avatar-customization">
-                <img src={userDefaultProfile}></img>
+                <img src={previewSrc}></img>
                 <div>
                   <h3>Profile Picture</h3>
                   <p>PNG, JPG or GIF · Max 4MB Square images work best</p>
-                  <button>
+                  <input
+                    ref={avatarInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif"
+                    style={{ display: "none" }}
+                    onChange={prepareAvatarChange}
+                  />
+                  <button type="button" onClick={() => avatarInputRef.current.click()}>
                     <svg
                       width="12"
                       height="12"
@@ -277,13 +347,31 @@ export default function UserProfileCustomizer() {
               <div className="profile-banner">
                 <span>Profile Banner</span>
                 <div>
-                  <button className="active" style={{ background: "linear-gradient(135deg,#0f2027,#1a3a2a 40%,#0b2218)" }}></button>
-                  <button style={{ background: "linear-gradient(135deg,#1a0a2e,#2d1b4e,#0a1628)" }}></button>
-                  <button style={{ background: "linear-gradient(135deg,#1a0a0a,#3a1515,#0a0a1a)" }}></button>
-                  <button style={{ background: "linear-gradient(135deg,#0a1a2e,#0d2b4a,#061018)" }}></button>
-                  <button style={{ background: "linear-gradient(135deg,#1a1a0a,#2e2a0a,#0a0a05)" }}></button>
-                  <button style={{ background: "linear-gradient(135deg,#0a0a1a,#1a0a2e,#050510)" }}></button>
-                  <button className="upload-button">
+                  {BANNER_GRADIENTS.map((gradient) => (
+                    <button
+                      key={gradient}
+                      type="button"
+                      className={selectedBanner === gradient ? "active" : ""}
+                      style={{ background: gradient }}
+                      onClick={() => setSelectedBanner(gradient)}
+                    ></button>
+                  ))}
+                  <input
+                    ref={bannerInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setSelectedBanner(`url(${URL.createObjectURL(file)})`);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className={!BANNER_GRADIENTS.includes(selectedBanner) ? "upload-button active" : "upload-button"}
+                    onClick={() => bannerInputRef.current.click()}
+                  >
                     <svg
                       width="12"
                       height="12"
@@ -305,15 +393,14 @@ export default function UserProfileCustomizer() {
                     <span>Display Name</span>
                     <span>Required</span>
                   </div>
-                  <input type="text" placeholder="Your display name"></input>
-                  <span className="char-count">0/32</span>
-                </div>
-                <div>
-                  <div>
-                    <span>Username</span>
-                    <span>Required</span>
-                  </div>
-                  <input type="text" placeholder="Your username"></input>
+                  <input
+                    type="text"
+                    placeholder="Your display name"
+                    value={displayName}
+                    maxLength={32}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                  />
+                  <span className="char-count">{displayName.length}/32</span>
                 </div>
               </div>
               <div className="short-bio-con">
@@ -321,16 +408,27 @@ export default function UserProfileCustomizer() {
                   <span>Short Bio</span>
                   <span>Shown on profile header</span>
                 </div>
-                <input type="text" placeholder="Tell us about yourself"></input>
-                <span className="char-count">0/100</span>
+                <input
+                  type="text"
+                  placeholder="Tell us about yourself"
+                  value={shortAboutMe}
+                  maxLength={100}
+                  onChange={(e) => setShortAboutMe(e.target.value)}
+                />
+                <span className="char-count">{shortAboutMe.length}/100</span>
               </div>
               <div className="about-me-con">
                 <div>
                   <span>About Me</span>
                   <span>Expanded Description</span>
                 </div>
-                <textarea placeholder="Tell us about yourself"></textarea>
-                <span className="char-count">0/500</span>
+                <textarea
+                  placeholder="Tell us about yourself"
+                  value={aboutMe}
+                  maxLength={500}
+                  onChange={(e) => setAboutMe(e.target.value)}
+                ></textarea>
+                <span className="char-count">{aboutMe.length}/500</span>
               </div>
             </div>
           </section>
@@ -340,26 +438,45 @@ export default function UserProfileCustomizer() {
               <span>Select up to 5 tags</span>
             </div>
             <div className="selected-tags-con">
-              <div className="title">
-                <span>Selected Tags</span>
-                <span>0/5</span>
-              </div>
-              <div className="selected-tags-list">
-                <button>
-                  Indie Lover <span>X</span>
-                </button>
-              </div>
+              {profileTags.length > 0 && (
+                <>
+                  <div className="title">
+                    <span>Selected Tags</span>
+                    <span>{profileTags.length}/5</span>
+                  </div>
+                  <div className="selected-tags-list">
+                    {profileTags.map((tag) => (
+                      <button key={tag} type="button" onClick={() => toggleProfileTag(tag)}>
+                        {tag} <span>✕</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <input
                 className="filter-tags-trigger"
                 type="text"
                 placeholder="Search tags"
-              ></input>
-              <div className="tag-results">
-                <button className="active">Indie Lover</button>
-                <button>RPG Enjoyer</button>
-                <button>Backlog Slasher</button>
-                <button>Retro Gamer</button>
-              </div>
+                value={tagSearch}
+                onClick={() => toggleDropdown("tags")}
+                onChange={(e) => setTagSearch(e.target.value)}
+              />
+              {openDropdown === "tags" && (
+                <div className="tag-results">
+                  {allProfileTags
+                    .filter((tag) => tag.toLowerCase().includes(tagSearch.toLowerCase()))
+                    .map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        className={profileTags.includes(tag) ? "active" : ""}
+                        onClick={() => toggleProfileTag(tag)}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
           </section>
           <section className="platforms-con">
@@ -368,25 +485,44 @@ export default function UserProfileCustomizer() {
               <span>Select all that apply</span>
             </div>
             <div className="selected-platforms-con">
-              <div className="title">
-                <span>Selected Platforms</span>
-              </div>
-              <div className="selected-platforms-list">
-                <button>
-                  PS5 <span>X</span>
-                </button>
-              </div>
+              {selectedPlatforms.length > 0 && (
+                <>
+                  <div className="title">
+                    <span>Selected Platforms</span>
+                  </div>
+                  <div className="selected-platforms-list">
+                    {selectedPlatforms.map((platform) => (
+                      <button key={platform} type="button" onClick={() => togglePlatform(platform)}>
+                        {platform} <span>✕</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <input
                 className="filter-platforms-trigger"
                 type="text"
                 placeholder="Search platforms"
-              ></input>
-              <div className="platform-results">
-                <button className="active">PS5</button>
-                <button>XBOX Seriex X/S</button>
-                <button>Switch</button>
-                <button>PC</button>
-              </div>
+                value={platformSearch}
+                onClick={() => toggleDropdown("platforms")}
+                onChange={(e) => setPlatformSearch(e.target.value)}
+              />
+              {openDropdown === "platforms" && (
+                <div className="platform-results">
+                  {allPlatforms
+                    .filter((p) => p.toLowerCase().includes(platformSearch.toLowerCase()))
+                    .map((platform) => (
+                      <button
+                        key={platform}
+                        type="button"
+                        className={selectedPlatforms.includes(platform) ? "active" : ""}
+                        onClick={() => togglePlatform(platform)}
+                      >
+                        {platform}
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
           </section>
           <section className="genres-con">
@@ -395,25 +531,44 @@ export default function UserProfileCustomizer() {
               <span>Select all that apply</span>
             </div>
             <div className="selected-genres-con">
-              <div className="title">
-                <span>Selected Genres</span>
-              </div>
-              <div className="selected-genres-list">
-                <button>
-                  Action <span>X</span>
-                </button>
-              </div>
+              {selectedGenres.length > 0 && (
+                <>
+                  <div className="title">
+                    <span>Selected Genres</span>
+                  </div>
+                  <div className="selected-genres-list">
+                    {selectedGenres.map((genre) => (
+                      <button key={genre} type="button" onClick={() => toggleGenre(genre)}>
+                        {genre} <span>✕</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <input
                 className="filter-genres-trigger"
                 type="text"
                 placeholder="Search genres"
-              ></input>
-              <div className="genre-results">
-                <button className="active">Action</button>
-                <button>Adventure</button>
-                <button>Horror</button>
-                <button>Puzzle</button>
-              </div>
+                value={genreSearch}
+                onClick={() => toggleDropdown("genres")}
+                onChange={(e) => setGenreSearch(e.target.value)}
+              />
+              {openDropdown === "genres" && (
+                <div className="genre-results">
+                  {allGenres
+                    .filter((g) => g.toLowerCase().includes(genreSearch.toLowerCase()))
+                    .map((genre) => (
+                      <button
+                        key={genre}
+                        type="button"
+                        className={selectedGenres.includes(genre) ? "active" : ""}
+                        onClick={() => toggleGenre(genre)}
+                      >
+                        {genre}
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
           </section>
         </div>
@@ -424,42 +579,41 @@ export default function UserProfileCustomizer() {
               <span>Updates in real-time</span>
             </div>
             <div className="preview-content-con">
-              <div className="preview-banner"></div>
+              <div className="preview-banner" style={{ backgroundImage: selectedBanner, backgroundSize: "cover", backgroundPosition: "center" }}></div>
               <div className="preview-content">
                 <div className="preview-pro-img">
-                  <img src={userDefaultProfile}></img>
+                  <img src={previewSrc}></img>
                 </div>
                 <div className="preview-pro-content">
                   <div className="preview-name-con">
-                    <p>Austin</p>
+                    <p>{displayName}</p>
                     <p>@Juanspotatoes</p>
                   </div>
-                  <p>My name is Austin and I'm the main developer of this site and a huge gamer!</p>
+                  <p>{shortAboutMe}</p>
                   <div className="preview-tags">
-                    <div>Indie Lover</div>
-                    <div>Retro Gamer</div>
-                    <div>Hardcore Mode</div>
-                    <div>Zombie Slayer</div>
-                    <div>Platformer Enjoyer</div>
+                    {profileTags.map((tag) => (
+                      <div key={tag}>{tag}</div>
+                    ))}
                   </div>
-                  <div className="preview-platforms">
-                    <span>Platforms</span>
-                    <div>
-                      <div>PS Vita</div>
-                      <div>Xbox Series S/X</div>
-                      <div>Nintendo 3DS</div>
-                      <div>PC</div>
+                  {selectedPlatforms.length > 0 && (
+                    <div className="preview-platforms">
+                      <span>Platforms</span>
+                      <div>
+                        {selectedPlatforms.map((platform) => (
+                          <div key={platform}>{platform}</div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </div>
           </section>
           <section className="actions-con">
-            <span>No changes made</span>
+            <span className={isDirty ? "changed" : ""}>No changes made</span>
             <div>
-              <button>Save Changes</button>
-              <button>Discard Changes</button>
+              <button type="button" onClick={handleSaveChanges}>Save Changes</button>
+              <button type="button" onClick={handleDiscardChanges}>Discard Changes</button>
             </div>
             <p>Changes are saved to your account and visible to others immediately.</p>
           </section>
