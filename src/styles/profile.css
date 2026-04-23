@@ -657,6 +657,10 @@
     min-height: 89px;
   }
 
+  body .profile-shell .library-stats{
+    grid-template-columns: 100%;
+  }
+
   body .profile-shell .completed-con .completed-games {
     grid-template-columns: 49.25% 49.25%;
   }
@@ -687,6 +691,7 @@
 
   body .profile-shell .profile-hero .profile-image-con img {
     top: -110px;
+    left: 15px;
   }
 
   body .profile-shell .profile-content-con {
@@ -745,7 +750,8 @@
 .profile-shell .profile-hero .profile-details .profile-name {
   display: flex;
   align-items: center;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: flex-start;
 }
 
 .profile-shell .profile-hero .profile-details .profile-name h3 {
@@ -753,11 +759,12 @@
   margin-top: 0px;
   margin-bottom: 0px;
   font-size: 26px;
-  width: 100%;
+  width: fit-content;
 }
 
 .profile-shell .profile-hero .profile-details .profile-name span{
-  width: 100%;
+  width: fit-content;
+  color:#6b7280;
 }
 
 .profile-shell .profile-hero .profile-details .tags {
@@ -799,15 +806,16 @@
 
 .profile-shell .profile-hero .edit-button {
   position: absolute;
-  top: 140px;
+  top: 146px;
   right: 10px;
   background: linear-gradient(135deg, rgb(34 197 94), rgb(22 163 74));
   color: #022c22;
   border: none;
   border-radius: 99px;
-  padding: 10px 20px;
+  padding: 5px 20px;
   font-weight: bold;
   text-decoration: none;
+  font-size: 14px;
 }
 
 .profile-shell .profile-stats-con div {
@@ -833,7 +841,7 @@
 .profile-shell .platforms-con {
   margin-top: 15px;
   border-top: solid 2px #94a3b81a;
-  padding-top: 15px;
+  padding-top: 10px;
 }
 
 .profile-shell .platforms-con > span {
@@ -844,7 +852,6 @@
 }
 
 .profile-shell .platforms-con div {
-  padding-top: 10px;
   display: flex;
   flex-wrap: wrap;
 }

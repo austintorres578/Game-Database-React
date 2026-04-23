@@ -16,6 +16,7 @@ import ProfileAboutPanel from "../components/userProfile/ProfileAboutPanel";
 import LibraryStatsPanel from "../components/userProfile/LibraryStatsPanel";
 import CompletedGamesSection from "../components/userProfile/CompletedGamesSection";
 import placeholderImage from "../assets/images/greenPlaceholder.png";
+import { RevealWrapper } from "../components/RevealWrapper";
 
 export default function UserProfile() {
   const [profile, setProfile] = useState(null);
@@ -105,39 +106,42 @@ export default function UserProfile() {
     <div className="profile-shell">
       <section className="profile-hero">
         <div className="profile-banner"></div>
-        <div className="profile-details">
-          <div className="profile-image-con">
-            <img src={avatarSrc} alt={displayName} />
-          </div>
-          <div className="profile-content-con">
-            <div className="profile-name">
-              <h3 className="display-name">{displayName}</h3>
-              <span className="username">@{username}</span>
+        <RevealWrapper direction="up">
+          <div className="profile-details">
+            <div className="profile-image-con">
+              <img src={avatarSrc} alt={displayName} />
             </div>
-            <p className="short-bio">{shortAboutMe}</p>
-            {profileTags.length > 0 && (
-              <div className="tags">
-                {profileTags.map((tag) => (
-                  <span key={tag}>{tag}</span>
-                ))}
+            <div className="profile-content-con">
+              <div className="profile-name">
+                <h3 className="display-name">{displayName}</h3>
+                <span className="username">@{username}</span>
               </div>
-            )}
-            {selectedPlatforms.length > 0 && (
-              <div className="platforms-con">
-                <span>Platforms</span>
-                <div className="platforms">
-                  {selectedPlatforms.map((platform) => (
-                    <span key={platform}>{platform}</span>
+              <p className="short-bio">{shortAboutMe}</p>
+              {profileTags.length > 0 && (
+                <div className="tags">
+                  {profileTags.map((tag) => (
+                    <span key={tag}>{tag}</span>
                   ))}
                 </div>
-              </div>
-            )}
+              )}
+              {selectedPlatforms.length > 0 && (
+                <div className="platforms-con">
+                  <span>Platforms</span>
+                  <div className="platforms">
+                    {selectedPlatforms.map((platform) => (
+                      <span key={platform}>{platform}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <Link to="/profile/customize" className="edit-button">Edit Profile</Link>
+          <Link to="/profile/customize" className="edit-button">Edit Profile</Link>
+        </RevealWrapper>
       </section>
       <section className="about-con">
         <div className="left-col">
+          <RevealWrapper direction="up">
           <div className="favorites">
             <div className="title">
               <h2>Favorite Games</h2>
@@ -177,6 +181,8 @@ export default function UserProfile() {
               )}
             </div>
           </div>
+          </RevealWrapper>
+          <RevealWrapper direction="up" delay={100}>
           <div className="completed-con">
             <div className="title">
               <h2>Completed</h2>
@@ -261,9 +267,11 @@ export default function UserProfile() {
               </div>
             )}
           </div>
+          </RevealWrapper>
         </div>
 
         <div className="right-col">
+          <RevealWrapper direction="right">
           <div className="about">
             <div className="title">
               <h2>About</h2>
@@ -280,6 +288,8 @@ export default function UserProfile() {
               </div>
             )}
           </div>
+          </RevealWrapper>
+          <RevealWrapper direction="right" delay={100}>
           <div className="library-stats-con">
             <div>
               <h2>Library Stats</h2>
@@ -351,6 +361,7 @@ export default function UserProfile() {
               </div>
             </div>
           </div>
+          </RevealWrapper>
         </div>
       </section>
     </div>
