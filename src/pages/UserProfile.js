@@ -104,9 +104,16 @@ export default function UserProfile() {
 
   return (
     <div className="profile-shell">
+      <RevealWrapper direction="up">
       <section className="profile-hero">
-        <div className="profile-banner"></div>
-        <RevealWrapper direction="up">
+        <div
+          className="profile-banner"
+          style={{
+            background: profile?.bannerUrl
+              ? `url(${profile.bannerUrl}) center/cover no-repeat`
+              : profile?.selectedBanner || 'linear-gradient(135deg,#0f2027,#1a3a2a 40%,#0b2218)',
+          }}
+        ></div>
           <div className="profile-details">
             <div className="profile-image-con">
               <img src={avatarSrc} alt={displayName} />
@@ -137,11 +144,11 @@ export default function UserProfile() {
             </div>
           </div>
           <Link to="/profile/customize" className="edit-button">Edit Profile</Link>
-        </RevealWrapper>
       </section>
+      </RevealWrapper>
       <section className="about-con">
         <div className="left-col">
-          <RevealWrapper direction="up">
+          <RevealWrapper direction="up" delay={100}>
           <div className="favorites">
             <div className="title">
               <h2>Favorite Games</h2>
@@ -182,7 +189,7 @@ export default function UserProfile() {
             </div>
           </div>
           </RevealWrapper>
-          <RevealWrapper direction="up" delay={100}>
+          <RevealWrapper direction="up" delay={150}>
           <div className="completed-con">
             <div className="title">
               <h2>Completed</h2>
@@ -271,7 +278,7 @@ export default function UserProfile() {
         </div>
 
         <div className="right-col">
-          <RevealWrapper direction="right">
+          <RevealWrapper direction="up" delay={100}>
           <div className="about">
             <div className="title">
               <h2>About</h2>
@@ -289,7 +296,7 @@ export default function UserProfile() {
             )}
           </div>
           </RevealWrapper>
-          <RevealWrapper direction="right" delay={100}>
+          <RevealWrapper direction="up" delay={150}>
           <div className="library-stats-con">
             <div>
               <h2>Library Stats</h2>

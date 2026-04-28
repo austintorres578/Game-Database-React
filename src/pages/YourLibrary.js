@@ -667,7 +667,7 @@ export default function YourLibrary() {
         <div id="filter-settings" className="custom-filter-settings">
           <h2>
             {panelMode === "import"
-              ? "Import Games"
+              ? ""
               : panelMode === "text"
                 ? "Text Import"
                 : editingGroupId
@@ -843,7 +843,7 @@ export default function YourLibrary() {
           )}
 
           <button className="close-button" onClick={closeCustomFilterPanel}>
-            <span>X</span>
+            <span>✕</span>
           </button>
         </div>
       </section>

@@ -369,18 +369,14 @@
   border: 1px solid #94a3b81f;
   opacity: 0;
   animation: cardIn 0.4s ease forwards;
-  transition:
-    transform 0.22s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: 0.25s;
+  transform: translateY(0px);
 }
 
 .search-container .game-wrapper:hover {
-  transform: translateY(-5px);
-  border-color: rgba(34, 197, 94, 0.45);
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(34, 197, 94, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 22px 40px rgba(34, 197, 94, 0.25);
+  border-color: #22c55e;
 }
 
 .search-container .game-info {

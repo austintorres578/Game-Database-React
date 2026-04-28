@@ -391,6 +391,7 @@ body {
 .game-page-shell .game-main-layout .left-col h3 {
   margin-top: 0px;
   margin-bottom: 10px;
+  font-family: "Syne", sans-serif;
 }
 
 .game-page-shell .screenshot-wrapper div:hover {
@@ -441,7 +442,7 @@ body {
 .game-page-shell .desc-toggle {
       background: none;
     border: none;
-    color: #a78bfa;
+    color: #22c55e;
     cursor: pointer;
     padding: 4px 0;
     font-size: 12px;
@@ -451,7 +452,7 @@ body {
 }
 
 .game-page-shell .desc-toggle:hover {
-  color: #c4b5fd;
+  text-decoration: underline;
 }
 
 .game-page-shell .platform-con {
@@ -833,7 +834,7 @@ body {
 
 .game-page-shell .game-hero-actions .btn {
   position: relative;
-  width: 160px;
+  width: 175px;
   font-weight: 700;
 }
 
@@ -1045,6 +1046,7 @@ body {
 .game-page-shell .screenshots-header h2 {
   font-size: 1.15rem;
   margin: 0;
+  font-family: "Syne", sans-serif;
 }
 
 .game-page-shell .screenshots-header span {
@@ -1202,6 +1204,7 @@ body {
   color: #9ca3af;
   letter-spacing: 1px;
   font-weight: 700;
+  font-family: "Syne", sans-serif;
 }
 
 .game-page-shell .digital-stores a {
@@ -1358,6 +1361,7 @@ body {
 
 .game-page-shell .digital-stores h3 {
   margin-bottom: 5px;
+  font-family: "Syne", sans-serif;
 }
 
 .game-page-shell .dropdown-menu {

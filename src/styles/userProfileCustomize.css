@@ -70,11 +70,12 @@
 .profile-settings-shell .profile-settings-con .title h2 {
   margin-top: 0px;
   margin-bottom: 0px;
-  font-size: 18px;
+  font-size: 1.125rem;
+  font-family: "Syne", sans-serif;
 }
 
 .profile-settings-shell .profile-settings-con .title span {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: rgb(107 114 128);
 }
 
@@ -99,15 +100,16 @@
 
 .profile-settings-shell .avatar-con .avatar-customization>div h3 {
   margin: 0px;
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   margin-bottom: 3px;
   color: #f9fafb;
+  font-family: "Syne", sans-serif;
 }
 
 .profile-settings-shell .avatar-con .avatar-customization>div p {
   margin: 0px;
-  font-size: 12px;
+  font-size: 0.75rem;
   color: rgb(107 114 128);
   line-height: 1.5;
   max-width: 180px;
@@ -146,7 +148,8 @@
   color: rgb(107 114 128);
   letter-spacing: 1.5px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 0.75rem;
+  font-family: "Syne", sans-serif;
 }
 
 .profile-settings-shell .profile-banner>div {
@@ -198,6 +201,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-direction: column;
 }
 
 .profile-settings-shell .name-con>div {
@@ -218,15 +222,16 @@
   color: rgb(107 114 128);
   letter-spacing: 1.5px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 0.75rem;
   display: block;
+  font-family: "Syne", sans-serif;
 }
 
 .profile-settings-shell .name-con>div>div span:last-of-type {
   color: rgb(107 114 128);
   letter-spacing: 1px;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 0.625rem;
   display: block;
 }
 
@@ -244,7 +249,7 @@
   margin-left: auto;
   display: block;
   right: 0px;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: rgb(107 114 128);
 }
 
@@ -264,14 +269,15 @@
   color: rgb(107 114 128);
   letter-spacing: 1.5px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 0.75rem;
+  font-family: "Syne", sans-serif;
 }
 
 .profile-settings-shell .short-bio-con>div span:last-of-type {
   color: rgb(107 114 128);
   letter-spacing: 1px;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .profile-settings-shell .short-bio-con input {
@@ -287,7 +293,7 @@
   text-align: right;
   display: block;
   width: 100%;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: rgb(107 114 128);
 }
 
@@ -307,14 +313,15 @@
   color: rgb(107 114 128);
   letter-spacing: 1.5px;
   font-weight: 600;
-  font-size: 12px;
+  font-size: 0.75rem;
+  font-family: "Syne", sans-serif;
 }
 
 .profile-settings-shell .about-me-con>div span:last-of-type {
   color: rgb(107 114 128);
   letter-spacing: 1px;
   font-weight: 600;
-  font-size: 10px;
+  font-size: 0.625rem;
 }
 
 .profile-settings-shell .about-me-con textarea {
@@ -330,7 +337,7 @@
   text-align: right;
   display: block;
   width: 100%;
-  font-size: 10px;
+  font-size: 0.625rem;
   color: rgb(107 114 128);
 }
 
@@ -372,7 +379,6 @@
   height: fit-content;
   padding: 8px 12px;
   margin-bottom: 15px;
-  min-height: 30px;
 }
 
 .profile-settings-shell .selected-tags-list button {
@@ -382,8 +388,7 @@
   border-radius: 99px;
   padding: 3px 10px;
   font-weight: bold;
-  margin: 2.5px 5px 2.5px 0px;
-  cursor: pointer;
+  margin: 0px 5px 3px 0px;
 }
 
 .profile-settings-shell .selected-tags-list button span {
@@ -397,7 +402,6 @@
   padding: 8px 12px;
   width: stretch;
   border-radius: 10px;
-  position: relative;
 }
 
 .profile-settings-shell .selected-tags-con .tag-results {
@@ -472,8 +476,7 @@
   border-radius: 99px;
   padding: 3px 10px;
   font-weight: bold;
-  margin: 2.5px 5px 2.5px 0px;
-  cursor: pointer;
+  margin: 0px 3px 5px 0px;
 }
 
 .profile-settings-shell .selected-genres-list button span {
@@ -562,8 +565,7 @@
   border-radius: 99px;
   padding: 3px 10px;
   font-weight: bold;
-  margin: 2.5px 5px 2.5px 0px;
-  cursor: pointer;
+  margin: 0px 5px 3px 0px;
 }
 
 .profile-settings-shell .selected-platforms-list button span {
@@ -634,16 +636,17 @@
 .profile-settings-shell .profile-preview .title h2 {
   margin-top: 0px;
   margin-bottom: 0px;
-  font-size: 18px;
+  font-size: 1.125rem;
+  font-family: "Syne", sans-serif;
 }
 
 .profile-settings-shell .profile-preview .title span {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: rgb(107 114 128);
 }
 
 .profile-settings-shell .preview-banner {
-
+  background: linear-gradient(135deg, #0f2027, #1a3a2a 40%, #0b2218);
   height: 100px;
 }
 
@@ -720,7 +723,18 @@
   background-color: transparent;
 }
 
-.profile-settings-shell .preview-name-con p:first-of-type .profile-settings-shell .preview-name-con p:first-of-type {
+.profile-settings-shell .preview-name-con p:first-of-type {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.profile-settings-shell .preview-name-con p:last-of-type {
+  width: fit-content;
+  color: #6b7280;
+  font-size: 10px;
+}
+
+.profile-settings-shell .preview-name-con p:first-of-type {
   font-weight: 600;
   color: rgb(241 245 249);
 }
@@ -728,6 +742,67 @@
 .profile-settings-shell .actions-con div button:last-of-type:hover {
   color: rgb(229 231 235);
   border-color: rgba(255, 255, 255, 0.3);
+}
+
+.profile-settings-shell .preview-name-con {
+  display: flex;
+  align-items: center;
+  margin-top: 3px;
+}
+
+.profile-settings-shell .preview-pro-content>p {
+  font-size: 10px;
+}
+
+.profile-settings-shell .preview-tags-con {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.profile-settings-shell .preview-tags-con span {
+  font-size: 8px;
+  margin: 0px 5px 5px 0px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid #94a3b833;
+  color: rgb(107 114 128);
+  border-radius: 99px;
+  padding: 0px 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.profile-settings-shell .preview-platforms {
+  border-top: solid 2px #94a3b81a;
+  margin-top: 3px;
+  padding-top: 2px;
+}
+
+.profile-settings-shell .preview-platforms>span {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 10px;
+  color: rgb(107 114 128);
+  font-weight: bold;
+}
+
+.profile-settings-shell .preview-platforms div span {
+  font-size: 8px;
+  margin: 0px 5px 5px 0px;
+  background: rgb(15 23 42);
+  border: 1px solid #94a3b81a;
+  color: rgb(156 163 175);
+  border-radius: 1px;
+  padding: 0px 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.profile-settings-shell .preview-name-con p {
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 .profile-settings-shell .actions-con span {
@@ -741,6 +816,10 @@
   align-items: center;
 }
 
+.profile-settings-shell .actions-con span.changed:before{
+  background-color: #d5ba0b;
+}
+
 .profile-settings-shell .actions-con span:before {
   content: "";
   display: block;
@@ -749,87 +828,6 @@
   border-radius: 99px;
   background-color: #1aae50;
   margin-right: 5px;
-}
-
-
-.profile-settings-shell .actions-con span.changed:before {
-  content: "";
-  display: block;
-  height: 10px;
-  width: 10px;
-  border-radius: 99px;
-  background-color: #fbbf24;
-  margin-right: 5px;
-}
-
-.profile-settings-shell .preview-name-con p:first-of-type {
-  margin: 0px;
-  font-weight: bold;
-}
-
-.profile-settings-shell .preview-pro-content .preview-tags {
-  display: flex;
-  flex-wrap: wrap;
-  font-size: 8px;
-}
-
-.profile-settings-shell .preview-pro-content .preview-tags div {
-  margin: 0px 3px 3px 0px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid #94a3b833;
-  color: rgb(107 114 128);
-  border-radius: 99px;
-  padding: 0px 5px;
-}
-
-.profile-settings-shell .preview-pro-content .preview-platforms {
-  border-top: solid 2px #94a3b81a;
-  margin-top: 5px;
-  padding-top: 5px;
-
-}
-
-.profile-settings-shell .preview-pro-content .preview-platforms>div {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.profile-settings-shell .preview-pro-content .preview-platforms>div div {
-  background: rgb(15 23 42);
-  border: 1px solid #94a3b81a;
-  color: rgb(156 163 175);
-  padding: 0px 5px;
-}
-
-.profile-settings-shell .preview-pro-content .preview-platforms span {
-  display: block;
-  font-size: 8px;
-  margin-bottom: 5px;
-  color: rgb(107 114 128);
-  letter-spacing: 2px;
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.profile-settings-shell .preview-pro-content .preview-platforms div {
-  font-size: 8px;
-  margin: 0px 3px 3px 0px;
-}
-
-.profile-settings-shell .preview-name-con p:last-of-type {
-  margin: 0px 0px 0px 5px;
-  font-size: 10px;
-  color: #6b7280;
-}
-
-.profile-settings-shell .preview-pro-content>p {
-  font-size: 10px;
-}
-
-.profile-settings-shell .preview-name-con {
-  display: flex;
-  align-items: center;
-  padding-top: 3px;
 }
 
 @media (max-width: 850px) {
@@ -854,7 +852,26 @@
     margin-bottom: 15px;
   }
 
-  body .profile-settings-shell {
+}
+
+@media(max-width:765px) {
+  body .profile-settings-shell-header h1 {
+    display: none;
+  }
+
+  body .profile-settings-shell{
     padding-top: 90px;
   }
+
+}
+
+@media(max-width:600px) {
+  body .profile-settings-shell .name-con {
+    flex-direction: column;
+  }
+
+  body .profile-settings-shell .name-con>div {
+    width: 100%
+  }
+
 }
