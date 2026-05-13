@@ -35,12 +35,14 @@ export async function handleSaveSubmit({
     avatarUrl = await getDownloadURL(avatarRef);
   }
 
-  let bannerUrl = existingBannerUrl || null;
+  let bannerUrl = null;
 
   if (bannerFile) {
     const bannerRef = ref(storage, `users/${user.uid}/banner`);
     await uploadBytes(bannerRef, bannerFile);
     bannerUrl = await getDownloadURL(bannerRef);
+  } else if (!selectedBanner || selectedBanner === existingBannerUrl) {
+    bannerUrl = existingBannerUrl || null;
   }
 
   const payload = {

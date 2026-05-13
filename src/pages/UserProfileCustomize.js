@@ -24,6 +24,7 @@ import "../styles/userProfileCustomize.css";
 
 import ProfilePreviewCard from "../components/userProfileCustomize/ProfilePreviewCard";
 import ProfileSettingsForm from "../components/userProfileCustomize/ProfileSettingsForm";
+import { RevealWrapper } from "../components/RevealWrapper";
 
 export default function UserProfileCustomizer() {
   const navigate = useNavigate();
@@ -316,6 +317,7 @@ export default function UserProfileCustomizer() {
       </div>
       <div className="profile-settings-wrapper">
         <div className="profile-settings-con">
+          <RevealWrapper direction="up" delay={100}>
           <section className="identity-con">
             <div className="title">
               <h2>Identity</h2>
@@ -448,20 +450,22 @@ export default function UserProfileCustomizer() {
               </div>
             </div>
           </section>
+          </RevealWrapper>
+          <RevealWrapper direction="up" delay={200}>
           <section className="tags-con">
             <div className="title">
               <h2>Profile Tags</h2>
               <span>Select up to 5 tags</span>
             </div>
             <div className="selected-tags-con">
-              <div className="title">
+              {profileTags.length > 0 && <div className="title">
                 <span>Selected Tags</span>
                 <span>{profileTags.length}/5</span>
-              </div>
-              <div className="selected-tags-list">
+              </div>}
+              <div className="selected-tags-list" style={profileTags.length === 0 ? { display: "none" } : undefined}>
                 {profileTags.map((tag) => (
                   <button key={tag} type="button" onClick={() => toggleProfileTag(tag)}>
-                    {tag} <span>X</span>
+                    {tag} <span>✕</span>
                   </button>
                 ))}
               </div>
@@ -484,7 +488,7 @@ export default function UserProfileCustomizer() {
                       key={tag}
                       type="button"
                       className={profileTags.includes(tag) ? "active" : ""}
-                      onClick={() => toggleProfileTag(tag)}
+                      onMouseDown={(e) => { e.preventDefault(); toggleProfileTag(tag); }}
                     >
                       {tag}
                     </button>
@@ -492,19 +496,21 @@ export default function UserProfileCustomizer() {
               </div>}
             </div>
           </section>
+          </RevealWrapper>
+          <RevealWrapper direction="up" delay={300}>
           <section className="platforms-con">
             <div className="title">
               <h2>Platforms</h2>
               <span>Select all that apply</span>
             </div>
             <div className="selected-platforms-con">
-              <div className="title">
+              {selectedPlatforms.length > 0 && <div className="title">
                 <span>Selected Platforms</span>
-              </div>
-              <div className="selected-platforms-list">
+              </div>}
+              <div className="selected-platforms-list" style={selectedPlatforms.length === 0 ? { display: "none" } : undefined}>
                 {selectedPlatforms.map((platform) => (
                   <button key={platform} type="button" onClick={() => togglePlatform(platform)}>
-                    {platform} <span>X</span>
+                    {platform} <span>✕</span>
                   </button>
                 ))}
               </div>
@@ -527,7 +533,7 @@ export default function UserProfileCustomizer() {
                       key={platform}
                       type="button"
                       className={selectedPlatforms.includes(platform) ? "active" : ""}
-                      onClick={() => togglePlatform(platform)}
+                      onMouseDown={(e) => { e.preventDefault(); togglePlatform(platform); }}
                     >
                       {platform}
                     </button>
@@ -535,19 +541,21 @@ export default function UserProfileCustomizer() {
               </div>}
             </div>
           </section>
+          </RevealWrapper>
+          <RevealWrapper direction="up" delay={400}>
           <section className="genres-con">
             <div className="title">
               <h2>Favorite Genres</h2>
               <span>Select all that apply</span>
             </div>
             <div className="selected-genres-con">
-              <div className="title">
+              {selectedGenres.length > 0 && <div className="title">
                 <span>Selected Genres</span>
-              </div>
-              <div className="selected-genres-list">
+              </div>}
+              <div className="selected-genres-list" style={selectedGenres.length === 0 ? { display: "none" } : undefined}>
                 {selectedGenres.map((genre) => (
                   <button key={genre} type="button" onClick={() => toggleGenre(genre)}>
-                    {genre} <span>X</span>
+                    {genre} <span>✕</span>
                   </button>
                 ))}
               </div>
@@ -570,7 +578,7 @@ export default function UserProfileCustomizer() {
                       key={genre}
                       type="button"
                       className={selectedGenres.includes(genre) ? "active" : ""}
-                      onClick={() => toggleGenre(genre)}
+                      onMouseDown={(e) => { e.preventDefault(); toggleGenre(genre); }}
                     >
                       {genre}
                     </button>
@@ -578,7 +586,9 @@ export default function UserProfileCustomizer() {
               </div>}
             </div>
           </section>
+          </RevealWrapper>
         </div>
+        <RevealWrapper direction="up" delay={100}>
         <div className="profile-preview-con">
           <section className="profile-preview">
             <div className="title">
@@ -596,7 +606,7 @@ export default function UserProfileCustomizer() {
                     <p>{displayName}</p>
                     <p>@{username}</p>
                   </div>
-                  <p>My name is Austin and I'm the main developer of this site and a huge gamer!</p>
+                  <p className="short-bio-prev">{shortAboutMe}</p>
                   <div className="preview-tags-con">
                     {profileTags.map((tag) => (
                       <span key={tag}>{tag}</span>
@@ -615,14 +625,16 @@ export default function UserProfileCustomizer() {
             </div>
           </section>
           <section className="actions-con">
-            <span className={isDirty ? "changed" : ""}>No changes made</span>
+            <span className={isDirty ? "changed" : ""}>{isDirty ? "Unsaved changes" : "No changes made"}</span>
             <div>
-              <button type="button" onClick={prepareSave}>Save Changes</button>
+              <button type="button" onClick={prepareSave} disabled={saving}>{saving ? "Saving..." : "Save Changes"}</button>
               <button type="button" onClick={discardChanges}>Discard Changes</button>
             </div>
+            {error && <p className="save-error">{error}</p>}
             <p>Changes are saved to your account and visible to others immediately.</p>
           </section>
         </div>
+        </RevealWrapper>
       </div>
     </section>
     // <section>

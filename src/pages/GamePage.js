@@ -23,6 +23,8 @@ import {
   deleteDoc,
   arrayRemove,
   getDoc,
+  getDocs,
+  collection,
   db,
 } from "../firebase/firestore";
 
@@ -248,8 +250,20 @@ export default function GamePage({ auth }) {
         await deleteDoc(favoriteRef);
         setIsFavorite(false);
       } else {
+        const favSnapshot = await getDocs(collection(db, "users", user.uid, "favorites"));
+        if (favSnapshot.size >= 5) {
+          alert("You can only have 5 favorite games. Remove one before adding another.");
+          setSavingFavorite(false);
+          return;
+        }
         await setDoc(favoriteRef, {
-          ...buildBaseGamePayload(),
+          id: gameData.id,
+          title: gameData.name,
+          background_image: gameData.background_image || null,
+          backgroundImage: gameData.background_image || null,
+          genres: gameData.genres?.map((g) => g?.name).filter(Boolean) || [],
+          platforms: gameData.platforms?.map((p) => p?.platform?.name).filter(Boolean) || [],
+          metacritic: gameData.metacritic ?? null,
           inLibrary: false,
           favoritedAt: new Date().toISOString(),
         });
@@ -604,13 +618,13 @@ export default function GamePage({ auth }) {
 
         {playableVideos.length > 0 && (
           <RevealWrapper direction="up" delay={150}>
-            <section className="game-screenshots-section">
-              <div className="screenshots-header">
+            <section className="game-video-section">
+              <div className="video-header">
                 <h2>Videos</h2>
               </div>
               <div
                 ref={videosRowRef}
-                className={`screenshots-row${isVideoDragging ? " is-dragging" : ""}`}
+                className={`videos-row${isVideoDragging ? " is-dragging" : ""}`}
                 onMouseDown={handleVideoMouseDown}
                 onMouseMove={handleVideoMouseMove}
                 onMouseUp={stopVideoDragging}
@@ -638,41 +652,6 @@ export default function GamePage({ auth }) {
           </RevealWrapper>
         )}
 
-        <h3>You might also like</h3>
-        <div className="related-con">
-          <a href="#">
-            <div className="related-art"></div>
-            <div className="related-content">
-              <p className="title">The Witcher 3</p>
-              <div className="related-meta">
-                <p className="genre">RPG</p>
-                <p className="score">97</p>
-              </div>
-            </div>
-          </a>
-
-          <a href="#">
-            <div className="related-art"></div>
-            <div className="related-content">
-              <p className="title">The Witcher 3</p>
-              <div className="related-meta">
-                <p className="genre">RPG</p>
-                <p className="score">97</p>
-              </div>
-            </div>
-          </a>
-
-          <a href="#">
-            <div className="related-art"></div>
-            <div className="related-content">
-              <p className="title">The Witcher 3</p>
-              <div className="related-meta">
-                <p className="genre">RPG</p>
-                <p className="score">97</p>
-              </div>
-            </div>
-          </a>
-        </div>
       </div>
 
       <ScreenshotModal

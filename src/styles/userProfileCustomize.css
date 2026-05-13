@@ -393,6 +393,7 @@
 
 .profile-settings-shell .selected-tags-list button span {
   margin-left: 5px;
+  cursor: pointer;
 }
 
 .profile-settings-shell .selected-tags-con input {

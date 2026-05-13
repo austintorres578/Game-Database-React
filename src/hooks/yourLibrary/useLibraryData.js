@@ -27,6 +27,7 @@ export function useLibraryData() {
   const unsubLibraryRef = useRef(null);
   const unsubGroupsRef = useRef(null);
   const unsubCompletedRef = useRef(null);
+  const unsubFavoritesRef = useRef(null);
   const initializedRef = useRef(false);
 
   const [authUser, setAuthUser] = useState(null);
@@ -38,6 +39,7 @@ export function useLibraryData() {
   });
   const [completedCount, setCompletedCount] = useState(0);
   const [completedGames, setCompletedGames] = useState([]);
+  const [favoriteGames, setFavoriteGames] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [libraryGames, setLibraryGames] = useState([]);
 
@@ -81,11 +83,13 @@ export function useLibraryData() {
       if (unsubLibraryRef.current) { unsubLibraryRef.current(); unsubLibraryRef.current = null; }
       if (unsubGroupsRef.current) { unsubGroupsRef.current(); unsubGroupsRef.current = null; }
       if (unsubCompletedRef.current) { unsubCompletedRef.current(); unsubCompletedRef.current = null; }
+      if (unsubFavoritesRef.current) { unsubFavoritesRef.current(); unsubFavoritesRef.current = null; }
       initializedRef.current = false;
 
       if (!user) {
         setStats({ total: 0, completed: 0, backlog: 0, playing: 0 });
         setCompletedCount(0);
+        setFavoriteGames([]);
         setLibraryGames([]);
         setCustomFilters([ALL_PLATFORMS_FILTER, UNGROUPED_FILTER]);
         setActiveGroupIds(["all-platforms"]);
@@ -138,6 +142,18 @@ export function useLibraryData() {
         setStats((prev) => ({ ...prev, completed: count }));
       }, (err) => {
         console.error("Completed snapshot error:", err);
+      });
+
+      // --- FAVORITES LISTENER ---
+      const favoritesRef = query(collection(db, "users", user.uid, "favorites"));
+      unsubFavoritesRef.current = onSnapshot(favoritesRef, (snapshot) => {
+        const games = snapshot.docs.map((docSnap) => ({
+          id: String(docSnap.id),
+          ...docSnap.data(),
+        }));
+        setFavoriteGames(games);
+      }, (err) => {
+        console.error("Favorites snapshot error:", err);
       });
 
       // --- GROUPS LISTENER ---
@@ -234,6 +250,7 @@ export function useLibraryData() {
       if (unsubLibraryRef.current) unsubLibraryRef.current();
       if (unsubGroupsRef.current) unsubGroupsRef.current();
       if (unsubCompletedRef.current) unsubCompletedRef.current();
+      if (unsubFavoritesRef.current) unsubFavoritesRef.current();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -266,6 +283,7 @@ export function useLibraryData() {
     loadingStats,
     libraryGames,
     completedGames,
+    favoriteGames,
     setLibraryGames,
     statusFilter,
     setStatusFilter,

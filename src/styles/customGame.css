@@ -992,8 +992,83 @@
   }
 } */
 
+@media (max-width: 1025px) {
+  body .cg-shell .game-details-con {
+    flex-direction: column-reverse;
+  }
+
+  body .cg-shell .game-details-con .right-col {
+    margin-bottom: 15px;
+  }
+
+  body .cg-shell .game-details-con .right-col .game-details {
+    width: 100%;
+  }
+
+  body .cg-shell .game-details-con .right-col .tags-con {
+    width: 100%;
+  }
+
+  body .cg-shell .screenshot-section {
+    margin-right: 0px;
+  }
+
+  body .cg-shell .tag-options {
+    margin-right: 25px;
+    max-width: stretch;
+  }
+}
+
+@media (max-width: 765px) {
+  body .cg-shell {
+    padding-top: 90px;
+  }
+
+  body .cg-shell .save-section{
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  body .cg-shell .save-section span{
+    margin-bottom: 10px;
+  }
+
+  body .cg-shell .custom-hero .cover-upload-con {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body .cg-shell .custom-hero {
+    flex-direction: column;
+  }
+
+  body .cg-shell .custom-hero .left-col {
+    margin-right: 0px;
+    margin-bottom: 15px;
+    width: 100%;
+  }
+
+  body .title-input-row {
+    flex-direction: column;
+  }
+
+  body .cg-shell .custom-hero .right-col .title-input-row > div {
+    width: 100%;
+  }
+
+  body .cg-shell .custom-hero .right-col .title-input-row > div:first-of-type {
+    margin-bottom: 15px;
+  }
+}
+
+@media (max-width: 555px) {
+  body .cg-shell .page-title div:last-of-type {
+    margin-top: 15px;
+  }
+}
+
 .cg-shell {
-  padding-top: 120px;
+  padding: 120px 15px 15px 15px;
 }
 
 .cg-shell .cg-container {
@@ -1002,30 +1077,212 @@
   width: 100%;
   margin-left: auto;
   margin-right: auto;
-  padding: 15px;
 }
 
 .cg-shell .custom-hero {
   background: rgb(11 17 32);
   border: 1px solid #94a3b838;
-  padding: 30px;
+  padding: 20px;
   display: flex;
   align-items: center;
   border-radius: 30px;
+  position: relative;
+}
+
+.cg-shell .custom-hero:before {
+  content: "";
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.07), transparent 65%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.cg-shell .drop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cg-shell .drop-row > div {
+  width: 49.5%;
+}
+
+.cg-shell .genre-options {
+  padding: 5px;
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  width: stretch;
+  border-radius: 10px;
+  position: absolute;
+  z-index: 2;
+  top: 110%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  z-index: 5;
+}
+
+.cg-shell .genre-options button {
+  margin: 5px;
+  background: none;
+  border: 1px solid #94a3b81a;
+  color: rgb(156 163 175);
+  padding: 5px 10px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cg-shell .genre-options button:hover {
+  border-color: #18a84d;
+  color: #18a84d;
+}
+
+.cg-shell .genre-options button.active {
+  background: #18a84d;
+  border-color: #18a84d;
+  color: white;
+}
+
+.cg-shell .platform-options {
+  padding: 5px;
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  width: stretch;
+  border-radius: 10px;
+  position: absolute;
+  z-index: 2;
+  top: 110%;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  z-index: 5;
+}
+
+.cg-shell .platform-options button {
+  margin: 5px;
+  background: none;
+  border: 1px solid #94a3b81a;
+  color: rgb(156 163 175);
+  padding: 5px 10px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cg-shell .platform-options button:hover {
+  border-color: #18a84d;
+  color: #18a84d;
+}
+
+.cg-shell .platform-options button.active {
+  background: #18a84d;
+  border-color: #18a84d;
+  color: white;
+}
+
+.cg-shell .dev-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.cg-shell .dev-row span {
+  margin-bottom: 10px;
+  display: block;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgb(107 114 128);
+  font-weight: 700;
+}
+
+.cg-shell .dev-row input {
+  background: rgb(15 23 42);
+  border: 1px solid #94a3b81a;
+  color: rgb(229 231 235);
+  padding: 10px;
+  border-radius: 5px;
+}
+
+.cg-shell .dev-row > div {
+  width: 49.5%;
+  display: flex;
+  flex-direction: column;
 }
 
 .cg-shell .custom-hero .cover-upload-con {
   border: 1.5px dashed #94a3b838;
   border-radius: 25px;
   background: rgb(15 23 42);
-  height: 400px;
+  height: 340px;
+  width: 240px;
   margin-bottom: 15px;
+  transition: 0.25s;
+  position: relative;
+  cursor: pointer;
+}
+
+.cg-shell .custom-hero .cover-upload-con span {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, 50%);
+  text-align: center;
+  font-size: 14px;
+  color: rgb(107 114 128);
+}
+
+.cg-shell .custom-hero .cover-upload-con:after {
+  content: "+";
+  height: 50px;
+  width: 50px;
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 50px;
+  text-align: center;
+  line-height: 38px;
+  border: dashed 2px #94a3b838;
+  border-radius: 99px;
+  color: #94a3b8;
   transition: 0.25s;
 }
 
 .cg-shell .custom-hero .cover-upload-con:hover {
   border-color: rgb(34 197 94);
   box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+}
+
+.cg-shell .page-title {
+  margin-bottom: 15px;
+}
+
+.cg-shell .page-title button {
+  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+  color: #9ca3af;
+  padding: 5px 14px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.cg-shell .page-title h1 {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.cg-shell .custom-hero .cover-upload-con:hover:after {
+  border-color: rgb(34 197 94);
+  color: rgb(34 197 94);
 }
 
 .cg-shell .custom-hero .image-link-con {
@@ -1039,31 +1296,31 @@
   border: 1px solid #94a3b81a;
   padding: 10px;
   border-radius: 5px;
+  color: white;
 }
 
-.cg-shell .page-title{
+.cg-shell .page-title {
   display: flex;
   justify-content: space-between;
-  align-items:center
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .cg-shell .custom-hero .left-col {
-  width: 437.5px;
+  width: fit-content;
   margin-right: 15px;
-  padding: 10px;
 }
 
 .cg-shell .custom-hero .right-col {
-  max-width: 797.5px;
   width: 100%;
 }
 
-.cg-shell .custom-hero .short-desc-con {
+.cg-shell .custom-hero .desc-con {
   display: flex;
   flex-direction: column;
 }
 
-.cg-shell .custom-hero .short-desc-con textarea {
+.cg-shell .custom-hero .desc-con textarea {
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
   color: #e5e7eb;
@@ -1072,7 +1329,7 @@
   padding: 10px;
 }
 
-.cg-shell .custom-hero .short-desc-con span {
+.cg-shell .custom-hero .desc-con span {
   margin-bottom: 10px;
   display: block;
   letter-spacing: 2px;
@@ -1110,7 +1367,7 @@
   width: stretch;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
-  color: rgb(107 114 128);
+  color: white;
   padding: 10px;
   border-radius: 5px;
 }
@@ -1136,7 +1393,7 @@
   width: stretch;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
-  color: rgb(107 114 128);
+  color: white;
   padding: 10px;
   border-radius: 5px;
 }
@@ -1169,4 +1426,458 @@
   text-transform: uppercase;
   color: rgb(107 114 128);
   font-weight: 700;
+}
+
+.cg-shell .game-details-con {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.cg-shell .game-details-con .left-col {
+  width: 100%;
+}
+
+.cg-shell .screenshot-section {
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  border-radius: 30px;
+  height: 100%;
+  margin-right: 10px;
+}
+
+.cg-shell .game-details-con .right-col .game-details {
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  width: 450px;
+  border-radius: 30px;
+  margin-bottom: 15px;
+}
+
+.cg-shell .game-details-con .right-col .tags-con {
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  width: 450px;
+  border-radius: 30px;
+}
+
+.cg-shell .detail-con {
+  padding: 10px 20px 10px 20px;
+  display: grid;
+  grid-template-columns: 50% 50%;
+  justify-content: space-between;
+}
+
+.cg-shell .detail-con .detail {
+  display: flex;
+  flex-direction: column;
+  background: rgb(15 23 42);
+  border: 1px solid #94a3b81a;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 5px;
+}
+
+.cg-shell .video-section {
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  border-radius: 30px;
+  height: 100%;
+  margin-top: 15px;
+}
+
+.cg-shell .video-section .title-row {
+  padding: 0px 15px;
+  border-bottom: 1px solid #94a3b81a;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cg-shell .video-section .videos {
+  padding: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
+  min-height: 100px;
+  align-items: center;
+  width: stretch;
+  position: relative;
+}
+
+.cg-shell .video-section .videos span {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cg-shell .video-section .videos .no-video-text {
+  color: rgb(107 114 128);
+  font-size: 14px;
+  text-align: center;
+}
+
+.cg-shell .video-section .title-row button {
+  background: none;
+  border: 1px solid #94a3b838;
+  color: rgb(156 163 175);
+  padding: 5px 10px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: 0.25s;
+  margin-left: 5px;
+  width: 125px;
+}
+
+.cg-shell .video-section .videos .video {
+  margin: 5px;
+  height: 150px;
+  border-radius: 10px;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: rgb(15 23 42);
+  position: relative;
+  overflow: hidden;
+  transition: 0.25s;
+  top: 0px;
+}
+
+.cg-shell .video-section .videos .video:hover {
+  top: -5px;
+}
+
+.cg-shell .video-section .videos .video svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 10px;
+  pointer-events: none;
+  height: 35px;
+  width: auto;
+}
+
+.cg-shell .video-section .videos .video:after {
+  content: "";
+  height: 100%;
+  width: 100%;
+  display: block;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.cg-shell .video-section .videos .video:hover .close-button {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.cg-shell .video-section .videos .video .close-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  border-radius: 99px;
+  height: 25px;
+  width: 25px;
+  border: none;
+  font-weight: bold;
+  background-color: #20bf5b;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.25s;
+}
+
+.cg-shell .video-section .title-row div input {
+  border-radius: 5px;
+  height: 20px;
+  padding: 5px;
+  max-width: 350px;
+  width: 100%;
+  padding-left: 10px;
+}
+
+.cg-shell .video-section .title-row div {
+  display: flex;
+  align-items: center;
+}
+
+.cg-shell .video-section .title-row button:hover {
+  color: rgb(229 231 235);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cg-shell .video-section .title-row button.active {
+  color: #18a84d;
+  border-color: #18a84d;
+}
+
+.cg-shell .save-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  margin-top: 15px;
+  border-radius: 30px;
+}
+
+.cg-shell .save-section div button {
+  cursor: pointer;
+}
+
+.cg-shell .save-section div button:last-of-type {
+  margin-left: 10px;
+  background: linear-gradient(135deg, rgb(34 197 94), rgb(22 163 74));
+  color: #022c22;
+  border: none;
+  padding: 5px 15px;
+  border-radius: 99px;
+  font-weight: bold;
+}
+
+.cg-shell .save-section div button:first-of-type {
+  border: 1px solid #94a3b838;
+  color: rgb(156 163 175);
+  border-radius: 99px;
+  background: none;
+  padding: 5px 15px;
+  font-weight: bold;
+  transition: 0.25s;
+}
+
+.cg-shell .save-section div button:first-of-type:hover {
+  color: rgb(229 231 235);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cg-shell .save-section span:before {
+  content: "";
+  display: block;
+  height: 10px;
+  width: 10px;
+  border-radius: 99px;
+  background-color: #1aae50;
+  margin-right: 5px;
+}
+
+.cg-shell .save-section .unsaved:before {
+  background-color: #d5ba0b;
+}
+
+.cg-shell .save-section span {
+  color: rgb(107 114 128);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.cg-shell .detail-con .detail input {
+  background: #0f172a;
+  padding: 5px;
+  border: none;
+  color: white;
+  width: stretch;
+}
+
+.cg-shell .detail-con .detail input::placeholder {
+  color: #6b7280;
+}
+
+.cg-shell .detail-con .detail span {
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: bold;
+}
+
+.cg-shell .detail-con .detail input {
+  margin-top: 10px;
+}
+
+.cg-shell .game-details-con .right-col h3 {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  font-size: 18px;
+}
+
+.cg-shell .game-details-con .right-col span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.cg-shell .game-details-con .right-col .title-row {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid #94a3b81a;
+  padding: 0px 15px;
+  height: 65px;
+}
+
+.cg-shell .game-details-con .right-col .tags {
+  padding: 25px;
+  position: relative;
+}
+
+.cg-shell .game-details-con .right-col .tag-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgb(15 23 42);
+  border: 1px solid #94a3b81a;
+  padding: 15px;
+  border-radius: 10px;
+  width: stretch;
+  color: white;
+}
+
+.cg-shell .tag-options {
+  padding: 5px;
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b838;
+  width: 100%;
+  max-width: 370px;
+  border-radius: 10px;
+  position: absolute;
+  z-index: 2;
+  top: 85px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 10px 15px;
+}
+
+.cg-shell .tag-options button {
+  margin: 5px;
+  background: none;
+  border: 1px solid #94a3b81a;
+  color: rgb(156 163 175);
+  padding: 5px 12px;
+  border-radius: 99px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cg-shell .tag-options button:hover {
+  border-color: #18a84d;
+  color: #18a84d;
+}
+
+.cg-shell .tag-options button.active {
+  background: #18a84d;
+  border-color: #18a84d;
+  color: white;
+}
+
+.cg-shell .game-details-con .right-col .tag-toggle p {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  color: #6b7280;
+}
+
+.cg-shell .screenshots .screenshot-press {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  height: 150px;
+  /* width: 250px; */
+  border: 1.5px dashed #94a3b838;
+  border-radius: 15px;
+  color: #6b7280;
+  margin: 5px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: 0.25s;
+  position: relative;
+}
+
+.cg-shell .screenshots .filled-screenshot{
+  border: 1.5px solid #94a3b838;
+}
+
+.cg-shell .screenshots .screenshot-press .close-button {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  border-radius: 99px;
+  height: 25px;
+  width: 25px;
+  border: none;
+  font-weight: bold;
+  background-color: #20bf5b;
+  cursor: pointer;
+  opacity: 0;
+  transition: .25s;
+  pointer-events: none;
+}
+
+.cg-shell .screenshots .filled-screenshot:hover .close-button{
+  opacity: 1;
+  pointer-events: all;
+}
+
+.cg-shell .screenshots .screenshot-press:hover {
+  border-color: rgb(34 197 94);
+  color: rgb(34 197 94);
+  background: #22c55e1a;
+}
+
+.cg-shell .screenshots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  padding: 15px;
+}
+
+.cg-shell .screenshots .screenshot-press svg {
+  height: 25px;
+  width: 25px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.cg-shell .screenshots .screenshot-press span {
+  font-size: 14px;
+}
+
+.cg-shell .game-details-con .left-col h3 {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  font-size: 18px;
+}
+
+.cg-shell .game-details-con .left-col .screenshot-section .title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #94a3b81a;
+  padding: 0px 15px;
+  height: 65px;
+}
+
+.cg-shell .game-details-con .left-col .screenshot-section .title-row button {
+  background: none;
+  border: 1px solid #94a3b838;
+  color: rgb(156 163 175);
+  padding: 5px 20px;
+  border-radius: 99px;
+  cursor: pointer;
+}
+
+.cg-shell
+  .game-details-con
+  .left-col
+  .screenshot-section
+  .title-row
+  button:hover {
+  color: rgb(229 231 235);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cg-shell .game-details-con .left-col .screenshot-section .title-row h3 {
+  margin-top: 0px;
+  margin-bottom: 0px;
 }

@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { loadProfileUserData } from "../services/profile/loadUserData";
 import { getPrimaryGenre } from "../utils/userProfile/gameHelpers";
+import { normalizeGenre } from "../utils/yourLibrary/gameDataHelpers";
 import { useClickOutside } from "../hooks/searchPage/useClickOutside";
 import { getPageOptions } from "../utils/searchPage/filterHelpers";
 
@@ -65,6 +66,26 @@ export default function UserProfile() {
 
   const avatarSrc = profile?.avatarUrl || userDefaultProfileImage;
 
+  const topGenres = useMemo(() => {
+    const counts = {}
+    libraryGames.forEach((game) => {
+      const genres = game?.genres || game?.genreList || game?.genre_names || []
+      const genreArray = Array.isArray(genres) ? genres : [genres]
+      genreArray.forEach((g) => {
+        const name = normalizeGenre(g)
+        if (!name) return
+        counts[name] = (counts[name] || 0) + 1
+      })
+    })
+    const total = libraryGames.length || 1
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, pct: Math.round((count * 100) / total) }))
+  }, [libraryGames])
+
+  const maxGenrePct = topGenres[0]?.pct || 1
+
   // 🔹 Stats
   const totalTracked = libraryGames.length;
   const completedCount = completedGames.length;
@@ -105,15 +126,15 @@ export default function UserProfile() {
   return (
     <div className="profile-shell">
       <RevealWrapper direction="up">
-      <section className="profile-hero">
-        <div
-          className="profile-banner"
-          style={{
-            background: profile?.bannerUrl
-              ? `url(${profile.bannerUrl}) center/cover no-repeat`
-              : profile?.selectedBanner || 'linear-gradient(135deg,#0f2027,#1a3a2a 40%,#0b2218)',
-          }}
-        ></div>
+        <section className="profile-hero">
+          <div
+            className="profile-banner"
+            style={{
+              background: profile?.bannerUrl
+                ? `url(${profile.bannerUrl}) center/cover no-repeat`
+                : profile?.selectedBanner || 'linear-gradient(135deg,#0f2027,#1a3a2a 40%,#0b2218)',
+            }}
+          ></div>
           <div className="profile-details">
             <div className="profile-image-con">
               <img src={avatarSrc} alt={displayName} />
@@ -144,230 +165,216 @@ export default function UserProfile() {
             </div>
           </div>
           <Link to="/profile/customize" className="edit-button">Edit Profile</Link>
-      </section>
+        </section>
       </RevealWrapper>
       <section className="about-con">
         <div className="left-col">
           <RevealWrapper direction="up" delay={100}>
-          <div className="favorites">
-            <div className="title">
-              <h2>Favorite Games</h2>
-              <span>Click a game to view details</span>
-            </div>
-            <div className="games">
-              {favoriteGames.length === 0 ? (
-                <p className="profile-empty-state">No favorite games yet.</p>
-              ) : (
-                favoriteGames.slice(0, 12).map((game) => (
-                  <Link
-                    key={game.id}
-                    to={`/game#${game.id}`}
-                    className="game-con"
-                  >
-                    <img
-                      src={
-                        game.background_image ||
-                        game.backgroundImage ||
-                        placeholderImage
-                      }
-                      alt={game.title || game.name}
-                    />
-                    <div className="game-content">
-                      <p className="game-title">
-                        {game.title || game.name || "Untitled"}
-                      </p>
-                      <div>
-                        <span className="genre">{getPrimaryGenre(game)}</span>
-                        <span className="rating">
-                          {game.metacritic ?? "N/A"}
-                        </span>
+            <div className="favorites">
+              <div className="title">
+                <h2>Top 5 Games</h2>
+                <span>Click a game to view details</span>
+              </div>
+              <div className="games">
+                {favoriteGames.length === 0 ? (
+                  <p className="profile-empty-state">No favorite games yet.</p>
+                ) : (
+                  favoriteGames.slice(0, 5).map((game) => (
+                    <Link
+                      key={game.id}
+                      to={`/game#${game.id}`}
+                      className="game-con"
+                    >
+                      <img
+                        src={
+                          game.background_image ||
+                          game.backgroundImage ||
+                          placeholderImage
+                        }
+                        alt={game.title || game.name}
+                      />
+                      <span className="rating">
+                        {game.metacritic ?? "N/A"}
+                      </span>
+                      <div className="game-content">
+                        <p className="game-title">
+                          {game.title || game.name || "Untitled"}
+                        </p>
+                        <div>
+                          <span className="genre">{getPrimaryGenre(game)}</span>
+                          <p className="rating">{game.metacritic ?? "N/A"}</p>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))
-              )}
+                    </Link>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
           </RevealWrapper>
           <RevealWrapper direction="up" delay={150}>
-          <div className="completed-con">
-            <div className="title">
-              <h2>Completed</h2>
-            </div>
-            <div className="completed-games">
-              {completedGames.length === 0 ? (
-                <p className="profile-empty-state">No completed games yet.</p>
-              ) : (
-                paginatedCompletedGames.map((game) => (
-                  <Link
-                    key={game.id}
-                    to={`/game#${game.id}`}
-                    className="completed"
+            <div className="completed-con">
+              <div className="title">
+                <h2>Completed</h2>
+              </div>
+              <div className="completed-games">
+                {completedGames.length === 0 ? (
+                  <p className="profile-empty-state">No completed games yet.</p>
+                ) : (
+                  paginatedCompletedGames.map((game) => (
+                    <Link
+                      key={game.id}
+                      to={`/game#${game.id}`}
+                      className="completed"
+                    >
+                      <img
+                        src={game.background_image || game.backgroundImage || ""}
+                        alt={game.title || game.name}
+                      />
+                      <p className="rating">{game.metacritic ?? "N/A"}</p>
+                      <div className="completed-content">
+                        <p className="title">
+                          {game.title || game.name || "Untitled"}
+                        </p>
+                        <div>
+                          <p className="genre">{getPrimaryGenre(game)}</p>
+                          <p className="rating">{game.metacritic ?? "N/A"}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  ))
+                )}
+              </div>
+              {completedGames.length > COMPLETED_PER_PAGE && (
+                <div className="pagination">
+                  <button
+                    className="page-btn"
+                    disabled={safeCompletedPage === 1}
+                    onClick={() => setCompletedPage((p) => Math.max(1, p - 1))}
                   >
-                    <img
-                      src={game.background_image || game.backgroundImage || ""}
-                      alt={game.title || game.name}
-                    />
-                    <div className="completed-content">
-                      <p className="title">
-                        {game.title || game.name || "Untitled"}
-                      </p>
-                      <p className="genre">{getPrimaryGenre(game)}</p>
-                    </div>
-                  </Link>
-                ))
+                    ← Prev
+                  </button>
+                  <div
+                    className={"dropdown" + (isPageDropdownOpen ? " open" : "")}
+                    ref={dropdownRef}
+                  >
+                    <button
+                      className="dropdown-trigger"
+                      type="button"
+                      onClick={() => setIsPageDropdownOpen((v) => !v)}
+                    >
+                      Page {safeCompletedPage} of {totalCompletedPages}{" "}
+                      <span className="chevron">▾</span>
+                    </button>
+                    {isPageDropdownOpen && (
+                      <div className="dropdown-menu">
+                        {getPageOptions(totalCompletedPages, safeCompletedPage).map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            className={
+                              "dropdown-item" +
+                              (n === safeCompletedPage ? " current-page" : "")
+                            }
+                            onClick={() => {
+                              setCompletedPage(n);
+                              setIsPageDropdownOpen(false);
+                            }}
+                          >
+                            Page {n}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    className="page-btn"
+                    disabled={safeCompletedPage === totalCompletedPages}
+                    onClick={() =>
+                      setCompletedPage((p) =>
+                        Math.min(totalCompletedPages, p + 1),
+                      )
+                    }
+                  >
+                    Next →
+                  </button>
+                </div>
               )}
             </div>
-            {completedGames.length > COMPLETED_PER_PAGE && (
-              <div className="pagination">
-                <button
-                  className="page-btn"
-                  disabled={safeCompletedPage === 1}
-                  onClick={() => setCompletedPage((p) => Math.max(1, p - 1))}
-                >
-                  ← Prev
-                </button>
-                <div
-                  className={"dropdown" + (isPageDropdownOpen ? " open" : "")}
-                  ref={dropdownRef}
-                >
-                  <button
-                    className="dropdown-trigger"
-                    type="button"
-                    onClick={() => setIsPageDropdownOpen((v) => !v)}
-                  >
-                    Page {safeCompletedPage} of {totalCompletedPages}{" "}
-                    <span className="chevron">▾</span>
-                  </button>
-                  {isPageDropdownOpen && (
-                    <div className="dropdown-menu">
-                      {getPageOptions(totalCompletedPages, safeCompletedPage).map((n) => (
-                        <button
-                          key={n}
-                          type="button"
-                          className={
-                            "dropdown-item" +
-                            (n === safeCompletedPage ? " current-page" : "")
-                          }
-                          onClick={() => {
-                            setCompletedPage(n);
-                            setIsPageDropdownOpen(false);
-                          }}
-                        >
-                          Page {n}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  className="page-btn"
-                  disabled={safeCompletedPage === totalCompletedPages}
-                  onClick={() =>
-                    setCompletedPage((p) =>
-                      Math.min(totalCompletedPages, p + 1),
-                    )
-                  }
-                >
-                  Next →
-                </button>
-              </div>
-            )}
-          </div>
           </RevealWrapper>
         </div>
 
         <div className="right-col">
           <RevealWrapper direction="up" delay={100}>
-          <div className="about">
-            <div className="title">
-              <h2>About</h2>
-            </div>
-            <p>{aboutMe}</p>
-            {selectedGenres.length > 0 && (
-              <div className="genres-con">
-                <span>Favorite Genres</span>
-                <div className="genres">
-                  {selectedGenres.map((genre) => (
-                    <span key={genre}>{genre}</span>
-                  ))}
-                </div>
+            <div className="about">
+              <div className="title">
+                <h2>About</h2>
               </div>
-            )}
-          </div>
+              <p>{aboutMe}</p>
+              {selectedGenres.length > 0 && (
+                <div className="genres-con">
+                  <span>Favorite Genres</span>
+                  <div className="genres">
+                    {selectedGenres.map((genre) => (
+                      <span key={genre}>{genre}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </RevealWrapper>
           <RevealWrapper direction="up" delay={150}>
-          <div className="library-stats-con">
-            <div>
-              <h2>Library Stats</h2>
-            </div>
-            <div className="library-stats">
+            <div className="library-stats-con">
               <div>
-                <h3>{completedCount}</h3>
-                <span>Completed</span>
+                <h2>Library Stats</h2>
               </div>
-              <div>
-                <h3>{backlogCount}</h3>
-                <span>In Backlog</span>
-              </div>
-              <div>
-                <h3>{totalTracked}</h3>
-                <span>Total</span>
-              </div>
-            </div>
-            <div className="completion-rate-con">
-              <div className="title">
-                <span>Completion Rate</span>
-                <span>{completionRate}%</span>
-              </div>
-              <div className="bar-con">
-                <div
-                  className="bar-value"
-                  style={{ width: `${completionRate}%` }}
-                ></div>
-              </div>
-            </div>
-            <div className="top-genres-con">
-              <span>Top Genres</span>
-              <div className="top-genres">
+              <div className="library-stats">
                 <div>
-                  <span>Action</span>
-                  <div className="genre-bar">
-                    <div className="genre-bar-value"></div>
-                  </div>
-                  <span>29</span>
+                  <h3>{completedCount}</h3>
+                  <span>Completed</span>
                 </div>
                 <div>
-                  <span>Action</span>
-                  <div className="genre-bar">
-                    <div className="genre-bar-value"></div>
-                  </div>
-                  <span>29</span>
+                  <h3>{backlogCount}</h3>
+                  <span>In Backlog</span>
                 </div>
                 <div>
-                  <span>Action</span>
-                  <div className="genre-bar">
-                    <div className="genre-bar-value"></div>
-                  </div>
-                  <span>29</span>
+                  <h3>{totalTracked}</h3>
+                  <span>Total</span>
                 </div>
-                <div>
-                  <span>Action</span>
-                  <div className="genre-bar">
-                    <div className="genre-bar-value"></div>
-                  </div>
-                  <span>29</span>
+              </div>
+              <div className="completion-rate-con">
+                <div className="title">
+                  <span>Completion Rate</span>
+                  <span>{completionRate}%</span>
                 </div>
-                <div>
-                  <span>Action</span>
-                  <div className="genre-bar">
-                    <div className="genre-bar-value"></div>
-                  </div>
-                  <span>29</span>
+                <div className="bar-con">
+                  <div
+                    className="bar-value"
+                    style={{ width: `${completionRate}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="top-genres-con">
+                <span>Top Genres</span>
+                <div className="top-genres">
+                  {topGenres.length === 0 ? (
+                    <p>No genre data yet.</p>
+                  ) : (
+                    topGenres.map(({ name, pct }) => (
+                      <div key={name}>
+                        <span>{name}</span>
+                        <div className="genre-bar">
+                          <div
+                            className="genre-bar-value"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span>{pct}%</span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </div>
-          </div>
           </RevealWrapper>
         </div>
       </section>

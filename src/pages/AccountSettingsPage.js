@@ -59,7 +59,7 @@ async function clearAllLibraryData(uid) {
   for (const subcol of LIBRARY_SUBCOLLECTIONS) {
     const snap = await getDocs(collection(db, "users", uid, subcol));
     const deletions = snap.docs.map(async (docSnap) => {
-      if (subcol === "library" && docSnap.data().isCustom === true) {
+      if (docSnap.data().isCustom === true) {
         await deleteCustomGameFiles(uid, docSnap.id, docSnap.data());
       }
       await deleteDoc(docSnap.ref);
@@ -326,6 +326,8 @@ export default function AccountSettingsPage() {
       const storage = getStorage(app);
       const avatarRef = ref(storage, `users/${user.uid}/avatar`);
       await deleteObject(avatarRef).catch(() => { });
+      const bannerRef = ref(storage, `users/${user.uid}/banner`);
+      await deleteObject(bannerRef).catch(() => { });
 
       await user.delete();
 

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import CandidateList from "./CandidateList";
-
+import { extractGameTitlesWithLLM } from "../../services/yourLibrary/scanService";
 import steamLogo from "../../assets/images/steamLogo.png";
 
 /**
@@ -31,6 +31,7 @@ export default function ImportPanel({
   onSelectAll,
   onDeselectAll,
   onImport,
+  isImporting = false,
   onRemoveCandidate,
   importSummary,
   notFoundCandidates,
@@ -44,12 +45,52 @@ export default function ImportPanel({
   onSteamUnlink,
   // navigation
   onOpenTextImportPanel,
+  onGenerateLoadingChange,
+  onClose,
 }) {
   const [selectedOption, setSelectedOption] = useState(null);
+  const [view, setView] = useState("options");
+  const [titleCount, setTitleCount] = useState(0);
+  const [generateLoading, setGenerateLoading] = useState(false);
+  const [selectedGames, setSelectedGames] = useState(new Set());
+  const [hasImportStarted, setHasImportStarted] = useState(false);
+  const textareaRef = useRef(null);
+
+  useEffect(() => {
+    if (candidates?.length) console.log("Steam games:", candidates);
+  }, [candidates]);
+
+  useEffect(() => {
+    if (scanCleanText) {
+      console.log("Screenshot detected games:", scanCleanText);
+      const lines = scanCleanText.split('\n').filter(l => l.trim() !== '');
+      setSelectedGames(new Set(lines.map((_, i) => i)));
+    }
+  }, [scanCleanText]);
+
+  useEffect(() => {
+    if (scanError) alert(scanError);
+  }, [scanError]);
+
+  useEffect(() => {
+    onGenerateLoadingChange?.(generateLoading);
+  }, [generateLoading]);
+
+  useEffect(() => {
+    if (isImporting) setHasImportStarted(true);
+  }, [isImporting]);
 
   return (
     <div className="import-settings">
-      <div className="import-options-con">
+      <input
+        ref={scanFileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        style={{ display: "none" }}
+        onChange={onScanFileChange}
+      />
+      <div className="import-options-con" style={{ display: (view === "text-import" || (!scanLoading && scanCleanText)) ? "none" : undefined }}>
         <div className="import-options-header">
           <span className="pre-header">Add to Library</span>
           <h3>How would you like to import?</h3>
@@ -57,6 +98,7 @@ export default function ImportPanel({
             Pick a method — you can always change this later.
           </span>
         </div>
+        <div style={scanLoading ? { pointerEvents: "none", opacity: 0.5 } : undefined}>
         <div
           className={`import-option${selectedOption === "steam" ? " active" : ""}`}
           onClick={() => setSelectedOption("steam")}
@@ -105,10 +147,13 @@ export default function ImportPanel({
             </div>
           </div>
           <div className="import-option-copy">
-            <h3>Upload a Screenshot</h3>
+            <h3>Scan a Image</h3>
             <p>
-              Take a photo or screenshot of your game collection and we'll
+              Upload a photo or screenshot of your game collection and we'll
               detect the titles.
+            </p>
+            <p className="disclaimer">
+              The clearer the image, the better — make sure titles are legible.
             </p>
           </div>
           <div className="import-checkbox">
@@ -148,11 +193,23 @@ export default function ImportPanel({
             <div></div>
           </div>
         </div>
-        <button className={`continue-button${selectedOption ? " active" : ""}`}>
-          Continue
+        </div>
+        <button
+          className={`continue-button${selectedOption ? " active" : ""}`}
+          disabled={scanLoading}
+          onClick={() => {
+            if (selectedOption === "manual") setView("text-import");
+            if (selectedOption === "steam") {
+              if (!authUser?.uid || !steamLinked) onSteamLogin();
+              else onSteamSync({ allowAutoRelink: false });
+            }
+            if (selectedOption === "screenshot") onOpenScanFilePicker();
+          }}
+        >
+          {scanLoading && selectedOption === "screenshot" ? "Scanning image..." : "Continue"}
         </button>
       </div>
-      <div className="detected-games-con">
+      <div className="detected-games-con" style={{ display: !scanLoading && scanCleanText ? "block" : "none" }}>
         <div className="import-options-header">
           <span className="pre-header">Game Library</span>
           <h3>Review Detected Games</h3>
@@ -169,7 +226,10 @@ export default function ImportPanel({
           value={scanCleanText}
           onChange={(e) => onScanCleanTextChange(e.target.value)}
         />
-        <button className="regen-button">
+        <button className="regen-button" disabled={isImporting} onClick={() => {
+          const lines = scanCleanText.split('\n').filter(l => l.trim() !== '');
+          setSelectedGames(new Set(lines.map((_, i) => i)));
+        }}>
           <svg
             id="regenIco"
             width="14"
@@ -191,62 +251,86 @@ export default function ImportPanel({
           <div>
             <span>Add to group:</span>
           </div>
-          <select class="group-select" id="groupSelect">
+          <select
+            className="group-select"
+            value={importTargetGroupId}
+            onChange={onImportTargetGroupChange}
+          >
             <option value="">None</option>
-            <option value="steam">Steam</option>
-            <option value="steam-ethan">Steam (Ethan)</option>
-            <option value="xbox">Xbox Series X/S</option>
-            <option value="ungrouped">Ungrouped</option>
+            {customFilters
+              .filter(g => g.id !== "all-platforms" && g.id !== "ungrouped")
+              .map(g => (
+                <option key={g.id} value={g.id}>{g.name}</option>
+              ))
+            }
           </select>
         </div>
         <div className="game-selection-con">
           <div className="game-actions">
             <div className="game-selection-buttons">
-              <button>Select All</button>
-              <button>Select None</button>
+              <button disabled={isImporting} onClick={() => {
+                const lines = scanCleanText.split('\n').filter(l => l.trim() !== '');
+                setSelectedGames(new Set(lines.map((_, i) => i)));
+              }}>Select All</button>
+              <button disabled={isImporting} onClick={() => setSelectedGames(new Set())}>Select None</button>
             </div>
             <div>
-              <span><strong>13</strong> / 13 selected</span>
+              <span><strong>{selectedGames.size}</strong> / {scanCleanText ? scanCleanText.split('\n').filter(l => l.trim() !== '').length : 0} selected</span>
             </div>
           </div>
           <div className="detected-games">
-            <div className="detected-game selected">
-              <input type="checkbox"></input>
-              <p>Along the Edge</p>
-              <div className="detected-actions">
-                <button><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button>
-                <button><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            {scanCleanText && (() => {
+              const statusByTitle = {};
+              (candidates || []).forEach((c) => {
+                const s = candidateImportStatus?.[c.id];
+                if (s) statusByTitle[String(c.cleaned || c.raw || "").trim().toLowerCase()] = s.state;
+              });
+              return scanCleanText.split('\n').filter(l => l.trim() !== '').map((title, i) => {
+                const state = statusByTitle[title.trim().toLowerCase()];
+                const statusLabel = state === "imported" ? "Imported" : state === "skipped" ? "Skipped" : state === "notfound" ? "Not Found" : state === "error" ? "Error" : state === "importing" ? "Importing..." : "Pending";
+                return (
+                <div key={i} className={`detected-game${selectedGames.has(i) ? ' selected' : ''}`}>
+                  <input
+                    type="checkbox"
+                    checked={selectedGames.has(i)}
+                    onChange={() => setSelectedGames(prev => {
+                      const next = new Set(prev);
+                      next.has(i) ? next.delete(i) : next.add(i);
+                      return next;
+                    })}
+                  />
+                  <p>{title}</p>
+                  <div className="detected-actions">
+                    <span className="candidate-status">{hasImportStarted ? statusLabel : ""}</span>
+                  <button disabled={isImporting}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button>
+                  <button disabled={isImporting}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                </div>
               </div>
-            </div>
-            <div className="detected-game">
-              <input type="checkbox"></input>
-              <p>Along the Edge</p>
-              <div className="detected-actions">
-                <button><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button>
-                <button><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-              </div>
-            </div>
-            <div className="detected-game">
-              <input type="checkbox"></input>
-              <p>Along the Edge</p>
-              <div className="detected-actions">
-                <button><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button>
-                <button><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
-              </div>
-            </div>
+              );
+            });
+            })()}
           </div>
           <div className="detected-cta-con">
             <div>
-              <span><strong>13</strong> games will be imported</span>
+              <span>{importSummary?.imported ?? 0} / <strong>{selectedGames.size}</strong> games imported</span>
             </div>
             <div className="detected-ctas">
-              <button>Cancel</button>
-              <button><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> Import Selected</button>
+              <button disabled={isImporting} onClick={onClose}>Cancel</button>
+              <button
+                disabled={isImporting || selectedGames.size === 0 || (hasImportStarted && !isImporting)}
+                onClick={async () => {
+                  const lines = scanCleanText.split('\n').filter(l => l.trim() !== '');
+                  const selectedTitles = lines.filter((_, i) => selectedGames.has(i)).join('\n');
+                  onScanCleanTextChange(selectedTitles);
+                  const { candidates: freshCandidates, selectedIds: freshSelectedIds } = await onRegenerate();
+                  onImport(freshCandidates, freshSelectedIds);
+                }}
+              ><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg> {isImporting ? "Importing Games..." : hasImportStarted ? "Import Complete" : "Import Selected"}</button>
             </div>
           </div>
         </div>
       </div>
-      <div className="text-import-con">
+      <div className="text-import-con" style={{ display: view === "text-import" ? "block" : "none" }}>
         <div className="text-import-header">
           <span className="pre-header">Text Import</span>
           <h3>Review Detected Games</h3>
@@ -255,10 +339,15 @@ export default function ImportPanel({
           </span>
         </div>
         <div className="textarea-con">
-          <textarea placeholder={"Example:\nHalo 3\nDead Space\nFinal Fantasy VII\n..."}>
-
-          </textarea>
-          <p>0 titles</p>
+          <textarea
+            ref={textareaRef}
+            placeholder={"Example:\nHalo 3\nDead Space\nFinal Fantasy VII\n..."}
+            onInput={e => {
+              const count = e.target.value.split('\n').filter(l => l.trim() !== '').length;
+              setTitleCount(count);
+            }}
+          ></textarea>
+          <p>{titleCount} {titleCount === 1 ? 'title' : 'titles'}</p>
         </div>
         <div className="text-disclaimer">
           <div>
@@ -268,15 +357,35 @@ export default function ImportPanel({
             <p>Paste titles above, then click <strong>Generate</strong> to build your candidates. Each line is treated as one game title.</p>
           </div>
         </div>
-        <div className="action-buttons">
-            <button className="active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> Generate Game Selection</button>
-            <button>Clear</button>
+        <div className="action-buttons" style={generateLoading ? { opacity: 0.5 } : undefined}>
+            <button className="active" disabled={generateLoading} onClick={async () => {
+              const text = textareaRef.current?.value;
+              if (!text?.trim()) return;
+              setGenerateLoading(true);
+              try {
+                const result = await extractGameTitlesWithLLM(text);
+                console.log("Generated game selection:", result);
+                onScanCleanTextChange(result.sortedTitles.join('\n'));
+                setView("options");
+              } catch (err) {
+                console.error("Generate failed:", err);
+              } finally {
+                setGenerateLoading(false);
+              }
+            }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg> {generateLoading ? "Scanning Game List..." : "Generate Game Selection"}</button>
+            <button disabled={generateLoading} onClick={() => {
+              if (textareaRef.current) {
+                textareaRef.current.value = '';
+                textareaRef.current.style.height = 'auto';
+              }
+              setTitleCount(0);
+            }}>Clear</button>
         </div>
-        <div className="import-alt-con">
+        <div className="import-alt-con" style={generateLoading ? { opacity: 0.5 } : undefined}>
           <p>Or Import From</p>
           <div>
-            <button><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Screenshot / Image</button>
-            <button>Steam Library</button>
+            <button disabled={generateLoading} onClick={() => { setView("options"); onOpenScanFilePicker(); }}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Screenshot / Image</button>
+            <button disabled={generateLoading} onClick={() => { setView("options"); if (!authUser?.uid || !steamLinked) onSteamLogin(); else onSteamSync({ allowAutoRelink: false }); }}>Steam Library</button>
           </div>
         </div>
       </div>

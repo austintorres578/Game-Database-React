@@ -42,6 +42,7 @@ export default function YourLibrary() {
     loadingStats,
     libraryGames,
     completedGames,
+    favoriteGames,
     setLibraryGames,
     statusFilter,
     setStatusFilter,
@@ -86,6 +87,7 @@ export default function YourLibrary() {
     STATE: GROUP BUILDER (PANEL)
   ----------------------------------------------------------------------- */
   const [panelMode, setPanelMode] = useState("group");
+  const [textImportGenerating, setTextImportGenerating] = useState(false);
   const [showGameSelection, setShowGameSelection] = useState(false);
   const [selectedGroupGameIds, setSelectedGroupGameIds] = useState([]);
   const [filterName, setFilterName] = useState("");
@@ -103,6 +105,7 @@ export default function YourLibrary() {
       panel.style.pointerEvents = "auto";
       panel.style.opacity = "1";
     }
+    document.body.style.overflow = "hidden";
   }
 
   function openImportPanel() {
@@ -137,6 +140,7 @@ export default function YourLibrary() {
       panel.style.pointerEvents = "none";
       panel.style.opacity = "0";
     }
+    document.body.style.overflow = "";
 
     setPanelMode("group");
     setFilterName("");
@@ -199,12 +203,19 @@ export default function YourLibrary() {
   );
 
   const completedGameIds = new Set(completedGames.map((g) => String(g.id)));
+  const libraryGameIds = new Set(libraryGames.map((g) => String(g.id)));
+  const favoritesOnlyIds = new Set(
+    favoriteGames
+      .map((g) => String(g.id))
+      .filter((id) => !libraryGameIds.has(id) && !completedGameIds.has(id))
+  );
 
   // Dedupe library (strip entries already in the completed subcollection), then
   // append completed games with a guaranteed status so the backlog filter can't match them.
+  // Exclude any game that only exists in favorites and not in library or completed.
   const allGames = [
-    ...libraryGames.filter((g) => !completedGameIds.has(String(g.id))),
-    ...completedGames.map((g) => ({ ...g, status: "completed" })),
+    ...libraryGames.filter((g) => !completedGameIds.has(String(g.id)) && !favoritesOnlyIds.has(String(g.id))),
+    ...completedGames.filter((g) => !favoritesOnlyIds.has(String(g.id))).map((g) => ({ ...g, status: "completed" })),
   ];
   const customCount = allGames.filter((g) => g.isCustom).length;
 
@@ -234,7 +245,6 @@ export default function YourLibrary() {
 
     groupFilteredGames = allGames.filter((game) => {
       const id = String(game.id);
-      if (completedGameIds.has(id)) return false;
       if (ungroupedSelected && !groupedIdSet.has(id)) return true;
       if (realSelectedGroupIds.length > 0 && selectedGroupGameIds.has(id)) return true;
       return false;
@@ -810,8 +820,8 @@ export default function YourLibrary() {
               scanPreviewUrls={importFlow.scanPreviewUrls}
               scanError={importFlow.scanError}
               scanCleanText={importFlow.scanCleanText}
-              onScanCleanTextChange={(e) =>
-                importFlow.setScanCleanText(e.target.value)
+              onScanCleanTextChange={(val) =>
+                importFlow.setScanCleanText(val)
               }
               onRegenerate={importFlow.handleRegenerateCandidatesFromTextarea}
               candidates={importFlow.candidates}
@@ -828,6 +838,7 @@ export default function YourLibrary() {
               onSelectAll={importFlow.selectAllCandidates}
               onDeselectAll={importFlow.deselectAllCandidates}
               onImport={importFlow.importSelectedCandidatesDirect}
+              isImporting={importFlow.isImporting}
               onRemoveCandidate={importFlow.removeCandidate}
               importSummary={importFlow.importSummary}
               notFoundCandidates={importFlow.notFoundCandidates}
@@ -839,10 +850,12 @@ export default function YourLibrary() {
               onSteamLogin={steamSync.handleSteamLogin}
               onSteamUnlink={handleSteamUnlink}
               onOpenTextImportPanel={openTextImportPanel}
+              onGenerateLoadingChange={setTextImportGenerating}
+              onClose={closeCustomFilterPanel}
             />
           )}
 
-          <button className="close-button" onClick={closeCustomFilterPanel}>
+          <button className="close-button" onClick={closeCustomFilterPanel} disabled={importFlow.scanLoading || textImportGenerating} style={textImportGenerating ? { opacity: 0.5 } : undefined}>
             <span>✕</span>
           </button>
         </div>

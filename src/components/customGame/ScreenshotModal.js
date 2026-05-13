@@ -30,7 +30,7 @@ export default function ScreenshotModal({ screenshots, activeIndex, onClose, onP
           <img
             src={screenshots[activeIndex].image}
             alt={`Screenshot ${activeIndex + 1}`}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain" }}
+            style={{ inset: 0 }}
           />
         </div>
         {screenshots.length > 1 && (

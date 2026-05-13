@@ -155,7 +155,7 @@ body:hover .cursor-ring {
 .site-header .header-nav .desk-nav a {
   text-decoration: none;
   transition: 0.25s;
-  margin: 10px 10px 10px 0px;
+  margin: 10px 0px 10px 10px;
   padding: 5px 15px;
   border-radius: 5px;
   font-size: 12px;
