@@ -650,22 +650,49 @@
   }
 }
 
+@media(max-width:875px){
+  body .profile-shell .completed-con .completed-games {
+    grid-template-columns: 49.25% 49.25%;
+    grid-gap:0px;
+    height: 100%;
+    justify-content: center;
+  }
+
+   body .profile-shell .completed-con .completed-games .completed {
+    display: flex;
+    align-items: center;
+    min-height: 95px;
+    width: auto;
+    margin: 2.5px;
+  }
+
+  body .profile-shell .completed-con .completed-games .completed img {
+    width: 80px;
+    height: 100%;
+    border-radius: 10px 0px 0px 10px;
+  }
+
+   body .profile-shell .completed-con .completed-games .completed .completed-content p:first-of-type {
+    min-height: auto;
+  }
+}
+
 @media (max-width: 765px) {
 
-  body .profile-shell .games{
+  body .profile-shell .games {
     flex-wrap: wrap;
     padding: 20px 0px 0px 0px;
   }
 
-  body .profile-shell .completed-con .completed-games .completed > .rating{
+  body .profile-shell .completed-con .completed-games .completed>.rating {
     display: none;
   }
 
-  body .profile-shell .completed-con .completed-games .completed .completed-content div .rating{
+  body .profile-shell .completed-con .completed-games .completed .completed-content div .rating {
     display: inline;
   }
 
-  body .profile-shell .games .game-con{
+  body .profile-shell .games .game-con {
     margin: 0px;
     display: flex;
     align-items: center;
@@ -680,32 +707,32 @@
     display: inline;
   }
 
-  body .profile-shell .game-con > .rating{
+  body .profile-shell .game-con>.rating {
     display: none;
   }
 
-  body .profile-shell .game-con img{
-    width:80px;
+  body .profile-shell .game-con img {
+    width: 80px;
     height: 100%;
     margin-right: 10px;
   }
 
-  body .favorites .title{
+  body .favorites .title {
     flex-direction: column;
     justify-content: flex-start;
   }
 
-   body .favorites .title h2{
+  body .favorites .title h2 {
     width: 100%;
     text-align: left;
-   }
+  }
 
-   body .profile-shell .favorites .title span{
+  body .profile-shell .favorites .title span {
     width: 100%;
     text-align: left;
-   }
+  }
 
-  body .profile-shell .games{
+  body .profile-shell .games {
     overflow-x: visible;
     display: grid;
     grid-template-columns: 49% 49%;
@@ -713,54 +740,44 @@
     grid-gap: 10px;
   }
 
-  body .profile-shell .game-con .game-content p{
+  body .profile-shell .game-con .game-content p {
     min-height: auto;
     padding-right: 10px;
   }
 
-  body .profile-shell .game-con .game-content{
+  body .profile-shell .game-con .game-content {
     padding: 0px;
   }
 
-  body .profile-shell .game-con{
+  body .profile-shell .game-con {
     min-height: 80px;
     height: 100%;
   }
 
-  body .completed-games .completed {
-    display: flex;
-    align-items: center;
-    min-height: 89px;
-  }
+ 
 
   /* body .profile-shell .library-stats {
     grid-template-columns: 100%;
   } */
 
-  body .profile-shell .completed-con .completed-games {
+  /* body .profile-shell .completed-con .completed-games {
     grid-template-columns: 49.25% 49.25%;
-  }
+  } */
 
-  body .profile-shell .completed-con .completed-games .completed img {
-    width: 80px;
-    height: 100%;
-    border-radius: 10px 0px 0px 10px;
-  }
+  
 
   body .profile-shell {
     padding-top: 90px;
   }
 
-  body .profile-shell .completed-con .completed-games .completed .completed-content p:first-of-type {
-    min-height: auto;
-  }
+ 
 
   body .profile-shell .profile-details {
     grid-template-columns: 0% 100%;
   }
 
   body .profile-shell .profile-hero .profile-image-con img {
-    top: -110px;
+    top: -100px;
     left: 15px;
   }
 
@@ -779,7 +796,7 @@
     grid-template-columns: 100%;
   }
 
-  body .profile-shell .games{
+  body .profile-shell .games {
     grid-template-columns: 100%;
   }
 
@@ -1010,7 +1027,7 @@
   margin-bottom: 10px;
 }
 
-.profile-shell .library-stats-con .top-genres > div {
+.profile-shell .library-stats-con .top-genres>div {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1019,9 +1036,7 @@
   position: relative;
 }
 
-.profile-shell .library-stats-con .top-genres > div  span
-
-.profile-shell .library-stats-con .top-genres>div div{
+.profile-shell .library-stats-con .top-genres>div span .profile-shell .library-stats-con .top-genres>div div {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1033,15 +1048,15 @@
   right: -34px;
 } */
 
-.profile-shell .library-stats-con .top-genres> div > span{
+.profile-shell .library-stats-con .top-genres>div>span {
   width: 100%;
   margin-bottom: 5px;
   /* position: absolute;
   right: 0px; */
 }
 
-.profile-shell .library-stats-con .top-genres> div > span:last-of-type{
-   position: absolute;
+.profile-shell .library-stats-con .top-genres>div>span:last-of-type {
+  position: absolute;
   right: -5px;
   width: fit-content;
   bottom: -4px;
@@ -1122,8 +1137,12 @@
   font-size: 14px;
 }
 
-.profile-shell .completed-con{
-  padding: 20px;
+.profile-shell .completed-con {
+  padding: 15px;
+  background: rgb(11 17 32);
+  border: 1px solid #94a3b81a;
+  border-radius: 15px;
+  margin-top: 15px;
 }
 
 .profile-shell .about-con {
@@ -1138,7 +1157,7 @@
   justify-content: space-between;
 }
 
-.profile-shell .game-con > .rating {
+.profile-shell .game-con>.rating {
   position: absolute;
   right: 10px;
   top: 10px;
@@ -1160,7 +1179,7 @@
 .profile-shell .games {
   display: flex;
   align-items: center;
-  padding: 20px 20px 20px 0px;
+  padding: 20px 0px 10px 0px;
   overflow-x: scroll;
   scrollbar-color: rgb(11 17 32) transparent;
   scrollbar-width: thin;
@@ -1222,41 +1241,43 @@
 }
 
 .profile-shell .game-con .game-content .rating {
-      margin-left: 5px;
-    /* display: inline-block; */
-    display: none;
-    border-radius: 5px;
-    padding: 1px 6px;
-    background: #22c55e;
-    color: black;
-    font-weight: bold;
-    font-size: 0.6875rem;
-    font-family: "Syne", sans-serif;
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
-    flex-shrink: 0;
+  margin-left: 5px;
+  /* display: inline-block; */
+  display: none;
+  border-radius: 5px;
+  padding: 1px 6px;
+  background: #22c55e;
+  color: black;
+  font-weight: bold;
+  font-size: 0.6875rem;
+  font-family: "Syne", sans-serif;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
+  flex-shrink: 0;
 }
 
 .profile-shell .completed-con .completed-games {
   display: grid;
-  grid-template-columns: 24.25% 24.25% 24.25% 24.25%;
-  justify-content: space-around;
+  grid-template-columns: 25% 25% 25% 25%;
+  flex-wrap: wrap;
 }
 
 .profile-shell .completed-con .completed-games .completed {
+  flex-shrink: 0;
   border: 1px solid #94a3b81a;
-  border-radius: 10px;
-  width: 100%;
-  background-color: #0f172a;
+  width: 95%;
+  border-radius: 15px;
+  overflow: hidden;
+  background: #0f172a;
   text-decoration: none;
-  margin-bottom: 5px;
   transition: 0.25s;
   position: relative;
+  margin: 5px;
 }
 
-.profile-shell .completed-con .completed-games .completed > .rating {
+.profile-shell .completed-con .completed-games .completed>.rating {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 5px;
+  right: 5px;
   margin-top: 0px;
   margin-bottom: 0px;
   border-radius: 5px;
@@ -1267,6 +1288,10 @@
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
   font-family: "Syne", sans-serif;
 
+}
+
+.profile-shell .completed-con h2{
+  margin-top: 0px;
 }
 
 .profile-shell .completed-con .completed-games .completed:hover {
@@ -1312,7 +1337,7 @@
 }
 
 .profile-shell .completed-con .completed-games .completed .completed-content {
-  padding: 10px;
+  padding: 20px 10px 10px 10px;
 }
 
 .profile-shell .completed-con .completed-games .completed .completed-content p:first-of-type {
@@ -1345,19 +1370,19 @@
   font-size: 14px;
 }
 
-.profile-shell .completed-con .completed-games .completed .completed-content div .rating{
+.profile-shell .completed-con .completed-games .completed .completed-content div .rating {
   margin-left: 5px;
-      /* display: inline-block; */
-      display: none;
-    border-radius: 5px;
-    padding: 1px 6px;
-    background: #22c55e;
-    color: black;
-    font-weight: bold;
-    font-size: 0.6875rem;
-    font-family: "Syne", sans-serif;
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
-    flex-shrink: 0;
+  /* display: inline-block; */
+  display: none;
+  border-radius: 5px;
+  padding: 1px 6px;
+  background: #22c55e;
+  color: black;
+  font-weight: bold;
+  font-size: 0.6875rem;
+  font-family: "Syne", sans-serif;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
+  flex-shrink: 0;
 }
 
 .profile-shell .completed-con .pagination {
@@ -1382,7 +1407,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin: 10px;
+  margin-top: 15px;
 }
 
 .profile-shell .page-btn {
@@ -1394,6 +1419,9 @@
   transition: 0.25s;
   display: flex;
   align-items: center;
+  position: relative;
+  top: 8px;
+  margin: 0px 5px;
 }
 
 .profile-shell .dropdown-trigger {

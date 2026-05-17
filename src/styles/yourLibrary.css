@@ -179,24 +179,24 @@
   }
 }
 
-@media(max-width:445px){
-  body .library-page .import-settings .text-import-con .action-buttons{
+@media(max-width:445px) {
+  body .library-page .import-settings .text-import-con .action-buttons {
     flex-direction: column;
   }
 
-  body .library-page .import-settings .text-import-con .action-buttons button:last-of-type{
+  body .library-page .import-settings .text-import-con .action-buttons button:last-of-type {
     width: 100%;
   }
 
-   body .library-page .import-settings .text-import-con .action-buttons button:first-of-type{
+  body .library-page .import-settings .text-import-con .action-buttons button:first-of-type {
     width: 100%;
   }
 
-  body .library-page .import-settings .text-import-con .import-alt-con div{
+  body .library-page .import-settings .text-import-con .import-alt-con div {
     flex-direction: column;
   }
 
-  body .library-page .import-settings .text-import-con .import-alt-con div button{
+  body .library-page .import-settings .text-import-con .import-alt-con div button {
     width: 100%;
   }
 
@@ -1013,7 +1013,7 @@
   }
 }
 
-@media(max-width: 765px){
+@media(max-width: 765px) {
 
   /* body .library-page .custom-filter-settings-con{
     overflow: scroll;
@@ -1023,11 +1023,20 @@
     padding: 15px;
   } */
 
-  body .library-page .import-settings .import-option-copy h3{
+  body .library-page .custom-filter-settings {
+    justify-content: center;
+  }
+
+  body .library-page .cfs-form {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  body .library-page .import-settings .import-option-copy h3 {
     font-size: 16px;
   }
 
-  body .library-page .custom-filter-settings{
+  body .library-page .custom-filter-settings {
     padding: 0px;
     margin: 0px;
     width: 100%;
@@ -1037,24 +1046,50 @@
     border: none;
   }
 
+  body .library-page .import-group-con {
+    flex-direction: column;
+    padding: 10px;
+  }
 
-  body .library-page .import-settings{
+  body .library-page .game-actions {
+    flex-direction: column;
+  }
+
+  body .library-page .game-selection-buttons {
+    margin-bottom: 10px;
+  }
+
+  body .library-page .detected-cta-con {
+    flex-direction: column;
+  }
+
+  body .library-page .detected-cta-con .detected-ctas {
+    margin-top: 10px;
+  }
+
+  body .library-page .detected-games-con select {
+    margin-top: 10px;
+    width: 100%;
+  }
+
+
+  body .library-page .import-settings {
     padding: 40px 15px 15px 15px;
   }
 
-  body .library-page .import-options-con{
+  body .library-page .import-options-con {
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
   }
 
-  body .library-page .text-import-con{
+  body .library-page .text-import-con {
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
   }
 
-  body .library-page .detected-games-con{
+  body .library-page .detected-games-con {
     max-width: 500px;
     margin-left: auto;
     margin-right: auto;
@@ -1873,7 +1908,7 @@
   font-size: 12px;
 }
 
-.library-page .import-settings .import-option-copy .disclaimer{
+.library-page .import-settings .import-option-copy .disclaimer {
   color: #ba9115;
   border: solid 1px #ba9115;
   padding: 1px 3px;
@@ -2031,6 +2066,7 @@
   padding: 0px 10px;
   border-radius: 10px;
   margin-bottom: 10px;
+  min-height: 48px;
 }
 
 .library-page .detected-games-con .detected-games>div input {
@@ -2051,16 +2087,48 @@
   color: rgb(156 163 175);
 }
 
+.library-page .detected-games-con .detected-title-con {
+  max-width: 350px;
+  width: 100%;
+}
+
+.library-page .detected-games-con .detected-title-con .edit-input {
+  background: rgb(11 17 32);
+    border: 1px solid #94a3b81a;
+    color: rgb(156 163 175);
+    width: 95%;
+    height: 22.67px;
+    padding-right:44px;
+}
+
+.library-page .detected-games-con .detected-title-con .edit-input-con {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.library-page .detected-games-con .detected-title-con .edit-input-con button {
+  width: 50px;
+  padding: 0px;
+  margin-top: 0px;
+  height: 22.67px;
+  background: linear-gradient(135deg, rgb(34 197 94), rgb(22 163 74));
+  color: #022c22;
+  position: absolute;
+  border: none;
+  right: 0px;
+}
+
 .library-page .detected-games-con .detected-games>div .detected-actions {
   display: flex;
   align-items: center;
   margin-left: auto;
 }
 
-.library-page .detected-games-con .detected-games>div .detected-actions span{
+.library-page .detected-games-con .detected-games>div .detected-actions span {
   font-size: 14px;
   margin-right: 10px;
-  text-align: center ;
+  text-align: center;
 }
 
 .library-page .detected-games-con .detected-games>div input {
@@ -2245,7 +2313,7 @@
   position: absolute;
 }
 
-.library-page .text-disclaimer>div:last-of-type{
+.library-page .text-disclaimer>div:last-of-type {
   padding-left: 40px;
 }
 
@@ -2255,7 +2323,7 @@
   color: #ba9115;
 }
 
-.library-page .text-import-con{
+.library-page .text-import-con {
   display: none;
 }
 
@@ -2284,7 +2352,7 @@
   pointer-events: none;
 }
 
-.library-page .import-settings .text-import-con .action-buttons button.active{
+.library-page .import-settings .text-import-con .action-buttons button.active {
   opacity: 1;
   pointer-events: all;
 }
@@ -2319,17 +2387,17 @@
   margin-left: 10px;
 }
 
-.library-page .import-settings .text-import-con .import-alt-con div{
+.library-page .import-settings .text-import-con .import-alt-con div {
   display: flex;
   align-items: center;
 }
 
-.library-page .import-settings .text-import-con .import-alt-con div button{
+.library-page .import-settings .text-import-con .import-alt-con div button {
   width: 48%;
   font-weight: bold;
 }
 
-.library-page .import-settings .text-import-con .import-alt-con div button svg{
+.library-page .import-settings .text-import-con .import-alt-con div button svg {
   margin-right: 5px;
 }
 

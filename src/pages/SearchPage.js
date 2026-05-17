@@ -9,7 +9,7 @@ import SearchPagination from "../components/searchPage/SearchPagination";
 import { buildLink } from "../utils/searchPage/buildLink";
 import { scrollToTop } from "../utils/searchPage/scrollHelpers";
 import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
-import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags } from "../services/searchPage/rawgService";
+import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags } from "../services/searchPage/rawgService";
 import { useClickOutside } from "../hooks/searchPage/useClickOutside";
 import { RevealWrapper } from "../components/RevealWrapper";
 
@@ -49,12 +49,36 @@ export default function SearchPage({ user }) {
   const [sortBy, setSortBy] = useState("-metacritic");
 
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
   const dropdownRef = useRef(null);
 
   const [activeFilterCategory, setActiveFilterCategory] = useState(null);
   const [filtersLoading, setFiltersLoading] = useState(true);
+  const [pillSearch, setPillSearch] = useState("");
+  const [tagSearchResults, setTagSearchResults] = useState([]);
+  const [isTagSearching, setIsTagSearching] = useState(false);
   const filterAreaRef = useRef(null);
   useClickOutside(filterAreaRef, () => setActiveFilterCategory(null));
+
+  useEffect(() => {
+    setPillSearch("");
+    setTagSearchResults([]);
+  }, [activeFilterCategory]);
+
+  useEffect(() => {
+    if (activeFilterCategory !== "tag" || pillSearch.trim().length < 2) {
+      setIsTagSearching(false);
+      setTagSearchResults([]);
+      return;
+    }
+    setIsTagSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchRawgTags(pillSearch);
+      setTagSearchResults(results);
+      setIsTagSearching(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [pillSearch, activeFilterCategory]);
 
   const fetchLink = buildRawgFetchBase(pageSize);
 
@@ -414,7 +438,27 @@ export default function SearchPage({ user }) {
 
   const handlePlatformClick = makeFilterToggler(setSelectedPlatforms, (p) => p.platformId);
   const handleGenreClick    = makeFilterToggler(setSelectedGenres,    (g) => g.slug);
-  const handleTagClick      = makeFilterToggler(setSelectedTags,      (t) => t.slug);
+
+  function handleTagClick(item) {
+    if (item.id === "all") return setSelectedTags([]);
+    const isSelected = selectedTags.includes(item.slug);
+    if (isSelected) {
+      setSelectedTags((prev) => prev.filter((s) => s !== item.slug));
+      setTagFilters((prev) => {
+        const baseIds = prev.slice(0, 41).map((t) => t.id);
+        if (!baseIds.includes(item.id)) return prev.filter((t) => t.id !== item.id);
+        return prev;
+      });
+    } else {
+      setTagFilters((prev) => {
+        if (prev.find((t) => t.id === item.id)) return prev;
+        return [prev[0], item, ...prev.slice(1)];
+      });
+      setSelectedTags((prev) => [...prev, item.slug]);
+      setTagSearchResults([]);
+      setPillSearch("");
+    }
+  }
 
   function resetSearch() {
     setSearchTerm("");
@@ -540,17 +584,33 @@ export default function SearchPage({ user }) {
                   : { filters: tagFilters,      isActive: (i) => isTagActive(i, selectedTags),           onClick: handleTagClick };
               return (
                 <div className="filter-pill-container">
-                  {filtersLoading && <span className="filter-loading">Loading filters...</span>}
-                  {filters.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className={isActive(item) ? "active" : ""}
-                      onClick={() => onClick(item)}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
+                  {activeFilterCategory === "tag" && (
+                    <input
+                      type="text"
+                      placeholder="Search tags"
+                      value={pillSearch}
+                      onChange={(e) => setPillSearch(e.target.value)}
+                    />
+                  )}
+                  <div className="pills">
+                    {filtersLoading && <span className="filter-loading">Loading filters...</span>}
+                    {activeFilterCategory === "tag" && isTagSearching && (
+                      <span className="filter-loading">Searching for tag...</span>
+                    )}
+                    {(activeFilterCategory === "tag" && pillSearch.trim().length >= 2
+                      ? tagSearchResults
+                      : filters
+                    ).map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={isActive(item) ? "active" : ""}
+                        onClick={() => onClick(item)}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               );
             })()}
@@ -568,7 +628,21 @@ export default function SearchPage({ user }) {
         {hasResults && (
           <RevealWrapper direction="up">
             <div className="pagination-info">
-              <p><strong>{totalResults}</strong> games found</p>
+              <div className="sort-by-con">
+                <p>Sort By</p>
+                <div>
+                  <button className={isSortOpen ? "open" : ""} onClick={() => setIsSortOpen((prev) => !prev)}>
+                    {{ "name": "Name A-Z", "-name": "Name Z-A", "-metacritic": "Metacritic", "-released": "Release Date (Newest)", "released": "Release Date (Oldest)" }[sortBy] ?? "Metacritic"}
+                  </button>
+                  <div className={`sort-options${isSortOpen ? " open" : ""}`}>
+                    <p onClick={() => { handleSortChange("name");        setIsSortOpen(false); }}>Name A-Z</p>
+                    <p onClick={() => { handleSortChange("-name");       setIsSortOpen(false); }}>Name Z-A</p>
+                    <p onClick={() => { handleSortChange("-metacritic"); setIsSortOpen(false); }}>Metacritic</p>
+                    <p onClick={() => { handleSortChange("-released");   setIsSortOpen(false); }}>Release Date (Newest)</p>
+                    <p onClick={() => { handleSortChange("released");    setIsSortOpen(false); }}>Release Date (Oldest)</p>
+                  </div>
+                </div>
+              </div>
               <p>Page {pageNumber} of {totalPages}</p>
             </div>
           </RevealWrapper>

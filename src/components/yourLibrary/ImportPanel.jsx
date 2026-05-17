@@ -53,6 +53,10 @@ export default function ImportPanel({
   const [titleCount, setTitleCount] = useState(0);
   const [generateLoading, setGenerateLoading] = useState(false);
   const [selectedGames, setSelectedGames] = useState(new Set());
+  const [editingGames, setEditingGames] = useState(new Set());
+  const [removedGames, setRemovedGames] = useState(new Set());
+  const [editValues, setEditValues] = useState({});
+  const [savedTitles, setSavedTitles] = useState({});
   const [hasImportStarted, setHasImportStarted] = useState(false);
   const textareaRef = useRef(null);
 
@@ -217,7 +221,7 @@ export default function ImportPanel({
           Pick a method — you can always change this later.
         </span> */}
         </div>
-        <div className="textarea-pre">
+        {/* <div className="textarea-pre">
           <span>Detected games — editable</span>
           <span>One title per line</span>
         </div>
@@ -246,7 +250,7 @@ export default function ImportPanel({
             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
           </svg>
           Regenerate Game Selection
-        </button>
+        </button> */}
         <div className="import-group-con">
           <div>
             <span>Add to group:</span>
@@ -285,7 +289,7 @@ export default function ImportPanel({
                 const s = candidateImportStatus?.[c.id];
                 if (s) statusByTitle[String(c.cleaned || c.raw || "").trim().toLowerCase()] = s.state;
               });
-              return scanCleanText.split('\n').filter(l => l.trim() !== '').map((title, i) => {
+              return scanCleanText.split('\n').filter(l => l.trim() !== '').filter((_, i) => !removedGames.has(i)).map((title, i) => {
                 const state = statusByTitle[title.trim().toLowerCase()];
                 const statusLabel = state === "imported" ? "Imported" : state === "skipped" ? "Skipped" : state === "notfound" ? "Not Found" : state === "error" ? "Error" : state === "importing" ? "Importing..." : "Pending";
                 return (
@@ -299,11 +303,27 @@ export default function ImportPanel({
                       return next;
                     })}
                   />
-                  <p>{title}</p>
+                  <div className="detected-title-con">
+                    {!editingGames.has(i) && <p>{savedTitles[i] ?? title}</p>}
+                    {editingGames.has(i) && (
+                      <div className="edit-input-con">
+                        <input
+                          className="edit-input"
+                          type="text"
+                          value={editValues[i] ?? savedTitles[i] ?? title}
+                          onChange={(e) => setEditValues((prev) => ({ ...prev, [i]: e.target.value }))}
+                        />
+                        <button onClick={() => {
+                          setSavedTitles((prev) => ({ ...prev, [i]: editValues[i] ?? savedTitles[i] ?? title }));
+                          setEditingGames((prev) => { const next = new Set(prev); next.delete(i); return next; });
+                        }}>Save</button>
+                      </div>
+                    )}
+                  </div>
                   <div className="detected-actions">
                     <span className="candidate-status">{hasImportStarted ? statusLabel : ""}</span>
-                  <button disabled={isImporting}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button>
-                  <button disabled={isImporting}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+                  {!editingGames.has(i) && <button disabled={isImporting} onClick={() => setEditingGames(prev => { const next = new Set(prev); next.has(i) ? next.delete(i) : next.add(i); return next; })}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4z"></path></svg></button>}
+                  <button disabled={isImporting} onClick={() => setRemovedGames(prev => new Set([...prev, i]))}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
                 </div>
               </div>
               );
