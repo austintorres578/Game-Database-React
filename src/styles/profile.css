@@ -824,6 +824,38 @@
   height: 160px;
 }
 
+.profile-shell .jump-to-con{
+  display:flex;
+  align-items: center;
+}
+
+.profile-shell .jump-to-con p{
+        color: #9ca3af;
+    font-size: 12px;
+}
+
+.profile-shell .jump-to-con input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.profile-shell .jump-to-con input[type="number"]::-webkit-outer-spin-button,
+.profile-shell .jump-to-con input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.profile-shell .jump-to-con input{
+    margin-left: 5px;
+    margin-right: 5px;
+    width: 38px;
+    background: #0f172a;
+    border: 1px solid #94a3b81f;
+    border-radius: 2px;
+    color: #9ca3af;
+    text-align: center;
+}
+
 .profile-shell .profile-image-con img {
   width: 88px;
   height: 88px;
@@ -1155,6 +1187,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .profile-shell .game-con>.rating {
@@ -1292,6 +1325,7 @@
 
 .profile-shell .completed-con h2{
   margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 .profile-shell .completed-con .completed-games .completed:hover {

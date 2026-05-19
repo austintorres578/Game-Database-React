@@ -5,6 +5,7 @@ import {
   EmailAuthProvider,
   updatePassword,
   verifyBeforeUpdateEmail,
+  signOut,
 } from "firebase/auth";
 import { getStorage, ref, deleteObject } from "firebase/storage";
 import { app } from "../firebase/firebase";
@@ -349,6 +350,17 @@ export default function AccountSettingsPage() {
     }
   }
 
+  async function handleLogout(event) {
+    if (event?.preventDefault) event.preventDefault();
+    try {
+      await signOut(auth);
+      navigate("/");
+    } catch (err) {
+      console.error("Logout failed:", err);
+      alert("Unable to log out. Please try again.");
+    }
+  }
+
   const busy = clearing || deleting;
 
   return (
@@ -571,6 +583,13 @@ export default function AccountSettingsPage() {
             </a> */}
           </div>
           <div className="link-section">
+            <span>Session</span>
+            <a href="#" onClick={handleLogout}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+              <p>Logout</p>
+            </a>
+          </div>
+          <div className="link-section">
             <span>Danger Zone</span>
             <a href="#danger" className={activeSection === "danger" ? "active" : ""} style={{ color: "red" }}>
               <svg
@@ -593,239 +612,239 @@ export default function AccountSettingsPage() {
         </div>
         <div className="account-settings">
           <RevealWrapper direction="up" delay={0}>
-          <section id="email">
-            <div className="setting-header">
-              <div>
-                <h3>
-                  <svg
-                    class="scard-title-ico"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>{" "}
-                  Change Email
-                </h3>
-                <p>Update the email address linked to your account.</p>
-              </div>
-              <div>
-                <span className="required">⚠ Requires password</span>
-              </div>
+            <section id="email">
+              <div className="setting-header">
+                <div>
+                  <h3>
+                    <svg
+                      class="scard-title-ico"
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>{" "}
+                    Change Email
+                  </h3>
+                  <p>Update the email address linked to your account.</p>
+                </div>
+                <div>
+                  <span className="required">⚠ Requires password</span>
+                </div>
 
-            </div>
-            <div className="sub-header">
-              <span className="title">Current Email</span>
-              <span>{authUser?.email || "—"}</span>
-            </div>
-            <form onSubmit={(e) => e.preventDefault()}>
-              <label>
-                New Email
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                ></input>
-              </label>
-              <label>
-                Confirm New Email
-                <input
-                  type="email"
-                  placeholder="you@example.com"
-                  value={confirmEmail}
-                  onChange={(e) => setConfirmEmail(e.target.value)}
-                ></input>
-              </label>
-              <label>
-                Current Password
-                <input
-                  type="password"
-                  placeholder="Enter your current password"
-                  value={emailCurrentPassword}
-                  onChange={(e) => setEmailCurrentPassword(e.target.value)}
-                ></input>
-              </label>
-              {emailError && <p className="form-error">{emailError}</p>}
-              {emailSuccess && <p className="form-success">{emailSuccess}</p>}
-              <div className="submit-con">
-                <div>
-                  {(newEmail || confirmEmail || emailCurrentPassword) && (
-                    <p><span></span> unsaved changes</p>
-                  )}
-                </div>
-                <div>
-                  <button className="cancel-button" type="button" onClick={handleCancelEmail}>Cancel</button>
-                  <button className="save-button" type="submit" onClick={handleChangeEmail} disabled={emailLoading}>
-                    {emailLoading ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
               </div>
-            </form>
-          </section>
+              <div className="sub-header">
+                <span className="title">Current Email</span>
+                <span>{authUser?.email || "—"}</span>
+              </div>
+              <form onSubmit={(e) => e.preventDefault()}>
+                <label>
+                  New Email
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                  ></input>
+                </label>
+                <label>
+                  Confirm New Email
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={confirmEmail}
+                    onChange={(e) => setConfirmEmail(e.target.value)}
+                  ></input>
+                </label>
+                <label>
+                  Current Password
+                  <input
+                    type="password"
+                    placeholder="Enter your current password"
+                    value={emailCurrentPassword}
+                    onChange={(e) => setEmailCurrentPassword(e.target.value)}
+                  ></input>
+                </label>
+                {emailError && <p className="form-error">{emailError}</p>}
+                {emailSuccess && <p className="form-success">{emailSuccess}</p>}
+                <div className="submit-con">
+                  <div>
+                    {(newEmail || confirmEmail || emailCurrentPassword) && (
+                      <p><span></span> unsaved changes</p>
+                    )}
+                  </div>
+                  <div>
+                    <button className="cancel-button" type="button" onClick={handleCancelEmail}>Cancel</button>
+                    <button className="save-button" type="submit" onClick={handleChangeEmail} disabled={emailLoading}>
+                      {emailLoading ? "Saving..." : "Save Changes"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </section>
           </RevealWrapper>
           <RevealWrapper direction="up" delay={100}>
-          <section id="password">
-            <div className="setting-header">
-              <div>
-                <h3>
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect
-                      x="3"
-                      y="11"
-                      width="18"
-                      height="11"
-                      rx="2"
-                      ry="2"
-                    ></rect>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                  </svg>
-                  Change Password
-                </h3>
-                <p>Use a strong, unique password you don't use elsewhere.</p>
-              </div>
-              <div>
-                <span className="required">⚠ Requires password</span>
-              </div>
+            <section id="password">
+              <div className="setting-header">
+                <div>
+                  <h3>
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <rect
+                        x="3"
+                        y="11"
+                        width="18"
+                        height="11"
+                        rx="2"
+                        ry="2"
+                      ></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    Change Password
+                  </h3>
+                  <p>Use a strong, unique password you don't use elsewhere.</p>
+                </div>
+                <div>
+                  <span className="required">⚠ Requires password</span>
+                </div>
 
-            </div>
-            <form onSubmit={(e) => e.preventDefault()}>
-              <label>
-                Current Password
-                <input
-                  type="password"
-                  placeholder="Enter your current password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                ></input>
-              </label>
-              <div className="split-row">
+              </div>
+              <form onSubmit={(e) => e.preventDefault()}>
                 <label>
-                  New Password
+                  Current Password
                   <input
                     type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  ></input>
-                  {newPassword && (
-                    <ul className="password-requirements">
-                      <li className={newPassword.length >= 8 ? "req-met" : "req-unmet"}>At least 8 characters</li>
-                      <li className={/[A-Z]/.test(newPassword) ? "req-met" : "req-unmet"}>One uppercase letter</li>
-                      <li className={/[0-9]/.test(newPassword) ? "req-met" : "req-unmet"}>One number</li>
-                      <li className={/[!@#$%^&*]/.test(newPassword) ? "req-met" : "req-unmet"}>One special character (!@#$%^&*)</li>
-                    </ul>
-                  )}
-                </label>
-                <label>
-                  Confirm Password
-                  <input
-                    type="password"
-                    placeholder="Repeat new password"
-                    value={confirmNewPassword}
-                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Enter your current password"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
                   ></input>
                 </label>
-              </div>
-              {passwordError && <p className="form-error">{passwordError}</p>}
-              {passwordSuccess && <p className="form-success">{passwordSuccess}</p>}
-              <div className="submit-con">
-                <div>
-                  {(currentPassword || newPassword || confirmNewPassword) && (
-                    <p><span></span> unsaved changes</p>
-                  )}
+                <div className="split-row">
+                  <label>
+                    New Password
+                    <input
+                      type="password"
+                      placeholder="New password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    ></input>
+                    {newPassword && (
+                      <ul className="password-requirements">
+                        <li className={newPassword.length >= 8 ? "req-met" : "req-unmet"}>At least 8 characters</li>
+                        <li className={/[A-Z]/.test(newPassword) ? "req-met" : "req-unmet"}>One uppercase letter</li>
+                        <li className={/[0-9]/.test(newPassword) ? "req-met" : "req-unmet"}>One number</li>
+                        <li className={/[!@#$%^&*]/.test(newPassword) ? "req-met" : "req-unmet"}>One special character (!@#$%^&*)</li>
+                      </ul>
+                    )}
+                  </label>
+                  <label>
+                    Confirm Password
+                    <input
+                      type="password"
+                      placeholder="Repeat new password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    ></input>
+                  </label>
                 </div>
-                <div>
-                  <button
-                    className="cancel-button"
-                    type="button"
-                    onClick={() => {
-                      setCurrentPassword("");
-                      setNewPassword("");
-                      setConfirmNewPassword("");
-                      setPasswordError("");
-                      setPasswordSuccess("");
-                    }}
-                  >Cancel</button>
-                  <button
-                    className="save-button"
-                    type="submit"
-                    onClick={handleUpdatePassword}
-                    disabled={passwordLoading}
-                  >
-                    {passwordLoading ? "Updating..." : "Update Password"}
-                  </button>
+                {passwordError && <p className="form-error">{passwordError}</p>}
+                {passwordSuccess && <p className="form-success">{passwordSuccess}</p>}
+                <div className="submit-con">
+                  <div>
+                    {(currentPassword || newPassword || confirmNewPassword) && (
+                      <p><span></span> unsaved changes</p>
+                    )}
+                  </div>
+                  <div>
+                    <button
+                      className="cancel-button"
+                      type="button"
+                      onClick={() => {
+                        setCurrentPassword("");
+                        setNewPassword("");
+                        setConfirmNewPassword("");
+                        setPasswordError("");
+                        setPasswordSuccess("");
+                      }}
+                    >Cancel</button>
+                    <button
+                      className="save-button"
+                      type="submit"
+                      onClick={handleUpdatePassword}
+                      disabled={passwordLoading}
+                    >
+                      {passwordLoading ? "Updating..." : "Update Password"}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </section>
+              </form>
+            </section>
           </RevealWrapper>
           <RevealWrapper direction="up" delay={200}>
-          <section id="connected">
-            <div className="setting-header">
-              <div>
-                <h3>
-                  <svg
-                    class="scard-title-ico"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                  </svg>
-                  Connected Accounts
-                </h3>
-                <p>Manage third-party services linked to your GameDB account.</p>
-              </div>
-              <div>
-                <span className="required">⚠ Requires password</span>
-              </div>
-            </div>
-            <div className={`con-acc-row${steamLinked ? " connected" : ""}`}>
-              <div>
-                <img src={steamLogo}></img>
+            <section id="connected">
+              <div className="setting-header">
                 <div>
-                  <h3>Steam</h3>
-                  <span>{steamLinked === null ? "Checking..." : steamLinked ? "Connected" : "Not connected"}</span>
-                  {steamError && <span style={{ color: "#f87171", fontSize: "11px", display: "block" }}>{steamError}</span>}
+                  <h3>
+                    <svg
+                      class="scard-title-ico"
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                    </svg>
+                    Connected Accounts
+                  </h3>
+                  <p>Manage third-party services linked to your GameDB account.</p>
+                </div>
+                <div>
+                  <span className="required">⚠ Requires password</span>
                 </div>
               </div>
-              <div>
-                {steamLinked === null ? (
-                  <span style={{ fontSize: "12px", color: "#6b7280" }}>Checking Steam link…</span>
-                ) : steamLinked ? (
-                  <button className="button-connect" onClick={handleSteamUnlink} disabled={steamUnlinking}>
-                    {steamUnlinking ? "Unlinking…" : "Disconnect"}
-                  </button>
-                ) : (
-                  <button className="button-connect" onClick={handleSteamConnect} disabled={!authUser}>
-                    Connect
-                  </button>
-                )}
+              <div className={`con-acc-row${steamLinked ? " connected" : ""}`}>
+                <div>
+                  <img src={steamLogo}></img>
+                  <div>
+                    <h3>Steam</h3>
+                    <span>{steamLinked === null ? "Checking..." : steamLinked ? "Connected" : "Not connected"}</span>
+                    {steamError && <span style={{ color: "#f87171", fontSize: "11px", display: "block" }}>{steamError}</span>}
+                  </div>
+                </div>
+                <div>
+                  {steamLinked === null ? (
+                    <span style={{ fontSize: "12px", color: "#6b7280" }}>Checking Steam link…</span>
+                  ) : steamLinked ? (
+                    <button className="button-connect" onClick={handleSteamUnlink} disabled={steamUnlinking}>
+                      {steamUnlinking ? "Unlinking…" : "Disconnect"}
+                    </button>
+                  ) : (
+                    <button className="button-connect" onClick={handleSteamConnect} disabled={!authUser}>
+                      Connect
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-            {/* <div className="con-acc-row">
+              {/* <div className="con-acc-row">
               <div>
                 <img src={xboxLogo}></img>
                 <div>
@@ -835,7 +854,7 @@ export default function AccountSettingsPage() {
               </div>
               <button className="button-connect">Connect</button>
             </div> */}
-            {/* <div className="con-acc-row">
+              {/* <div className="con-acc-row">
               <div>
                 <img src={playstationLogo}></img>
                 <div>
@@ -845,8 +864,8 @@ export default function AccountSettingsPage() {
               </div>
               <button className="button-connect">Connect</button>
             </div> */}
-          </section>
-          {/* <section id="notifications">
+            </section>
+            {/* <section id="notifications">
             <div className="setting-header">
               <div>
                 <h3>
@@ -908,58 +927,58 @@ export default function AccountSettingsPage() {
           </section> */}
           </RevealWrapper>
           <RevealWrapper direction="up" delay={300}>
-          <section id="danger" className="danger-con">
-            <div className="setting-header">
-              <div>
-                <h3>
-                  <svg
-                    className="scard-title-ico"
-                    width="15"
-                    height="15"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    style={{ color: "red" }}
-                  >
-                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                    <line x1="12" y1="9" x2="12" y2="13"></line>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                  </svg>
-                  Danger Zone
-                </h3>
-                <p>These actions are permanent and cannot be undone.</p>
-              </div>
-              <div>
-                <span className="danger">⚠ Irreversible</span>
-              </div>
+            <section id="danger" className="danger-con">
+              <div className="setting-header">
+                <div>
+                  <h3>
+                    <svg
+                      className="scard-title-ico"
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      style={{ color: "red" }}
+                    >
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Danger Zone
+                  </h3>
+                  <p>These actions are permanent and cannot be undone.</p>
+                </div>
+                <div>
+                  <span className="danger">⚠ Irreversible</span>
+                </div>
 
-            </div>
-            <div className="danger-row">
-              <div className="danger-content">
-                <h3>Clear Library</h3>
-                <span>Removes all games, groups, and import history from your account. Your profile and settings are kept.</span>
               </div>
-              <div>
-                <button onClick={handleClearLibrary} disabled={busy}>
-                  {clearing ? "Clearing..." : "Clear Library"}
-                </button>
+              <div className="danger-row">
+                <div className="danger-content">
+                  <h3>Clear Library</h3>
+                  <span>Removes all games, groups, and import history from your account. Your profile and settings are kept.</span>
+                </div>
+                <div>
+                  <button onClick={handleClearLibrary} disabled={busy}>
+                    {clearing ? "Clearing..." : "Clear Library"}
+                  </button>
+                </div>
               </div>
-            </div>
-            <div className="danger-row">
-              <div className="danger-content">
-                <h3>Delete Account</h3>
-                <span>Permanently deletes your account and all associated data. This cannot be reversed.</span>
+              <div className="danger-row">
+                <div className="danger-content">
+                  <h3>Delete Account</h3>
+                  <span>Permanently deletes your account and all associated data. This cannot be reversed.</span>
+                </div>
+                <div>
+                  <button onClick={handleDeleteAccount} disabled={busy}>
+                    {deleting ? "Deleting..." : "Delete Account"}
+                  </button>
+                </div>
               </div>
-              <div>
-                <button onClick={handleDeleteAccount} disabled={busy}>
-                  {deleting ? "Deleting..." : "Delete Account"}
-                </button>
-              </div>
-            </div>
-          </section>
+            </section>
           </RevealWrapper>
         </div>
       </section>

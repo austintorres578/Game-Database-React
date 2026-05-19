@@ -174,12 +174,12 @@
   }
 }
 
-@media (max-width: 500px) {
+/* @media (max-width: 500px) {
   body .game-page-shell .stat-grid {
     display: flex;
     flex-direction: column;
   }
-}
+} */
 
 body {
   margin: 0;
@@ -1266,6 +1266,29 @@ body {
   .game-page-shell .game-hero {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  body .game-page-shell .game-desc{
+    width: 100%;
+  }
+
+  body .game-page-shell .game-hero-con .col-wrapper{
+    flex-direction: column;
+  }
+
+  body .game-page-shell .game-hero-con .right-col{
+    width: 100%;
+  }
+
+  body .game-page-shell .game-hero-con .left-col{
+    width:100%
+  }
+
+  /* body .game-page-shell .game-hero-con .game-art-con{
+    max-width: 300px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  } */
 }
 
 @media (max-width: 765px) {

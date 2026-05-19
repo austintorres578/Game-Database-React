@@ -50,6 +50,8 @@ export default function SearchPage({ user }) {
 
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isJumpInputActive, setIsJumpInputActive] = useState(false);
+  const [jumpPageInput, setJumpPageInput] = useState("1");
   const dropdownRef = useRef(null);
 
   const [activeFilterCategory, setActiveFilterCategory] = useState(null);
@@ -99,6 +101,9 @@ export default function SearchPage({ user }) {
           if (typeof metaState.page === "number") {
             localStorage.setItem("currentPage", String(metaState.page));
           }
+          if (metaState.tags) {
+            localStorage.setItem("selectedTags", JSON.stringify(metaState.tags));
+          }
         }
 
         setGatheredData([
@@ -131,7 +136,11 @@ export default function SearchPage({ user }) {
         setGenreFilters((prev) => [prev[0], ...genres]);
       }),
       fetchRawgTags().then((tags) => {
-        setTagFilters((prev) => [prev[0], ...tags]);
+        setTagFilters((prev) => {
+          const baseIds = new Set(["all", ...tags.map((t) => t.id)]);
+          const customSelected = prev.filter((t) => !baseIds.has(t.id));
+          return [prev[0], ...customSelected, ...tags];
+        });
       }),
     ])
       .catch((err) => console.error("Error fetching filters:", err))
@@ -158,6 +167,11 @@ export default function SearchPage({ user }) {
         setSelectedTags(savedState.tags || []);
         setPageNumber(savedState.page || 1);
         if (savedState.sortBy) setSortBy(savedState.sortBy);
+
+        const savedTags = localStorage.getItem("selectedTags");
+        if (savedTags) {
+          try { setSelectedTags(JSON.parse(savedTags)); } catch {}
+        }
 
         runSearch(savedLink, savedState);
       } catch (err) {
@@ -401,6 +415,24 @@ export default function SearchPage({ user }) {
     scrollToTop();
   }
 
+  function handleJumpInputBlur() {
+    setIsJumpInputActive(false);
+    const nextPage = Number(jumpPageInput);
+    if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages) {
+      setJumpPageInput(String(pageNumber));
+      return;
+    }
+    if (nextPage !== pageNumber) {
+      goToPage(nextPage);
+    }
+  }
+
+  useEffect(() => {
+    if (!isJumpInputActive) {
+      setJumpPageInput(String(pageNumber));
+    }
+  }, [pageNumber, isJumpInputActive]);
+
   function handleSortChange(nextSort) {
     setSortBy(nextSort);
     const page = 1;
@@ -643,7 +675,25 @@ export default function SearchPage({ user }) {
                   </div>
                 </div>
               </div>
-              <p>Page {pageNumber} of {totalPages}</p>
+              <div className="jump-to-con">
+                <p>Jump to page </p>
+                <input
+                  type="number"
+                  value={jumpPageInput}
+                  readOnly={!isJumpInputActive}
+                  onClick={() => setIsJumpInputActive(true)}
+                  onChange={(e) => setJumpPageInput(e.target.value)}
+                  onBlur={handleJumpInputBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleJumpInputBlur();
+                    }
+                  }}
+                />
+                <p>of {totalPages}</p>
+              </div>
+              {/* <p>Page {pageNumber} of {totalPages}</p> */}
             </div>
           </RevealWrapper>
         )}

@@ -289,7 +289,8 @@ export default function ImportPanel({
                 const s = candidateImportStatus?.[c.id];
                 if (s) statusByTitle[String(c.cleaned || c.raw || "").trim().toLowerCase()] = s.state;
               });
-              return scanCleanText.split('\n').filter(l => l.trim() !== '').filter((_, i) => !removedGames.has(i)).map((title, i) => {
+              return scanCleanText.split('\n').filter(l => l.trim() !== '').map((title, i) => {
+                if (removedGames.has(i)) return null;
                 const state = statusByTitle[title.trim().toLowerCase()];
                 const statusLabel = state === "imported" ? "Imported" : state === "skipped" ? "Skipped" : state === "notfound" ? "Not Found" : state === "error" ? "Error" : state === "importing" ? "Importing..." : "Pending";
                 return (

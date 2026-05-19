@@ -32,6 +32,8 @@ export default function UserProfile() {
   // 🔹 Pagination for completed games
   const [completedPage, setCompletedPage] = useState(1);
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
+  const [isJumpInputActive, setIsJumpInputActive] = useState(false);
+  const [jumpPageInput, setJumpPageInput] = useState("1");
   const dropdownRef = useRef(null);
   useClickOutside(dropdownRef, () => setIsPageDropdownOpen(false));
 
@@ -112,6 +114,24 @@ export default function UserProfile() {
       setCompletedPage(1);
     }
   }, [completedCount, totalCompletedPages, completedPage]);
+
+  useEffect(() => {
+    if (!isJumpInputActive) {
+      setJumpPageInput(String(safeCompletedPage));
+    }
+  }, [safeCompletedPage, isJumpInputActive]);
+
+  function handleJumpInputBlur() {
+    setIsJumpInputActive(false);
+    const nextPage = Number(jumpPageInput);
+    if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalCompletedPages) {
+      setJumpPageInput(String(safeCompletedPage));
+      return;
+    }
+    if (nextPage !== safeCompletedPage) {
+      setCompletedPage(nextPage);
+    }
+  }
 
   if (loading) {
     return (
@@ -215,6 +235,24 @@ export default function UserProfile() {
             <div className="completed-con">
               <div className="title">
                 <h2>Completed</h2>
+                <div className="jump-to-con">
+                  <p>Jump to page </p>
+                  <input
+                    type="number"
+                    value={jumpPageInput}
+                    readOnly={!isJumpInputActive}
+                    onClick={() => setIsJumpInputActive(true)}
+                    onChange={(e) => setJumpPageInput(e.target.value)}
+                    onBlur={handleJumpInputBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleJumpInputBlur();
+                      }
+                    }}
+                  />
+                  <p>of {totalCompletedPages}</p>
+                </div>
               </div>
               <div className="completed-games">
                 {completedGames.length === 0 ? (
