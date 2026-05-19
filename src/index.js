@@ -11,6 +11,9 @@ import "./styles/header.css";
 // import './styles/signUp.css'
 
 import App from "./App";
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(<App />);
+
+serviceWorkerRegistration.register();

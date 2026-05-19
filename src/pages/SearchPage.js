@@ -3,15 +3,15 @@ import { useLocation } from "react-router-dom";
 import loadingCircle from "../assets/images/loading.gif";
 
 import Games from "../components/Games";
-import FilterDropdown from "../components/searchPage/FilterDropdown";
 import NoResultsMessage from "../components/searchPage/NoResultsMessage";
 import SearchPagination from "../components/searchPage/SearchPagination";
 
 import { buildLink } from "../utils/searchPage/buildLink";
 import { scrollToTop } from "../utils/searchPage/scrollHelpers";
 import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
-import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags } from "../services/searchPage/rawgService";
+import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags } from "../services/searchPage/rawgService";
 import { useClickOutside } from "../hooks/searchPage/useClickOutside";
+import { RevealWrapper } from "../components/RevealWrapper";
 
 import "../styles/gameSearch.css";
 
@@ -30,7 +30,7 @@ export default function SearchPage({ user }) {
 
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
-  const [selectedTags, setSelectedTags] = useState([]); // 🔹 NEW
+  const [selectedTags, setSelectedTags] = useState([]);
 
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -43,70 +43,51 @@ export default function SearchPage({ user }) {
   ]);
 
   const [tagFilters, setTagFilters] = useState([
-    // 🔹 NEW
     { id: "all", label: "All Tags", slug: "", kind: "all" },
   ]);
 
   const [sortBy, setSortBy] = useState("-metacritic");
-  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
-  const sortDropdownRef = useRef(null);
 
   const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isJumpInputActive, setIsJumpInputActive] = useState(false);
+  const [jumpPageInput, setJumpPageInput] = useState("1");
   const dropdownRef = useRef(null);
+
+  const [activeFilterCategory, setActiveFilterCategory] = useState(null);
+  const [filtersLoading, setFiltersLoading] = useState(true);
+  const [pillSearch, setPillSearch] = useState("");
+  const [tagSearchResults, setTagSearchResults] = useState([]);
+  const [isTagSearching, setIsTagSearching] = useState(false);
+  const filterAreaRef = useRef(null);
+  useClickOutside(filterAreaRef, () => setActiveFilterCategory(null));
+
+  useEffect(() => {
+    setPillSearch("");
+    setTagSearchResults([]);
+  }, [activeFilterCategory]);
+
+  useEffect(() => {
+    if (activeFilterCategory !== "tag" || pillSearch.trim().length < 2) {
+      setIsTagSearching(false);
+      setTagSearchResults([]);
+      return;
+    }
+    setIsTagSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchRawgTags(pillSearch);
+      setTagSearchResults(results);
+      setIsTagSearching(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [pillSearch, activeFilterCategory]);
 
   const fetchLink = buildRawgFetchBase(pageSize);
 
   const totalPages = Math.max(1, Math.ceil((totalResults || 0) / pageSize));
 
   // runs the request + stores "last search" meta in localStorage
-  function runSearch(link, isFreshSearch = false, metaState) {
-    console.log("🔍 RAWG REQUEST URL:", link);
-
-    if (metaState) {
-      const { term, platforms = [], genres = [], tags = [], page } = metaState;
-
-      console.log(
-        isFreshSearch ? "🔍 NEW / FRESH SEARCH" : "🔁 RE-RUN / RESTORED SEARCH",
-      );
-      console.log("Search Term:", term || "");
-
-      console.log("Platforms Selected:");
-      if (platforms.length === 0) {
-        console.log("- (none) -> All Platforms");
-      } else {
-        platforms.forEach((pid) => {
-          const found = platformFilters.find((p) => p.platformId === pid);
-          const name = found?.label || "(name not loaded yet)";
-          console.log(`- ID: ${pid} | Name: ${name}`);
-        });
-      }
-
-      console.log("Genres Selected:");
-      if (genres.length === 0) {
-        console.log("- (none) -> All Genres");
-      } else {
-        genres.forEach((slug) => {
-          const found = genreFilters.find((g) => g.slug === slug);
-          const name = found?.label || "(name not loaded yet)";
-          console.log(`- Slug: ${slug} | Name: ${name}`);
-        });
-      }
-
-      console.log("Tags Selected:");
-      if (tags.length === 0) {
-        console.log("- (none) -> All Tags");
-      } else {
-        tags.forEach((slug) => {
-          const found = tagFilters.find((t) => t.slug === slug);
-          const name = found?.label || "(name not loaded yet)";
-          console.log(`- Slug: ${slug} | Name: ${name}`);
-        });
-      }
-
-      console.log("Page:", page);
-      console.log("------------------------------------");
-    }
-
+  function runSearch(link, metaState) {
     setLoading(true);
 
     fetchRawgGames(link)
@@ -119,6 +100,9 @@ export default function SearchPage({ user }) {
           localStorage.setItem("searchState", JSON.stringify(metaState));
           if (typeof metaState.page === "number") {
             localStorage.setItem("currentPage", String(metaState.page));
+          }
+          if (metaState.tags) {
+            localStorage.setItem("selectedTags", JSON.stringify(metaState.tags));
           }
         }
 
@@ -144,29 +128,32 @@ export default function SearchPage({ user }) {
 
   // fetch platform + genre + tag filters
   useEffect(() => {
-    fetchRawgPlatforms().then((platforms) => {
-      setPlatformFilters((prev) => [prev[0], ...platforms]);
-    });
-
-    fetchRawgGenres().then((genres) => {
-      setGenreFilters((prev) => [prev[0], ...genres]);
-    });
-
-    fetchRawgTags()
-      .then((tags) => {
-        setTagFilters((prev) => [prev[0], ...tags]);
-      })
-      .catch((err) => {
-        console.error("Error fetching tags:", err);
-      });
+    Promise.all([
+      fetchRawgPlatforms().then((platforms) => {
+        setPlatformFilters((prev) => [prev[0], ...platforms]);
+      }),
+      fetchRawgGenres().then((genres) => {
+        setGenreFilters((prev) => [prev[0], ...genres]);
+      }),
+      fetchRawgTags().then((tags) => {
+        setTagFilters((prev) => {
+          const baseIds = new Set(["all", ...tags.map((t) => t.id)]);
+          const customSelected = prev.filter((t) => !baseIds.has(t.id));
+          return [prev[0], ...customSelected, ...tags];
+        });
+      }),
+    ])
+      .catch((err) => console.error("Error fetching filters:", err))
+      .finally(() => setFiltersLoading(false));
   }, []);
 
   // close page dropdown when clicking outside
   useClickOutside(dropdownRef, () => setIsPageDropdownOpen(false));
-  useClickOutside(sortDropdownRef, () => setIsSortDropdownOpen(false));
 
   // On mount: if there's a saved search, restore it and re-run it
   useEffect(() => {
+    if (location.state?.headerSearch) return;
+
     const savedLink = localStorage.getItem("currentLink");
     const savedStateRaw = localStorage.getItem("searchState");
 
@@ -181,12 +168,33 @@ export default function SearchPage({ user }) {
         setPageNumber(savedState.page || 1);
         if (savedState.sortBy) setSortBy(savedState.sortBy);
 
-        runSearch(savedLink, false, savedState);
+        const savedTags = localStorage.getItem("selectedTags");
+        if (savedTags) {
+          try { setSelectedTags(JSON.parse(savedTags)); } catch {}
+        }
+
+        runSearch(savedLink, savedState);
       } catch (err) {
         console.error("Failed to parse saved searchState", err);
       }
     }
   }, []);
+
+  useEffect(() => {
+    const term = location.state?.headerSearch;
+    if (!term) return;
+
+    const page = 1;
+    setSearchTerm(term);
+    setSelectedPlatforms([]);
+    setSelectedGenres([]);
+    setSelectedTags([]);
+    setPageNumber(page);
+
+    const link = buildLink(fetchLink, term, [], [], [], page, sortBy);
+    runSearch(link, { term, platforms: [], genres: [], tags: [], page, sortBy });
+    scrollToTop();
+  }, [location.state?.headerSearch]);
 
   useEffect(() => {
     const quickTag = location.state?.quickTag;
@@ -219,7 +227,7 @@ export default function SearchPage({ user }) {
 
       const link = buildLink(fetchLink, "", [], [], nextTags, page, sortBy);
 
-      runSearch(link, true, {
+      runSearch(link, {
         term: "",
         platforms: [],
         genres: [],
@@ -258,7 +266,7 @@ export default function SearchPage({ user }) {
 
       const link = buildLink(fetchLink, "", [], nextGenres, [], page, sortBy);
 
-      runSearch(link, true, {
+      runSearch(link, {
         term: "",
         platforms: [],
         genres: nextGenres,
@@ -279,7 +287,7 @@ export default function SearchPage({ user }) {
 
       const link = buildLink(fetchLink, "", [], [], nextTags, page, sortBy);
 
-      runSearch(link, true, {
+      runSearch(link, {
         term: "",
         platforms: [],
         genres: [],
@@ -309,7 +317,7 @@ export default function SearchPage({ user }) {
       sortBy,
     );
 
-    runSearch(link, true, {
+    runSearch(link, {
       term: searchTerm,
       platforms: selectedPlatforms,
       genres: selectedGenres,
@@ -338,7 +346,7 @@ export default function SearchPage({ user }) {
     setPageNumber(newPage);
     localStorage.setItem("currentPage", String(newPage));
 
-    runSearch(link, false, {
+    runSearch(link, {
       term: searchTerm,
       platforms: selectedPlatforms,
       genres: selectedGenres,
@@ -367,7 +375,7 @@ export default function SearchPage({ user }) {
     setPageNumber(newPage);
     localStorage.setItem("currentPage", String(newPage));
 
-    runSearch(link, false, {
+    runSearch(link, {
       term: searchTerm,
       platforms: selectedPlatforms,
       genres: selectedGenres,
@@ -395,7 +403,7 @@ export default function SearchPage({ user }) {
     setPageNumber(num);
     localStorage.setItem("currentPage", String(num));
 
-    runSearch(link, false, {
+    runSearch(link, {
       term: searchTerm,
       platforms: selectedPlatforms,
       genres: selectedGenres,
@@ -407,9 +415,26 @@ export default function SearchPage({ user }) {
     scrollToTop();
   }
 
+  function handleJumpInputBlur() {
+    setIsJumpInputActive(false);
+    const nextPage = Number(jumpPageInput);
+    if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages) {
+      setJumpPageInput(String(pageNumber));
+      return;
+    }
+    if (nextPage !== pageNumber) {
+      goToPage(nextPage);
+    }
+  }
+
+  useEffect(() => {
+    if (!isJumpInputActive) {
+      setJumpPageInput(String(pageNumber));
+    }
+  }, [pageNumber, isJumpInputActive]);
+
   function handleSortChange(nextSort) {
     setSortBy(nextSort);
-    setIsSortDropdownOpen(false);
     const page = 1;
     setPageNumber(page);
 
@@ -423,7 +448,7 @@ export default function SearchPage({ user }) {
       nextSort,
     );
 
-    runSearch(link, false, {
+    runSearch(link, {
       term: searchTerm,
       platforms: selectedPlatforms,
       genres: selectedGenres,
@@ -435,59 +460,36 @@ export default function SearchPage({ user }) {
     scrollToTop();
   }
 
-  function revealSearchDropdown(e) {
-    let parent = e.target.parentNode;
-    let filters = parent.querySelector(".filters");
+  function makeFilterToggler(setter, getKey) {
+    return (item) => {
+      if (item.id === "all") return setter([]);
+      const key = getKey(item);
+      setter((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
+    };
+  }
 
-    if (!filters) return;
+  const handlePlatformClick = makeFilterToggler(setSelectedPlatforms, (p) => p.platformId);
+  const handleGenreClick    = makeFilterToggler(setSelectedGenres,    (g) => g.slug);
 
-    const arrow = parent.querySelector("span");
-
-    if (
-      arrow.style.transform === "" ||
-      arrow.style.transform === "rotate(0deg)"
-    ) {
-      arrow.style.transform = "rotate(180deg)";
-      filters.style.height = "100%";
-      filters.style.marginTop = "15px";
-      parent.querySelector(".toggle").classList.add("active");
+  function handleTagClick(item) {
+    if (item.id === "all") return setSelectedTags([]);
+    const isSelected = selectedTags.includes(item.slug);
+    if (isSelected) {
+      setSelectedTags((prev) => prev.filter((s) => s !== item.slug));
+      setTagFilters((prev) => {
+        const baseIds = prev.slice(0, 41).map((t) => t.id);
+        if (!baseIds.includes(item.id)) return prev.filter((t) => t.id !== item.id);
+        return prev;
+      });
     } else {
-      arrow.style.transform = "rotate(0deg)";
-      filters.style.height = "0px";
-      filters.style.marginTop = "0px";
-      parent.querySelector(".toggle").classList.remove("active");
+      setTagFilters((prev) => {
+        if (prev.find((t) => t.id === item.id)) return prev;
+        return [prev[0], item, ...prev.slice(1)];
+      });
+      setSelectedTags((prev) => [...prev, item.slug]);
+      setTagSearchResults([]);
+      setPillSearch("");
     }
-  }
-
-  function handlePlatformClick(p) {
-    if (p.id === "all") return setSelectedPlatforms([]);
-
-    setSelectedPlatforms((prev) =>
-      prev.includes(p.platformId)
-        ? prev.filter((id) => id !== p.platformId)
-        : [...prev, p.platformId],
-    );
-  }
-
-  function handleGenreClick(g) {
-    if (g.id === "all") return setSelectedGenres([]);
-
-    setSelectedGenres((prev) =>
-      prev.includes(g.slug)
-        ? prev.filter((sl) => sl !== g.slug)
-        : [...prev, g.slug],
-    );
-  }
-
-  // 🔹 Tag click handler
-  function handleTagClick(t) {
-    if (t.id === "all") return setSelectedTags([]);
-
-    setSelectedTags((prev) =>
-      prev.includes(t.slug)
-        ? prev.filter((sl) => sl !== t.slug)
-        : [...prev, t.slug],
-    );
   }
 
   function resetSearch() {
@@ -498,7 +500,7 @@ export default function SearchPage({ user }) {
     setSortBy("-metacritic");
     setPageNumber(1);
     setIsPageDropdownOpen(false);
-    setIsSortDropdownOpen(false);
+    setActiveFilterCategory(null);
 
     setGatheredData([{ results: [], next: "", previous: "", loaded: false }]);
     setTotalResults(0);
@@ -509,10 +511,11 @@ export default function SearchPage({ user }) {
     scrollToTop();
   }
 
-  const games = gatheredData[0].results.map((game) => (
+  const games = gatheredData[0].results.map((game, index) => (
     <Games
       key={game.id}
-      user={user} // ✅ IMPORTANT: Games can now block “Add to Library” when logged out
+      index={index}
+      user={user}
       id={game.id}
       name={game.name}
       rating={game.metacritic}      rawgRating={game.rating}      developers={game.developers}
@@ -523,49 +526,13 @@ export default function SearchPage({ user }) {
       esrb_rating={game.esrb_rating}
       tag={game.tags}
       stores={game.stores}
+      released={game.released}
     />
   ));
 
 
-  // selected platforms/genres/tags summary
-  const selectedPlatformLabels = platformFilters
-    .filter((p) => p.id !== "all" && selectedPlatforms.includes(p.platformId))
-    .map((p) => p.label);
-
-  const platformSummary =
-    selectedPlatformLabels.length === 0
-      ? "All Platforms"
-      : selectedPlatformLabels.join(", ");
-
-  const selectedGenreLabels = genreFilters
-    .filter((g) => g.id !== "all" && selectedGenres.includes(g.slug))
-    .map((g) => g.label);
-
-  const genreSummary =
-    selectedGenreLabels.length === 0
-      ? "All Genres"
-      : selectedGenreLabels.join(", ");
-
-  const selectedTagLabels = tagFilters
-    .filter((t) => t.id !== "all" && selectedTags.includes(t.slug))
-    .map((t) => t.label);
-
-  const tagSummary =
-    selectedTagLabels.length === 0 ? "All Tags" : selectedTagLabels.join(", ");
-
   const pageOptions = getPageOptions(totalPages, pageNumber);
 
-  function getSortLabel(value) {
-    switch (value) {
-      case "metacritic":  return "Metacritic (Low-High)";
-      case "-rating":     return "RAWG (High-Low)";
-      case "rating":      return "RAWG (Low-High)";
-      case "name":        return "Name (A-Z)";
-      case "-name":       return "Name (Z-A)";
-      case "-metacritic":
-      default:            return "Metacritic (High-Low)";
-    }
-  }
 
   const hasResults =
     gatheredData[0].loaded && gatheredData[0].results.length > 0;
@@ -575,16 +542,24 @@ export default function SearchPage({ user }) {
   return (
     <div className="search-container">
 
-      <div className="search-header">
-        <h1 className="search-title">Find Your Next Game</h1>
-        <p className="search-subtitle">
-          Search thousands of titles across all platforms.
-        </p>
-      </div>
+      <RevealWrapper direction="up">
+        
+        {/*  
+        <div className="search-header">
+          <h1 className="search-title">Find Your Next Game</h1>
+          <p className="search-subtitle">
+            Search thousands of titles across all platforms.
+          </p>
+        </div>
+        */}
+        
+      </RevealWrapper>
 
       <div className="search-page-container">
+        <RevealWrapper direction="up" delay={100}>
         <form onSubmit={handleSubmit}>
           <div className="search-box-wrapper">
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"></circle><path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
             <input
               className="search-box"
               type="text"
@@ -597,82 +572,130 @@ export default function SearchPage({ user }) {
             </button>
           </div>
 
-          {/* PLATFORMS */}
-          <FilterDropdown
-            summary={platformSummary}
-            hasValue={selectedPlatforms.length > 0}
-            filters={platformFilters}
-            isActive={(p) => isPlatformActive(p, selectedPlatforms)}
-            onItemClick={handlePlatformClick}
-            filterClassName="platform-filter"
-            onToggle={revealSearchDropdown}
-          />
+          <div ref={filterAreaRef} style={{ position: "relative" }}>
+            <div className="platform-flex">
+              <button
+                type="button"
+                className={`filter-category-btn${selectedPlatforms.length > 0 ? " has-value" : ""}${activeFilterCategory === "platform" ? " open" : ""}`}
+                onClick={() => setActiveFilterCategory((prev) => prev === "platform" ? null : "platform")}
+              >
+                Platforms <span className="filter-count-badge">{selectedPlatforms.length > 0 ? selectedPlatforms.length : "All"}</span> <span className="chevron">▾</span>
+              </button>
 
-          {/* GENRES */}
-          <FilterDropdown
-            summary={genreSummary}
-            hasValue={selectedGenres.length > 0}
-            filters={genreFilters}
-            isActive={(g) => isGenreActive(g, selectedGenres)}
-            onItemClick={handleGenreClick}
-            filterClassName="genre-filter"
-            onToggle={revealSearchDropdown}
-          />
+              <button
+                type="button"
+                className={`filter-category-btn${selectedGenres.length > 0 ? " has-value" : ""}${activeFilterCategory === "genre" ? " open" : ""}`}
+                onClick={() => setActiveFilterCategory((prev) => prev === "genre" ? null : "genre")}
+              >
+                Genres <span className="filter-count-badge">{selectedGenres.length > 0 ? selectedGenres.length : "All"}</span> <span className="chevron">▾</span>
+              </button>
 
-          {/* TAGS */}
-          <FilterDropdown
-            summary={tagSummary}
-            hasValue={selectedTags.length > 0}
-            filters={tagFilters}
-            isActive={(t) => isTagActive(t, selectedTags)}
-            onItemClick={handleTagClick}
-            filterClassName="tag-filter"
-            onToggle={revealSearchDropdown}
-          />
+              <button
+                type="button"
+                className={`filter-category-btn${selectedTags.length > 0 ? " has-value" : ""}${activeFilterCategory === "tag" ? " open" : ""}`}
+                onClick={() => setActiveFilterCategory((prev) => prev === "tag" ? null : "tag")}
+              >
+                Tags <span className="filter-count-badge">{selectedTags.length > 0 ? selectedTags.length : "All"}</span> <span className="chevron">▾</span>
+              </button>
 
-          <button
-            type="button"
-            className="reset-search-button"
-            onClick={resetSearch}
-          >
-            Reset Search
-          </button>
-        </form>
-
-        {/* SORT */}
-        {hasResults && <div className="search-sort-con" ref={sortDropdownRef}>
-          <p>Sort by</p>
-          <div className="sorting">
-            <button type="button" onClick={() => setIsSortDropdownOpen((prev) => !prev)}>
-              {getSortLabel(sortBy)}
-            </button>
-            <div className={isSortDropdownOpen ? "" : "invisible"}>
-              {[
-                { key: "-metacritic", label: "Metacritic (High-Low)" },
-                { key: "metacritic",  label: "Metacritic (Low-High)" },
-                { key: "-rating",     label: "RAWG (High-Low)" },
-                { key: "rating",      label: "RAWG (Low-High)" },
-                { key: "name",        label: "Name (A-Z)" },
-                { key: "-name",       label: "Name (Z-A)" },
-              ].map(({ key, label }) => (
-                <button
-                  key={key}
-                  type="button"
-                  className={sortBy === key ? "active" : ""}
-                  onClick={() => handleSortChange(key)}
-                >
-                  {label}
-                </button>
-              ))}
+              <button
+                type="button"
+                className="reset-search-button"
+                onClick={resetSearch}
+              >
+                Reset Search
+              </button>
             </div>
+
+            {activeFilterCategory && (() => {
+              const { filters, isActive, onClick } =
+                activeFilterCategory === "platform"
+                  ? { filters: platformFilters, isActive: (i) => isPlatformActive(i, selectedPlatforms), onClick: handlePlatformClick }
+                  : activeFilterCategory === "genre"
+                  ? { filters: genreFilters,    isActive: (i) => isGenreActive(i, selectedGenres),       onClick: handleGenreClick }
+                  : { filters: tagFilters,      isActive: (i) => isTagActive(i, selectedTags),           onClick: handleTagClick };
+              return (
+                <div className="filter-pill-container">
+                  {activeFilterCategory === "tag" && (
+                    <input
+                      type="text"
+                      placeholder="Search tags"
+                      value={pillSearch}
+                      onChange={(e) => setPillSearch(e.target.value)}
+                    />
+                  )}
+                  <div className="pills">
+                    {filtersLoading && <span className="filter-loading">Loading filters...</span>}
+                    {activeFilterCategory === "tag" && isTagSearching && (
+                      <span className="filter-loading">Searching for tag...</span>
+                    )}
+                    {(activeFilterCategory === "tag" && pillSearch.trim().length >= 2
+                      ? tagSearchResults
+                      : filters
+                    ).map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={isActive(item) ? "active" : ""}
+                        onClick={() => onClick(item)}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
-        </div>}
+        </form>
+        </RevealWrapper>
 
         {loading && (
           <div className="loading-wrapper">
             <img src={loadingCircle} alt="Loading..." />
             <p>Searching For Games...</p>
           </div>
+        )}
+
+        {hasResults && (
+          <RevealWrapper direction="up">
+            <div className="pagination-info">
+              <div className="sort-by-con">
+                <p>Sort By</p>
+                <div>
+                  <button className={isSortOpen ? "open" : ""} onClick={() => setIsSortOpen((prev) => !prev)}>
+                    {{ "name": "Name A-Z", "-name": "Name Z-A", "-metacritic": "Metacritic", "-released": "Release Date (Newest)", "released": "Release Date (Oldest)" }[sortBy] ?? "Metacritic"}
+                  </button>
+                  <div className={`sort-options${isSortOpen ? " open" : ""}`}>
+                    <p onClick={() => { handleSortChange("name");        setIsSortOpen(false); }}>Name A-Z</p>
+                    <p onClick={() => { handleSortChange("-name");       setIsSortOpen(false); }}>Name Z-A</p>
+                    <p onClick={() => { handleSortChange("-metacritic"); setIsSortOpen(false); }}>Metacritic</p>
+                    <p onClick={() => { handleSortChange("-released");   setIsSortOpen(false); }}>Release Date (Newest)</p>
+                    <p onClick={() => { handleSortChange("released");    setIsSortOpen(false); }}>Release Date (Oldest)</p>
+                  </div>
+                </div>
+              </div>
+              <div className="jump-to-con">
+                <p>Jump to page </p>
+                <input
+                  type="number"
+                  value={jumpPageInput}
+                  readOnly={!isJumpInputActive}
+                  onClick={() => setIsJumpInputActive(true)}
+                  onChange={(e) => setJumpPageInput(e.target.value)}
+                  onBlur={handleJumpInputBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleJumpInputBlur();
+                    }
+                  }}
+                />
+                <p>of {totalPages}</p>
+              </div>
+              {/* <p>Page {pageNumber} of {totalPages}</p> */}
+            </div>
+          </RevealWrapper>
         )}
 
         {hasResults && <div className="game-grid">{games}</div>}

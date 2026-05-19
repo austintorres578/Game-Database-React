@@ -53,6 +53,7 @@ export function useImportFlow({
     skipped: 0,
   });
   const [importTargetGroupId, setImportTargetGroupId] = useState("none");
+  const [isImporting, setIsImporting] = useState(false);
 
   /* -------------------------------------------------------------------------
     EFFECT: CLEANUP PREVIEW URLS ON UNMOUNT
@@ -169,13 +170,15 @@ export function useImportFlow({
   /* -------------------------------------------------------------------------
     IMPORT SELECTED CANDIDATES
   -------------------------------------------------------------------------- */
-  async function importSelectedCandidatesDirect() {
+  async function importSelectedCandidatesDirect(candidatesOverride, selectedIdsOverride) {
     if (!authUser) {
       alert("You must be signed in to import games.");
       return;
     }
 
-    const selected = candidates.filter((c) => selectedCandidateIds.has(c.id));
+    const activeCandidates = candidatesOverride ?? candidates;
+    const activeSelectedIds = selectedIdsOverride ?? selectedCandidateIds;
+    const selected = activeCandidates.filter((c) => activeSelectedIds.has(c.id));
     if (selected.length === 0) return;
 
     setNotFoundCandidates([]);
@@ -194,6 +197,8 @@ export function useImportFlow({
     const notFound = [];
     const toAddToGroupIds = [];
 
+    setIsImporting(true);
+    try {
     for (const c of selected) {
       const q = String(c.cleaned || "").trim();
       if (!q) continue;
@@ -208,6 +213,7 @@ export function useImportFlow({
         const results = await searchGameByTitle(q);
         if (results.length === 0) {
           notFound.push({ id: c.id, title: q });
+          setImportSummary(prev => ({ ...prev, notFound: prev.notFound + 1 }));
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: { state: "notfound" },
@@ -218,6 +224,7 @@ export function useImportFlow({
         const chosen = pickBestResult(results, q);
         if (!chosen) {
           notFound.push({ id: c.id, title: q });
+          setImportSummary(prev => ({ ...prev, notFound: prev.notFound + 1 }));
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: { state: "notfound" },
@@ -228,6 +235,7 @@ export function useImportFlow({
         const resultId = getResultId(chosen);
         if (!resultId) {
           notFound.push({ id: c.id, title: q });
+          setImportSummary(prev => ({ ...prev, notFound: prev.notFound + 1 }));
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: { state: "notfound" },
@@ -257,6 +265,7 @@ export function useImportFlow({
 
         if (alreadyInTarget) {
           skippedCount += 1;
+          setImportSummary(prev => ({ ...prev, skipped: prev.skipped + 1 }));
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: {
@@ -293,6 +302,7 @@ export function useImportFlow({
           });
 
           importedCount += 1;
+          setImportSummary(prev => ({ ...prev, imported: prev.imported + 1 }));
 
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
@@ -329,11 +339,9 @@ export function useImportFlow({
     }
 
     setNotFoundCandidates(notFound);
-    setImportSummary({
-      imported: importedCount,
-      notFound: notFound.length,
-      skipped: skippedCount,
-    });
+    } finally {
+      setIsImporting(false);
+    }
   }
 
   /* -------------------------------------------------------------------------
@@ -349,17 +357,19 @@ export function useImportFlow({
     if (titles.length === 0) {
       setCandidates([]);
       setSelectedCandidateIds(new Set());
-      return;
+      return { candidates: [], selectedIds: new Set() };
     }
 
     const { sortedTitles, nextCandidates } = titlesToCandidates(
       titles,
       "manual",
     );
+    const nextSelectedIds = new Set(nextCandidates.map((c) => c.id));
 
     setScanCleanText(sortedTitles.join("\n"));
     setCandidates(nextCandidates);
-    setSelectedCandidateIds(new Set(nextCandidates.map((c) => c.id)));
+    setSelectedCandidateIds(nextSelectedIds);
+    return { candidates: nextCandidates, selectedIds: nextSelectedIds };
   }
 
   /* -------------------------------------------------------------------------
@@ -446,6 +456,7 @@ export function useImportFlow({
     deselectAllCandidates,
     removeCandidate,
     addGameIdsToGroup,
+    isImporting,
     importSelectedCandidatesDirect,
     handleRegenerateCandidatesFromTextarea,
     handleScanFileChange,

@@ -11,8 +11,11 @@ import SearchPage from "./pages/SearchPage";
 import YourLibrary from "./pages/YourLibrary";
 import UserProfileCustomizer from "./pages/UserProfileCustomize";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
+import YourLibraryMobile from "./pages/mobile/YourLibraryMobile";
 import Header from './components/Header';
 import Footer from './components/Footer';
+import ScrollProgressBar from './components/ScrollProgressBar';
+import CursorEffect from './components/CursorEffect';
 
 import { auth } from "./firebase/fireAuth";
 import { useAuth } from "./hooks/useAuth";
@@ -47,6 +50,8 @@ function App() {
 
   return (
     <BrowserRouter>
+      <CursorEffect />
+      <ScrollProgressBar />
       <ScrollToTop />
       <Header />
         <Routes>
@@ -94,6 +99,9 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* DEV */}
+          <Route path="/dev/mobile-library" element={<YourLibraryMobile />} />
 
           {/* Optional catch-all */}
           <Route path="*" element={<Navigate to="/" replace />} />

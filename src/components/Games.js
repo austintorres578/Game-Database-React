@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 
-import noGameBackground from "../assets/images/noGameBackground.jpg";
+import { getPlaceholderBackground } from "../utils/placeholderBackground";
 import addIcon from "../assets/images/plus-icon.png";
 
 // 🔐 Firebase
@@ -17,22 +17,19 @@ export default function Games(props) {
 
   const addButtonRef = useRef(null);
 
-  const img = props.background || noGameBackground;
+  const img = props.background || getPlaceholderBackground(props.name ?? props.id);
 
   const primaryGenre =
     props.genre && props.genre.length > 0 && props.genre[0]?.name
       ? props.genre[0].name
       : "Genre Unlisted";
 
+  const releaseYear = props.released ? props.released.slice(0, 4) : null;
+
   const hasRating =
     typeof props.rating === "number" && !Number.isNaN(props.rating);
 
-  const hasRawgRating =
-    typeof props.rawgRating === "number" && !Number.isNaN(props.rawgRating);
-
-  const metaText = hasRating ? `${props.rating} Metacritic` : "No Score";
-
-  const rawgText = hasRawgRating ? `${Math.round(props.rawgRating)}/5 RAWG` : "";
+  const metaText = hasRating ? `${props.rating}` : "N/A";
 
   // ✅ OLD doc-id convention (pre rawg_):
   // Firestore doc id === RAWG id as a string, e.g. "3498"
@@ -169,28 +166,31 @@ export default function Games(props) {
   return (
     <div
       className="game-wrapper"
-      onMouseEnter={() => {
-        console.log("Add Button Element (enter):", addButtonRef.current);
-        setIsHovered(true);
-      }}
-      onMouseLeave={() => {
-        console.log("Add Button Element (leave):", addButtonRef.current);
-        setIsHovered(false);
-      }}
+      style={{ animationDelay: `${props.index * 0.05}s` }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* ✅ Keep RAWG id in the hash (game page fetches by RAWG id) */}
       <Link to={"/game#" + props.id} className="game-link">
         <div className="game-card">
+          <div className="metacritic-rating">{metaText}</div>
           <div
             className="game-img"
             style={{ backgroundImage: `url('${img}')` }}
           />
+          {isInLibrary && 
+          <div className="in-lib-label-con">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <p className="in-lib-label">In Library</p>
+          </div>
+          }
           <div className="game-info">
             <p className="game-title">{props.name}</p>
 
             <div className="game-sub-info">
               <p className="game-genre">{primaryGenre} •</p>
-              <p className="game-meta">{metaText} {hasRawgRating && <span>• {rawgText}</span>}</p>
+              {releaseYear && <p>{releaseYear}</p>}
+              <span className="metacritic-rating-inline">{metaText}</span>
             </div>
           </div>
         </div>

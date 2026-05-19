@@ -14,6 +14,7 @@ export default function FilterDropdown({
         onClick={onToggle}
       >
         <p className="toggle-selected">{summary}</p>
+        <p className="toggle-count">All</p>
         <span>▾</span>
       </div>
       <div className={`filters ${filterClassName}`}>

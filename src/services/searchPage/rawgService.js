@@ -79,6 +79,22 @@ export async function fetchRawgGenres() {
   }));
 }
 
+export async function searchRawgTags(query) {
+  if (!query.trim()) return [];
+  const res = await fetch(
+    `${RAWG_ORIGIN}tags?key=${RAWG_QUERY_KEY}&page_size=20&search=${encodeURIComponent(query)}`,
+    { method: "GET", headers: RAWG_HEADERS },
+  );
+  const data = await res.json();
+  if (!data.results) return [];
+  return data.results.map((t) => ({
+    id: String(t.id),
+    label: t.name,
+    slug: t.slug,
+    kind: "tag",
+  }));
+}
+
 /**
  * Fetches available tag filters from RAWG.
  * Returns an array of filter objects sorted alphabetically by name:

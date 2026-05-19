@@ -1,18 +1,29 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { auth, onAuthStateChanged, signOut } from "../firebase/fireAuth";
+import { doc, getDoc, db } from "../firebase/firestore";
+import userDefaultProfileImage from "../assets/images/defaultUser.png";
 
 import headerLogo from "../assets/images/gameDatabase-nav-logo.png";
 import mobileNavIcon from "../assets/images/ham-menu-icon.png";
 import plusIcon from "../assets/images/plus-icon.png";
 
 export default function Header() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const [headerSearch, setHeaderSearch] = useState("");
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+      if (currentUser) {
+        const profileSnap = await getDoc(doc(db, "users", currentUser.uid));
+        setAvatarUrl(profileSnap.exists() ? profileSnap.data().avatarUrl || null : null);
+      } else {
+        setAvatarUrl(null);
+      }
     });
     return () => unsubscribe();
   }, []);
@@ -24,7 +35,16 @@ export default function Header() {
     setIsMobileNavOpen(false);
   };
 
-  const navClass = ({ isActive }) => (isActive ? "nav-link is-active" : "nav-link");
+  const handleHeaderSearch = (e) => {
+    e.preventDefault();
+    const term = headerSearch.trim();
+    if (!term) return;
+    setHeaderSearch("");
+    navigate("/search", { state: { headerSearch: term } });
+  };
+
+  const navClass = ({ isActive }) =>
+    isActive ? "nav-link is-active" : "nav-link";
 
   return (
     <header className="site-header">
@@ -35,47 +55,101 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="header-nav">
-          <NavLink to="/search" className={navClass}>
+          <form className="mobile-search-con" onSubmit={handleHeaderSearch}>
+            <input
+              type="text"
+              placeholder="Search"
+              value={headerSearch}
+              onChange={(e) => setHeaderSearch(e.target.value)}
+            />
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+              <circle
+                cx="8.5"
+                cy="8.5"
+                r="5.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+              ></circle>
+              <path
+                d="M13 13l3.5 3.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              ></path>
+            </svg>
+          </form>
+          <div className="desk-nav">
+            <NavLink to="/" className={navClass}>
+              Home
+            </NavLink>
+<NavLink to="/search" className={navClass}>
+              Search For Games
+            </NavLink>
+            {user ? (
+              <>
+                <NavLink to="/library" className={navClass}>
+                  Game Library
+                </NavLink>
+                <NavLink to="/profile" className={navClass}>
+                  Profile
+                </NavLink>
+                <NavLink to="/account-settings" className={navClass}>
+                  Account Settings
+                </NavLink>
+              </>
+            ) : (
+              <></>
+            )}
+          </div>
+          {/* <NavLink to="/search" className={navClass}>
             Search For Games
-          </NavLink>
+          </NavLink> */}
+          <div className="desk-nav">
+            {user ? (
+              <>
+                <a
+                  href="#"
+                  onClick={handleLogout}
+                  className="nav-link logout-link"
+                >
+                  Log Out
+                </a>
+              </>
+            ) : (
+              <>
+                <NavLink to="/signin" className={navClass}>
+                  Log In
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  className={({ isActive }) =>
+                    isActive ? "header-cta is-active" : "header-cta"
+                  }
+                >
+                  Sign Up
+                </NavLink>
+              </>
+            )}
+          </div>
 
-          {user ? (
-            <>
-              <NavLink to="/library" className={navClass}>
-                Game Library
-              </NavLink>
-              <NavLink to="/profile" className={navClass}>
-                Profile
-              </NavLink>
-              <NavLink to="/account-settings" className={navClass}>
-                Account Settings
-              </NavLink>
-              <a href="#" onClick={handleLogout} className="nav-link logout-link">
-                Log Out
-              </a>
-            </>
-          ) : (
-            <>
-              <NavLink to="/signin" className={navClass}>
-                Log In
-              </NavLink>
-              <NavLink
-                to="/signup"
-                className={({ isActive }) =>
-                  isActive ? "header-cta is-active" : "header-cta"
-                }
-              >
-                Sign Up
-              </NavLink>
-            </>
-          )}
-
-          <button
+          {/* <button
             className="mobile-nav-button"
             onClick={() => setIsMobileNavOpen(true)}
           >
             <img src={mobileNavIcon} alt="Open menu" />
-          </button>
+          </button> */}
+
+          <div className="mobile-dyn-buttons">
+            {user ? (
+              <NavLink className={'profile-con'} to="/profile">
+                <img src={avatarUrl || userDefaultProfileImage} alt="Profile" />
+              </NavLink>
+            ) : (
+              <NavLink to="/signin">
+                <button>Login</button>
+              </NavLink>
+            )}
+          </div>
         </nav>
       </div>
 
@@ -92,35 +166,63 @@ export default function Header() {
             <img src={plusIcon} alt="Close menu" />
           </button>
 
-          <NavLink to="/search" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+          <NavLink
+            to="/search"
+            className={navClass}
+            onClick={() => setIsMobileNavOpen(false)}
+          >
             Search For Games
           </NavLink>
 
           {user ? (
             <>
-              <NavLink to="/library" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/library"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Game Library
               </NavLink>
 
-              <NavLink to="/profile" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/profile"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Profile
               </NavLink>
 
-              <NavLink to="/account-settings" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/account-settings"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Account Settings
               </NavLink>
 
-              <a href="#" onClick={handleLogout} className="nav-link logout-link">
+              <a
+                href="#"
+                onClick={handleLogout}
+                className="nav-link logout-link"
+              >
                 Log Out
               </a>
             </>
           ) : (
             <>
-              <NavLink to="/signin" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/signin"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Log In
               </NavLink>
 
-              <NavLink to="/signup" className={navClass} onClick={() => setIsMobileNavOpen(false)}>
+              <NavLink
+                to="/signup"
+                className={navClass}
+                onClick={() => setIsMobileNavOpen(false)}
+              >
                 Sign Up
               </NavLink>
             </>

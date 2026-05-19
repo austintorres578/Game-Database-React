@@ -3,7 +3,7 @@ export default function GameDetailsPanel({ gameData, onTagClick }) {
     <aside className="game-sidebar">
       <div className="game-panel">
         <h2 className="panel-title">Game details</h2>
-        <p className="panel-sub">Quick facts at a glance.</p>
+        {/* <p className="panel-sub">Quick facts at a glance.</p> */}
 
         <div className="stat-grid">
           <div className="stat-item">

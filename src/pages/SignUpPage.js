@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getPasswordIssues } from "../utils/signUpPage/passwordValidation";
 import { createAccount } from "../services/signUpPage/authService";
+import '../styles/signUp.css'
 
 export default function SignUpPage(props) {
   const navigate = useNavigate();
@@ -71,7 +72,7 @@ export default function SignUpPage(props) {
   };
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell sign-up-page">
       {/* <Header /> */}
       <section className="auth-card">
         <div className="auth-logo">

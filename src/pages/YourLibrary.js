@@ -13,7 +13,6 @@ import "../styles/yourLibrary.css";
 import LibraryStatsHeader from "../components/yourLibrary/LibraryStatsHeader";
 import StatusFiltersBar from "../components/yourLibrary/StatusFiltersBar";
 import LibrarySearchBar from "../components/yourLibrary/LibrarySearchBar";
-import SortSelector from "../components/yourLibrary/SortSelector";
 import GameGrid from "../components/yourLibrary/GameGrid";
 import LibraryPagination from "../components/yourLibrary/LibraryPagination";
 import GroupPanel from "../components/yourLibrary/GroupPanel";
@@ -24,6 +23,8 @@ import { safeText, compareByTitle, compareByMetacritic, compareByRawg } from "..
 
 import { useLibraryData } from "../hooks/yourLibrary/useLibraryData";
 import { useSteamSync } from "../hooks/yourLibrary/useSteamSync";
+
+import { RevealWrapper } from "../components/RevealWrapper";
 import { useImportFlow } from "../hooks/yourLibrary/useImportFlow";
 
 /* =============================================================================
@@ -40,6 +41,8 @@ export default function YourLibrary() {
     stats,
     loadingStats,
     libraryGames,
+    completedGames,
+    favoriteGames,
     setLibraryGames,
     statusFilter,
     setStatusFilter,
@@ -84,6 +87,7 @@ export default function YourLibrary() {
     STATE: GROUP BUILDER (PANEL)
   ----------------------------------------------------------------------- */
   const [panelMode, setPanelMode] = useState("group");
+  const [textImportGenerating, setTextImportGenerating] = useState(false);
   const [showGameSelection, setShowGameSelection] = useState(false);
   const [selectedGroupGameIds, setSelectedGroupGameIds] = useState([]);
   const [filterName, setFilterName] = useState("");
@@ -101,6 +105,7 @@ export default function YourLibrary() {
       panel.style.pointerEvents = "auto";
       panel.style.opacity = "1";
     }
+    document.body.style.overflow = "hidden";
   }
 
   function openImportPanel() {
@@ -135,6 +140,7 @@ export default function YourLibrary() {
       panel.style.pointerEvents = "none";
       panel.style.opacity = "0";
     }
+    document.body.style.overflow = "";
 
     setPanelMode("group");
     setFilterName("");
@@ -163,14 +169,9 @@ export default function YourLibrary() {
 
       if (groupId === "all-platforms") {
         nextIds = ["all-platforms"];
-      } else if (groupId === "ungrouped") {
-        nextIds = ["ungrouped"];
       } else {
         const prevArr = Array.isArray(prev) ? prev : ["all-platforms"];
-        const hasPermanent =
-          prevArr.includes("all-platforms") || prevArr.includes("ungrouped");
-
-        const current = hasPermanent ? [] : [...prevArr];
+        const current = prevArr.includes("all-platforms") ? [] : [...prevArr];
 
         const index = current.indexOf(groupId);
         if (index >= 0) current.splice(index, 1);
@@ -189,22 +190,39 @@ export default function YourLibrary() {
   /* -----------------------------------------------------------------------
     DERIVED VALUES: GROUP + STATUS + SEARCH FILTER + SORT + PAGINATION
   ----------------------------------------------------------------------- */
-  const { total, completed } = stats;
+  const { total, completed, backlog } = stats;
 
   const safeActiveGroupIds = Array.isArray(activeGroupIds)
     ? activeGroupIds
     : ["all-platforms"];
 
-  const onlyUngroupedSelected =
-    safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "ungrouped";
+  const ungroupedSelected = safeActiveGroupIds.includes("ungrouped");
 
   const realSelectedGroupIds = safeActiveGroupIds.filter(
     (id) => id !== "all-platforms" && id !== "ungrouped",
   );
 
-  let groupFilteredGames = libraryGames;
+  const completedGameIds = new Set(completedGames.map((g) => String(g.id)));
+  const libraryGameIds = new Set(libraryGames.map((g) => String(g.id)));
+  const favoritesOnlyIds = new Set(
+    favoriteGames
+      .map((g) => String(g.id))
+      .filter((id) => !libraryGameIds.has(id) && !completedGameIds.has(id))
+  );
 
-  if (onlyUngroupedSelected) {
+  // Dedupe library (strip entries already in the completed subcollection), then
+  // append completed games with a guaranteed status so the backlog filter can't match them.
+  // Exclude any game that only exists in favorites and not in library or completed.
+  const allGames = [
+    ...libraryGames.filter((g) => !completedGameIds.has(String(g.id)) && !favoritesOnlyIds.has(String(g.id))),
+    ...completedGames.filter((g) => !favoritesOnlyIds.has(String(g.id))).map((g) => ({ ...g, status: "completed" })),
+  ];
+  const customCount = allGames.filter((g) => g.isCustom).length;
+
+  let groupFilteredGames = allGames;
+
+  if (ungroupedSelected || realSelectedGroupIds.length > 0) {
+    // Build set of all game IDs that belong to any real group
     const groupedIdSet = new Set();
     customFilters.forEach((g) => {
       if (g.id === "all-platforms" || g.id === "ungrouped") return;
@@ -212,22 +230,26 @@ export default function YourLibrary() {
         g.gameIds.forEach((id) => groupedIdSet.add(String(id)));
       }
     });
-    groupFilteredGames = libraryGames.filter(
-      (game) => !groupedIdSet.has(String(game.id)),
-    );
-  } else if (realSelectedGroupIds.length > 0) {
-    const selectedGroups = customFilters.filter((g) =>
-      realSelectedGroupIds.includes(g.id),
-    );
-    const gameIdSet = new Set();
-    selectedGroups.forEach((g) => {
-      if (Array.isArray(g.gameIds)) {
-        g.gameIds.forEach((id) => gameIdSet.add(String(id)));
-      }
+
+    // Build set of game IDs from the selected real groups
+    const selectedGroupGameIds = new Set();
+    if (realSelectedGroupIds.length > 0) {
+      customFilters
+        .filter((g) => realSelectedGroupIds.includes(g.id))
+        .forEach((g) => {
+          if (Array.isArray(g.gameIds)) {
+            g.gameIds.forEach((id) => selectedGroupGameIds.add(String(id)));
+          }
+        });
+    }
+
+    groupFilteredGames = allGames.filter((game) => {
+      const id = String(game.id);
+      if (ungroupedSelected && !groupedIdSet.has(id)) return true;
+      if (realSelectedGroupIds.length > 0 && selectedGroupGameIds.has(id)) return true;
+      return false;
     });
-    groupFilteredGames = libraryGames.filter((game) =>
-      gameIdSet.has(String(game.id)),
-    );
+
   }
 
   const groupStats = groupFilteredGames.reduce(
@@ -567,79 +589,86 @@ export default function YourLibrary() {
   return (
     <main className="library-page">
 
-      <LibraryStatsHeader
-        total={total}
-        completed={completed}
-        loadingStats={loadingStats}
-        onOpenImportPanel={openImportPanel}
-        onOpenTextImportPanel={openTextImportPanel}
-      />
+      <RevealWrapper direction="up">
+        <LibraryStatsHeader
+          total={total}
+          completed={completed}
+          backlog={backlog}
+          custom={customCount}
+          loadingStats={loadingStats}
+          onOpenImportPanel={openImportPanel}
+          onOpenTextImportPanel={openTextImportPanel}
+        />
+      </RevealWrapper>
 
-      <StatusFiltersBar
-        statusFilter={statusFilter}
-        onStatusFilterChange={handleStatusFilterChange}
-        loadingStats={loadingStats}
-        groupStats={groupStats}
-        customFilters={customFilters}
-        safeActiveGroupIds={safeActiveGroupIds}
-        onToggleGroup={handleToggleGroup}
-        realSelectedGroupIds={realSelectedGroupIds}
-        onHeaderAddToGroup={handleHeaderAddToGroup}
-        onOpenNewGroupPanel={openNewGroupPanel}
-      />
+      <RevealWrapper direction="up" delay={100}>
+        <StatusFiltersBar
+          statusFilter={statusFilter}
+          onStatusFilterChange={handleStatusFilterChange}
+          loadingStats={loadingStats}
+          groupStats={groupStats}
+          customFilters={customFilters}
+          safeActiveGroupIds={safeActiveGroupIds}
+          onToggleGroup={handleToggleGroup}
+          realSelectedGroupIds={realSelectedGroupIds}
+          onHeaderAddToGroup={handleHeaderAddToGroup}
+          onOpenNewGroupPanel={openNewGroupPanel}
+        />
+      </RevealWrapper>
 
-      <LibrarySearchBar
-        searchTerm={searchTerm}
-        onSearchChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-          setIsPageDropdownOpen(false);
-        }}
-        onClear={() => {
-          setSearchTerm("");
-          setCurrentPage(1);
-          setIsPageDropdownOpen(false);
-        }}
-      />
-
-      <section className="library-grid">
-        <SortSelector
-          sortBy={sortBy}
+      <RevealWrapper direction="up" delay={200}>
+        <LibrarySearchBar
           searchTerm={searchTerm}
+          onSearchChange={(e) => {
+            setSearchTerm(e.target.value);
+            setCurrentPage(1);
+            setIsPageDropdownOpen(false);
+          }}
+          onClear={() => {
+            setSearchTerm("");
+            setCurrentPage(1);
+            setIsPageDropdownOpen(false);
+          }}
+          sortBy={sortBy}
           sortedGamesCount={sortedGames.length}
           onRevealDrop={revealSortingDrop}
           onSortOptionClick={handleSortingOptionClick}
         />
+      </RevealWrapper>
 
-        <GameGrid
-          loadingStats={loadingStats}
-          pageGames={pageGames}
-          customFilters={customFilters}
-          onAddToGroup={handleAddToGroupFromGame}
-        />
+      <RevealWrapper direction="up" delay={300}>
+        <section className="library-grid">
 
-        {!loadingStats && sortedGames.length > 0 && (
-          <LibraryPagination
-            safeCurrentPage={safeCurrentPage}
-            totalPages={totalPages}
-            isPageDropdownOpen={isPageDropdownOpen}
-            setIsPageDropdownOpen={setIsPageDropdownOpen}
-            dropdownPages={dropdownPages}
-            onPrevPage={() => {
-              setCurrentPage((prev) => Math.max(1, prev - 1));
-              setIsPageDropdownOpen(false);
-            }}
-            onNextPage={() => {
-              setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-              setIsPageDropdownOpen(false);
-            }}
-            onGoToPage={(pageNumber) => {
-              setCurrentPage(pageNumber);
-              setIsPageDropdownOpen(false);
-            }}
+          <GameGrid
+            loadingStats={loadingStats}
+            pageGames={pageGames}
+            customFilters={customFilters}
+            onAddToGroup={handleAddToGroupFromGame}
           />
-        )}
-      </section>
+
+          {!loadingStats && sortedGames.length > 0 && (
+            <LibraryPagination
+              safeCurrentPage={safeCurrentPage}
+              totalPages={totalPages}
+              isPageDropdownOpen={isPageDropdownOpen}
+              setIsPageDropdownOpen={setIsPageDropdownOpen}
+              dropdownPages={dropdownPages}
+              onPrevPage={() => {
+                setCurrentPage((prev) => Math.max(1, prev - 1));
+                setIsPageDropdownOpen(false);
+              }}
+              onNextPage={() => {
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+                setIsPageDropdownOpen(false);
+              }}
+              onGoToPage={(pageNumber) => {
+                setCurrentPage(pageNumber);
+                setIsPageDropdownOpen(false);
+              }}
+            />
+          )}
+        </section>
+      </RevealWrapper>
 
       {/* ===========================
           GROUP / IMPORT MODAL
@@ -648,7 +677,7 @@ export default function YourLibrary() {
         <div id="filter-settings" className="custom-filter-settings">
           <h2>
             {panelMode === "import"
-              ? "Import Games"
+              ? ""
               : panelMode === "text"
                 ? "Text Import"
                 : editingGroupId
@@ -791,8 +820,8 @@ export default function YourLibrary() {
               scanPreviewUrls={importFlow.scanPreviewUrls}
               scanError={importFlow.scanError}
               scanCleanText={importFlow.scanCleanText}
-              onScanCleanTextChange={(e) =>
-                importFlow.setScanCleanText(e.target.value)
+              onScanCleanTextChange={(val) =>
+                importFlow.setScanCleanText(val)
               }
               onRegenerate={importFlow.handleRegenerateCandidatesFromTextarea}
               candidates={importFlow.candidates}
@@ -809,6 +838,7 @@ export default function YourLibrary() {
               onSelectAll={importFlow.selectAllCandidates}
               onDeselectAll={importFlow.deselectAllCandidates}
               onImport={importFlow.importSelectedCandidatesDirect}
+              isImporting={importFlow.isImporting}
               onRemoveCandidate={importFlow.removeCandidate}
               importSummary={importFlow.importSummary}
               notFoundCandidates={importFlow.notFoundCandidates}
@@ -820,11 +850,13 @@ export default function YourLibrary() {
               onSteamLogin={steamSync.handleSteamLogin}
               onSteamUnlink={handleSteamUnlink}
               onOpenTextImportPanel={openTextImportPanel}
+              onGenerateLoadingChange={setTextImportGenerating}
+              onClose={closeCustomFilterPanel}
             />
           )}
 
-          <button className="close-button" onClick={closeCustomFilterPanel}>
-            <span>X</span>
+          <button className="close-button" onClick={closeCustomFilterPanel} disabled={importFlow.scanLoading || textImportGenerating} style={textImportGenerating ? { opacity: 0.5 } : undefined}>
+            <span>✕</span>
           </button>
         </div>
       </section>

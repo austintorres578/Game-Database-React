@@ -41,6 +41,9 @@
     "Xbox 360",
     "Xbox One",
     "Xbox Series S/X",
+    "Meta Quest",
+    "Meta Quest 2",
+    "Meta Quest 3"
   ];
 
   // Popular genres (static)

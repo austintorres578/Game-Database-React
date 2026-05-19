@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
   setPersistence,
@@ -13,6 +13,7 @@ import "../styles/signIn.css";
 import loadingGif from "../assets/images/loading.gif";
 
 export default function SignInPage(props) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -20,6 +21,14 @@ export default function SignInPage(props) {
   const [loading, setLoading] = useState(false);
 
   const { user, checkingAuth } = useAuthState();
+
+  useEffect(() => {
+    if (!user) return;
+    const timer = setTimeout(() => {
+      navigate("/profile");
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [user]);
 
   const [rememberMe, setRememberMe] = useState(() => {
     const stored = localStorage.getItem("rememberMe");
@@ -92,7 +101,7 @@ export default function SignInPage(props) {
 
   if (checkingAuth) {
     return (
-      <main className="auth-shell">
+      <main className="auth-shell sign-in-page">
         <section className="auth-card">
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <img
@@ -109,7 +118,7 @@ export default function SignInPage(props) {
   }
 
   return (
-    <main className="auth-shell">
+    <main className="auth-shell sign-in-page">
 
       {user ? (
         <section className="sucessful-signin-block">

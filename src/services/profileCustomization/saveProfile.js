@@ -12,6 +12,9 @@ export async function handleSaveSubmit({
   profileTags,
   avatarFile,
   existingAvatarUrl,
+  bannerFile,
+  existingBannerUrl,
+  selectedBanner,
 }) {
   if (!displayName.trim() || !shortAboutMe.trim() || !aboutMe.trim()) {
     throw new Error("All required profile fields must be filled out.");
@@ -22,13 +25,24 @@ export async function handleSaveSubmit({
     throw new Error("You must be logged in to save your profile.");
   }
 
+  const storage = getStorage(app);
+
   let avatarUrl = existingAvatarUrl || null;
 
   if (avatarFile) {
-    const storage = getStorage(app);
     const avatarRef = ref(storage, `users/${user.uid}/avatar`);
     await uploadBytes(avatarRef, avatarFile);
     avatarUrl = await getDownloadURL(avatarRef);
+  }
+
+  let bannerUrl = null;
+
+  if (bannerFile) {
+    const bannerRef = ref(storage, `users/${user.uid}/banner`);
+    await uploadBytes(bannerRef, bannerFile);
+    bannerUrl = await getDownloadURL(bannerRef);
+  } else if (!selectedBanner || selectedBanner === existingBannerUrl) {
+    bannerUrl = existingBannerUrl || null;
   }
 
   const payload = {
@@ -39,6 +53,9 @@ export async function handleSaveSubmit({
     selectedGenres,
     profileTags,
     avatarUrl,
+    bannerUrl,
+    selectedBanner: selectedBanner,
+    bannerUrl: bannerUrl,
     updatedAt: new Date().toISOString(),
   };
 
