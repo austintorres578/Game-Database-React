@@ -1,0 +1,542 @@
+.manage-library-page {
+    margin: 0 auto;
+    padding-top: 120px;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.manage-library-page .manage-library-page-wrapper {
+    max-width: 1105px;
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 30px;
+}
+
+.manage-library-page .manage-library-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.manage-library-page .manage-library-title-row button {
+    background: none;
+    border: 1px solid #94a3b838;
+    color: rgb(156 163 175);
+    padding: 5px 15px;
+    border-radius: 99px;
+    cursor: pointer;
+}
+
+.manage-library-page .manage-library-title-row .pre-header {
+    color: #22c55e;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.manage-library-page .manage-library-title-row h1 {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+.manage-library-page .library-stats {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.manage-library-page .library-stats div {
+    margin-right: 10px;
+    background: rgb(11 17 32);
+    border: 1px solid #94a3b81a;
+    padding: 5px 15px;
+    border-radius: 10px;
+}
+
+.manage-library-page .library-stats div p {
+    margin: 0px;
+}
+
+.manage-library-page .library-stats div p:first-of-type {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.manage-library-page .library-stats div span {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.manage-library-page .manage-library-con {
+    background: rgb(11 17 32);
+    border: 1px solid #94a3b81a;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 15px;
+}
+
+.manage-library-page .manage-library-con .manage-library-top {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.manage-library-page .manage-library-con .manage-library-top .quick-actions {
+    display: flex;
+    align-items: center;
+    border-right: solid 1px #9ca3af;
+    padding-right: 15px;
+}
+
+.manage-library-page .manage-library-con .manage-library-top .quick-actions select {
+    width: 125px;
+    margin-right: 5px;
+    height: 25px;
+    border-radius: 5px;
+    background: rgb(15 23 42);
+    border: 1px solid #94a3b81a;
+    color: rgb(156 163 175);
+}
+
+.manage-library-page .library-table-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.manage-library-page .library-table-bottom>p {
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+.manage-library-page .library-table-pagination {
+    display: flex;
+    align-items: center;
+}
+
+.manage-library-page .library-table-pagination>button {
+    background: rgb(11 17 32);
+    border: 1px solid #94a3b81a;
+    color: rgb(156 163 175);
+    padding: 5px 12px;
+    border-radius: 99px;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.manage-library-page .library-table-pagination>button:hover{
+        border-color: #22c55e;
+    color: #bbf7d0;
+
+}
+
+.manage-library-page .library-table-pagination .pagn-con {
+    position: relative;
+    margin-left: 10px;
+    margin-right: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.manage-library-page .library-table-pagination .pagn-trigger {
+    background: rgb(11 17 32);
+    padding: 7px 12px;
+    border-radius: 999px;
+    color: #9ca3af;
+    border: 1px solid #94a3b81f;
+}
+
+.manage-library-page .library-table-pagination .pagn-trigger:after{
+    content:"▾";
+    margin-left: 5px;
+    display: inline-block;
+}
+
+.manage-library-page .library-table-pagination .pagn-trigger.active:after{
+    transform:rotate(180deg)
+}
+
+.manage-library-page .library-table-pagination .pagn-options {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-height: 212px;
+    bottom: 45px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid #94a3b81f;
+}
+
+.manage-library-page .library-table-pagination .pagn-options button {
+    background-color: #0f172a;
+    border: none;
+    color: #9ca3af;
+    padding: 5px 15px;
+    text-align: center;
+    transition: 0.25s;
+    border-bottom: solid 1px #94a3b81f;
+    cursor: pointer;
+}
+
+.manage-library-page .library-table-pagination .pagn-options button:hover{
+    background-color: #1a2847;
+    color: #cbd5e1;
+}
+
+.manage-library-page .manage-library-con .manage-library-top .quick-actions button {
+    height: 28px;
+    padding: 5px 15px;
+    border-radius: 5px;
+    background: rgb(15 23 42);
+    border: 1px solid #94a3b838;
+    color: rgb(156 163 175);
+}
+
+.manage-library-page .manage-library-con .library-search input {
+    height: 20px;
+    background: rgb(15 23 42);
+    border: 1px solid #94a3b81a;
+    color: rgb(156 163 175);
+    padding-left: 10px;
+}
+
+.manage-library-page .manage-library-con .library-search input::placeholder {
+    color: rgb(156 163 175);
+}
+
+.manage-library-page .manage-library-con .library-search select {
+    height: 25px;
+    width: 100px;
+    margin-left: 10px;
+    background: rgb(15 23 42);
+    border: 1px solid #94a3b81a;
+    color: rgb(156 163 175);
+}
+
+.manage-library-page .manage-library-con .manage-library-top .library-buttons {
+    background: rgb(15 23 42);
+    border: 1px solid #94a3b81a;
+    padding: 5px 10px;
+    border-radius: 99px;
+    margin-left: 15px;
+    margin-right: 15px;
+}
+
+.manage-library-page .manage-library-con .manage-library-top .library-buttons .active {
+    background: #22c55e1a;
+    color: rgb(34 197 94);
+}
+
+.manage-library-page .manage-library-con .manage-library-top .library-buttons .active span {
+    background: rgba(34, 197, 94, .18);
+    color: rgb(34 197 94);
+}
+
+.manage-library-page .manage-library-con .manage-library-top .library-buttons button {
+    margin-right: 10px;
+    padding: 5px 15px;
+    border-radius: 15px;
+    border: none;
+    background: none;
+    color: rgb(156 163 175);
+    cursor: pointer;
+    transition: .25s;
+}
+
+.manage-library-page .manage-library-con .manage-library-top .library-buttons button:hover {
+    color: rgb(229 231 235);
+    background: rgba(255, 255, 255, .05);
+}
+
+.manage-library-page .manage-library-con .manage-library-top .library-buttons button span {
+    margin-left: 5px;
+    background: rgba(255, 255, 255, .07);
+    color: rgb(107 114 128);
+    padding: 1px 5px;
+    border-radius: 999px;
+}
+
+.manage-library-page .manage-library-con .manage-library-top .library-buttons button:last-of-type {
+    margin-right: 0px;
+}
+
+.manage-library-page .library-table-game {
+    display: flex;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #94a3b81a;
+}
+
+.manage-library-page .library-table-game:last-of-type {
+    border-bottom: none;
+}
+
+.manage-library-page .library-table-head {
+    display: flex;
+    background: #0f172a;
+}
+
+.manage-library-page .library-table-head div p {
+    color: #6b7280;
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 2px;
+    font-size: 12px;
+}
+
+.manage-library-page .library-table-head .game-details-con {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.manage-library-page .library-table-head .game-details-con p {
+    color: #22c55e;
+    display: flex;
+    align-items: center;
+}
+
+.manage-library-page .library-table-head .game-details-con p:after {
+    content: "↑";
+    margin-left: 5px;
+}
+
+.manage-library-page .library-table-head .checkbox-con {
+    width: 100%;
+    max-width: 46px;
+    display: flex;
+    justify-content: center;
+}
+
+.manage-library-page .library-table-head .checkbox-con input {
+    background-color: transparent;
+}
+
+.library-table-head .game-details-con {
+    width: 100%;
+    max-width: 315px;
+}
+
+.library-table-head .genre-con {
+    width: 100%;
+    max-width: 100px;
+}
+
+.library-table-head .status-con {
+    width: 100%;
+    max-width: 100px;
+}
+
+.library-table-head .platform-con {
+    width: 100%;
+    max-width: 100px;
+}
+
+.library-table-head .score {
+    width: 100%;
+    max-width: 100px;
+}
+
+.library-table-head .added-con {
+    width: 100%;
+    max-width: 100px;
+}
+
+.library-table-head .groups-con {
+    width: 100%;
+    max-width: 150px;
+}
+
+.manage-library-page .library-table-game .checkbox-con {
+    width: 100%;
+    max-width: 46px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.manage-library-page .library-table-game .game-details-con {
+    display: flex;
+    align-items: center;
+    max-width: 315px;
+    width: 100%;
+}
+
+.manage-library-page .library-table-game .game-details-con a {
+    color: white;
+    text-decoration: none;
+    transition: .15s;
+}
+
+.manage-library-page .library-table-game .game-details-con a:hover{
+    color:#17ad58;
+}
+
+.manage-library-page .library-table-game .game-details-con a span {
+    color: #6b7280;
+}
+
+.manage-library-page .library-table-game .genre-con {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 100px;
+}
+
+.manage-library-page .library-table-game .genre-con p {
+    font-size: 12px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: center;
+    width: fit-content;
+    border: solid 1px #22c55e;
+    padding: 3px 6px;
+    border-radius: 99px;
+    color: #22c55e;
+    background: #22c55e1a;
+}
+
+.manage-library-page .library-table-game .status-con {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 100px;
+}
+
+.manage-library-page .library-table-game .status-con p {
+    font-size: 12px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: center;
+    width: fit-content;
+    background: rgba(255, 255, 255, .05);
+    color: rgb(107 114 128);
+    border: 1px solid #94a3b81a;
+    padding: 3px 6px;
+    border-radius: 99px;
+}
+
+.manage-library-page .library-table-game .status-con p.status-completed {
+    background: #60a5fa1a;
+    color: rgb(96 165 250);
+    border: 1px solid #60a5fa40;
+}
+
+.manage-library-page .library-table-game .platform-con {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 100px;
+}
+
+.manage-library-page .library-table-game .platform-con select {
+    background: rgb(15 23 42);
+    border: 1px solid #94a3b81a;
+    color: rgb(156 163 175);
+    padding: 3px 5px;
+    border-radius: 5px;
+    width: 80px;
+    font-size: 12px;
+}
+
+.manage-library-page .library-table-game .platform-con p {
+    font-size: 12px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: center;
+    width: fit-content;
+    background: rgba(255, 255, 255, .05);
+    color: rgb(107 114 128);
+    border: 1px solid #94a3b81a;
+    padding: 3px 6px;
+    border-radius: 5px;
+    text-align: left;
+}
+
+.manage-library-page .library-table-game .score {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 100px;
+}
+
+.manage-library-page .library-table-game .score p {
+    font-size: 16px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: center;
+    width: fit-content;
+    color: #22c55e;
+    font-weight: bold;
+}
+
+.manage-library-page .library-table-game .added-con {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 100px;
+}
+
+.manage-library-page .library-table-game .added-con p {
+    font-size: 12px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    text-align: center;
+    width: fit-content;
+    border-radius: 99px;
+    color: #6b7280;
+}
+
+.manage-library-page .library-table-game .groups-con {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    max-width: 150px;
+}
+
+.manage-library-page .library-table-game .groups-con select {
+    background: rgb(15 23 42);
+    border: 1px solid #94a3b81a;
+    color: rgb(156 163 175);
+    padding: 3px 5px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.manage-library-page .groups-con {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.manage-library-page .game-details-con p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.manage-library-page .game-details-con span {
+    font-size: 12px;
+}
+
+.manage-library-page .game-details-con img {
+    margin-right: 15px;
+    width: 56px;
+    height: 36px;
+    border-radius: 5px;
+    object-fit: cover;
+}

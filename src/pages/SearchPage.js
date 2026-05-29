@@ -126,6 +126,21 @@ export default function SearchPage({ user }) {
     scrollToTop();
   }, []);
 
+  // Handle incoming search query from mobile library
+  useEffect(() => {
+    const q = location.state?.query;
+    if (!q) return;
+    const page = 1;
+    setSearchTerm(q);
+    setSelectedPlatforms([]);
+    setSelectedGenres([]);
+    setSelectedTags([]);
+    setPageNumber(page);
+    const link = buildLink(fetchLink, q, [], [], [], page, sortBy);
+    runSearch(link, { term: q, platforms: [], genres: [], tags: [], page, sortBy });
+    scrollToTop();
+  }, [location.state?.query]);
+
   // fetch platform + genre + tag filters
   useEffect(() => {
     Promise.all([
@@ -593,7 +608,11 @@ export default function SearchPage({ user }) {
               <button
                 type="button"
                 className={`filter-category-btn${selectedTags.length > 0 ? " has-value" : ""}${activeFilterCategory === "tag" ? " open" : ""}`}
-                onClick={() => setActiveFilterCategory((prev) => prev === "tag" ? null : "tag")}
+                onClick={() => {
+                  const saved = localStorage.getItem("selectedTags");
+                  if (saved) console.log(JSON.parse(saved));
+                  setActiveFilterCategory((prev) => prev === "tag" ? null : "tag");
+                }}
               >
                 Tags <span className="filter-count-badge">{selectedTags.length > 0 ? selectedTags.length : "All"}</span> <span className="chevron">▾</span>
               </button>
@@ -675,7 +694,7 @@ export default function SearchPage({ user }) {
                   </div>
                 </div>
               </div>
-              <div className="jump-to-con">
+              {/* <div className="jump-to-con">
                 <p>Jump to page </p>
                 <input
                   type="number"
@@ -692,7 +711,7 @@ export default function SearchPage({ user }) {
                   }}
                 />
                 <p>of {totalPages}</p>
-              </div>
+              </div> */}
               {/* <p>Page {pageNumber} of {totalPages}</p> */}
             </div>
           </RevealWrapper>
@@ -716,8 +735,27 @@ export default function SearchPage({ user }) {
             onGoToPage={goToPage}
           />
         )}
+        {hasResults && (
+          <div className="jump-to-con">
+            <p>Jump to page </p>
+            <input
+              type="number"
+              value={jumpPageInput}
+              readOnly={!isJumpInputActive}
+              onClick={() => setIsJumpInputActive(true)}
+              onChange={(e) => setJumpPageInput(e.target.value)}
+              onBlur={handleJumpInputBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleJumpInputBlur();
+                }
+              }}
+            />
+            <p>of {totalPages}</p>
+          </div>
+        )}
       </div>
-
     </div>
   );
 }

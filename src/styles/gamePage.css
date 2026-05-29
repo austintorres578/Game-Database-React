@@ -110,7 +110,7 @@
   }
 
   body .game-page-shell .game-hero-con .genres p {
-    margin: 10px;
+    margin: 3px;
   }
 
   body .game-page-shell .game-hero-con .col-wrapper {
@@ -202,7 +202,6 @@ body {
 
 .game-page-shell .game-hero-con .col-wrapper {
   display: flex;
-  align-items: center;
 }
 
 .game-page-shell .game-hero-con .left-col {

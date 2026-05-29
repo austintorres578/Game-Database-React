@@ -50,6 +50,7 @@ body:hover .cursor-ring {
 }
 
 @media (pointer: coarse) {
+
   .cursor-dot,
   .cursor-ring {
     display: none;
@@ -307,13 +308,19 @@ body:hover .cursor-ring {
   width: 100%;
 }
 
-.site-header .mobile-search-con svg {
+.site-header .mobile-search-con button {
   position: absolute;
+  right: 0px;
+  bottom: 0px;
+  border: none;
+  background: transparent;
+}
+
+.site-header .mobile-search-con svg {
   height: 20px;
   width: auto;
   object-fit: contain;
-  right: 10px;
-  bottom: 6px;
+  color: #9ca3af;
 }
 
 .site-header .mobile-search-con input:hover {

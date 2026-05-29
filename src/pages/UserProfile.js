@@ -235,24 +235,6 @@ export default function UserProfile() {
             <div className="completed-con">
               <div className="title">
                 <h2>Completed</h2>
-                <div className="jump-to-con">
-                  <p>Jump to page </p>
-                  <input
-                    type="number"
-                    value={jumpPageInput}
-                    readOnly={!isJumpInputActive}
-                    onClick={() => setIsJumpInputActive(true)}
-                    onChange={(e) => setJumpPageInput(e.target.value)}
-                    onBlur={handleJumpInputBlur}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleJumpInputBlur();
-                      }
-                    }}
-                  />
-                  <p>of {totalCompletedPages}</p>
-                </div>
               </div>
               <div className="completed-games">
                 {completedGames.length === 0 ? (
@@ -305,7 +287,7 @@ export default function UserProfile() {
                     </button>
                     {isPageDropdownOpen && (
                       <div className="dropdown-menu">
-                        {getPageOptions(totalCompletedPages, safeCompletedPage).map((n) => (
+                        {getPageOptions(totalCompletedPages, safeCompletedPage).slice(0, 6).map((n) => (
                           <button
                             key={n}
                             type="button"
@@ -337,6 +319,24 @@ export default function UserProfile() {
                   </button>
                 </div>
               )}
+              <div className="jump-to-con">
+                  <p>Jump to page </p>
+                  <input
+                    type="number"
+                    value={jumpPageInput}
+                    readOnly={!isJumpInputActive}
+                    onClick={() => setIsJumpInputActive(true)}
+                    onChange={(e) => setJumpPageInput(e.target.value)}
+                    onBlur={handleJumpInputBlur}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleJumpInputBlur();
+                      }
+                    }}
+                  />
+                  <p>of {totalCompletedPages}</p>
+                </div>
             </div>
           </RevealWrapper>
         </div>

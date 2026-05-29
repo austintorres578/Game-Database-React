@@ -31,21 +31,31 @@ export function normalizeResultToLibraryDoc(r) {
     r?.coverImage ||
     "";
 
-  const genres =
+  const genres = (
     r?.genres ||
     r?.genreList ||
     r?.genre_names ||
-    (Array.isArray(r?.tags) ? r.tags : []);
+    (Array.isArray(r?.tags) ? r.tags : [])
+  ).map((g) =>
+    typeof g === "string"
+      ? { id: null, name: g, slug: g.toLowerCase().replace(/\s+/g, "-") }
+      : { id: g.id ?? null, name: g.name ?? g, slug: g.slug ?? null }
+  );
 
   const metacritic =
     r?.metacritic ?? r?.metacriticScore ?? r?.metaScore ?? null;
 
-  const platforms =
+  const platforms = (
     r?.platforms ||
     r?.parent_platforms ||
-    r?.platform ||
-    r?.platformName ||
-    "";
+    []
+  ).map((p) =>
+    typeof p === "string"
+      ? { platform: { id: null, name: p, slug: p.toLowerCase().replace(/\s+/g, "-") } }
+      : p.platform
+        ? p
+        : { platform: { id: p.id ?? null, name: p.name ?? p, slug: p.slug ?? null } }
+  );
 
   return {
     title,
@@ -56,6 +66,7 @@ export function normalizeResultToLibraryDoc(r) {
     metacritic,
     platforms,
     status: "backlog",
+    addedAt: new Date().toISOString(),
     _source: "scan_match",
     _raw: r || null,
   };

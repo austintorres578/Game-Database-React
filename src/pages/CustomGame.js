@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   getStorage,
@@ -23,6 +23,7 @@ import { useAuth } from "../hooks/useAuth";
 import { app } from "../firebase/firebase";
 import { saveGameToLibraryFirestore } from "../services/yourLibrary/gameSearchService";
 import { allGenres, allPlatforms, allProfileTags } from "../constants/profileTagOptions";
+import { fetchRawgTags, searchRawgTags } from "../services/searchPage/rawgService";
 import { RevealWrapper } from "../components/RevealWrapper";
 
 const GENRE_OPTIONS = allGenres
@@ -119,6 +120,30 @@ export default function CustomGame() {
 
   const [tagSearch, setTagSearch] = useState("");
   const [showTagOptions, setShowTagOptions] = useState(false);
+  const [rawgTagOptions, setRawgTagOptions] = useState([]);
+  const [isTagSearching, setIsTagSearching] = useState(false);
+
+  useEffect(() => {
+    fetchRawgTags().then((tags) => setRawgTagOptions(tags));
+  }, []);
+
+  useEffect(() => {
+    if (tagSearch.trim().length < 2) {
+      setIsTagSearching(false);
+      return;
+    }
+    setIsTagSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchRawgTags(tagSearch);
+      setRawgTagOptions((prev) => {
+        const existingIds = new Set(prev.map((t) => t.id));
+        const newOnes = results.filter((r) => !existingIds.has(r.id));
+        return [...prev, ...newOnes];
+      });
+      setIsTagSearching(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [tagSearch]);
 
   const coverFileInputRef = useRef(null);
   const screenshotFileInputRef = useRef(null);
@@ -366,7 +391,7 @@ export default function CustomGame() {
           <section className="custom-hero">
             <div className="left-col">
               <div
-                className="cover-upload-con"
+                className={`cover-upload-con${formData.coverUrl ? " active" : ""}`}
                 onClick={() => coverFileInputRef.current?.click()}
                 style={{
                   backgroundImage: formData.coverUrl ? `url(${formData.coverUrl})` : "none",
@@ -428,7 +453,7 @@ export default function CustomGame() {
                 </div> */}
                 <input
                   className="genre-trigger"
-                  placeholder="Select genres..."
+                  placeholder="Search & Select genres..."
                   type="text"
                   value={showGenreOptions ? genreSearch : formData.genres.join(", ")}
                   onChange={(e) => setGenreSearch(e.target.value)}
@@ -473,7 +498,7 @@ export default function CustomGame() {
                 <input
                   type="text"
                   className="platform-trigger"
-                  placeholder="Select platforms..."
+                  placeholder="Search & Select platforms..."
                   value={showPlatformOptions ? platformSearch : formData.platforms.join(", ")}
                   onChange={(e) => setPlatformSearch(e.target.value)}
                   onFocus={() => { setPlatformSearch(""); setShowPlatformOptions(true); }}
@@ -585,19 +610,23 @@ export default function CustomGame() {
                   />
                   {showTagOptions && (
                     <div className="tag-options">
-                      {TAG_OPTIONS.filter((t) =>
-                        t.label.toLowerCase().includes(tagSearch.toLowerCase())
-                      ).map((item) => (
-                        <button
-                          key={item.id}
-                          type="button"
-                          className={formData.tags.includes(item.label) ? "active" : ""}
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => handleTagClick(item)}
-                        >
-                          {item.label}
-                        </button>
-                      ))}
+                      {isTagSearching && <span className="filter-loading">Searching...</span>}
+                      {rawgTagOptions
+                        .filter((t) => t.label.toLowerCase().includes(tagSearch.toLowerCase()))
+                        .map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            className={`tag-option ${formData.tags.includes(t.label) ? "selected active" : ""}`}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleTagClick(t);
+                            }}
+                          >
+                            {t.label}
+                          </button>
+                        ))
+                      }
                     </div>
                   )}
                 </div>
@@ -826,7 +855,7 @@ export default function CustomGame() {
                         : "Select Tags"
                     }
                     hasValue={formData.tags.length > 0}
-                    filters={TAG_OPTIONS}
+                    // filters={TAG_OPTIONS}
                     isActive={(item) => formData.tags.includes(item.label)}
                     onItemClick={handleTagClick}
                     filterClassName="tag-filter"

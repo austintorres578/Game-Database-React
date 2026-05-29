@@ -421,6 +421,15 @@ export default function YourLibrary() {
     }
   }
 
+  async function handleCreateImportGroup(groupName) {
+    if (!authUser) return null;
+    const savedFilter = await createGroupInFirestore(authUser.uid, {
+      name: groupName.trim(),
+      gameIds: [],
+    });
+    return savedFilter.id;
+  }
+
   async function handleDeleteGroup() {
     if (!editingGroupId) return;
     if (!authUser) {
@@ -656,14 +665,17 @@ export default function YourLibrary() {
               onPrevPage={() => {
                 setCurrentPage((prev) => Math.max(1, prev - 1));
                 setIsPageDropdownOpen(false);
+                document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
               }}
               onNextPage={() => {
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1));
                 setIsPageDropdownOpen(false);
+                document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
               }}
               onGoToPage={(pageNumber) => {
                 setCurrentPage(pageNumber);
                 setIsPageDropdownOpen(false);
+                document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
               }}
             />
           )}
@@ -851,6 +863,7 @@ export default function YourLibrary() {
               onSteamUnlink={handleSteamUnlink}
               onOpenTextImportPanel={openTextImportPanel}
               onGenerateLoadingChange={setTextImportGenerating}
+              onCreateGroup={handleCreateImportGroup}
               onClose={closeCustomFilterPanel}
             />
           )}

@@ -8,7 +8,7 @@
  * @returns {string}
  */
 export function getPrimaryGenre(game) {
-  return Array.isArray(game.genres) && game.genres.length > 0
-    ? game.genres[0]
-    : "Unknown genre";
+  if (!Array.isArray(game.genres) || game.genres.length === 0) return "Unknown genre";
+  const g = game.genres[0];
+  return typeof g === "string" ? g : g?.name || "Unknown genre";
 }

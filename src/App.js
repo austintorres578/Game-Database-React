@@ -12,6 +12,7 @@ import YourLibrary from "./pages/YourLibrary";
 import UserProfileCustomizer from "./pages/UserProfileCustomize";
 import AccountSettingsPage from "./pages/AccountSettingsPage";
 import YourLibraryMobile from "./pages/mobile/YourLibraryMobile";
+import ManageLibrary from "./pages/ManageLibrary";
 import Header from './components/Header';
 import Footer from './components/Footer';
 import ScrollProgressBar from './components/ScrollProgressBar';
@@ -87,6 +88,15 @@ function App() {
             element={
               <ProtectedRoute user={user} authLoading={authLoading}>
                 <YourLibrary />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/library/manage"
+            element={
+              <ProtectedRoute user={user} authLoading={authLoading}>
+                <ManageLibrary />
               </ProtectedRoute>
             }
           />

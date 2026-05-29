@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { safeText } from "../../utils/yourLibrary/sortHelpers";
 
 export default function StatusFiltersBar({
@@ -12,6 +14,8 @@ export default function StatusFiltersBar({
   onHeaderAddToGroup,
   onOpenNewGroupPanel,
 }) {
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   return (
     <section className="library-filters-con">
       <div className="library-filters">
@@ -63,16 +67,9 @@ export default function StatusFiltersBar({
               + Create New Group
             </button>
           </a>
-          {safeActiveGroupIds.length === 1 &&
-            !["ungrouped", "all-platforms"].includes(safeActiveGroupIds[0]) && (
-            <button
-              type="button"
-              className="add-to-group btn btn-primary"
-              onClick={onHeaderAddToGroup}
-            >
-              Manage Group
-            </button>
-          )}
+          <Link to="/library/manage" className="manage-games-btn">
+            <button>Manage Library</button>
+          </Link>
         </div>
         {/* <a href="#filter-settings">
           <button className="btn btn-primary" onClick={onOpenNewGroupPanel}>
@@ -83,7 +80,11 @@ export default function StatusFiltersBar({
 
       <div className="custom-filters-con">
         <h3>Your Groups</h3>
-        <div className="custom-filters">
+        <div className={`custom-filter-trigger${filtersOpen ? " opened" : ""}`} onClick={() => setFiltersOpen((v) => !v)}>
+          <p>Selected Groups</p>
+          <span>{safeActiveGroupIds.length === 1 && safeActiveGroupIds[0] === "all-platforms" ? "All" : safeActiveGroupIds.length}</span>
+        </div>
+        <div className="custom-filters" style={{ display: filtersOpen ? undefined : "none" }}>
           {customFilters.map((f) => (
             <button
               key={f.id}

@@ -208,15 +208,25 @@ export default function GamePage({ auth }) {
     try {
       setSavingCompleted(true);
 
+      const libraryRef = doc(db, "users", user.uid, "library", docId);
+
       if (isCompleted) {
         await deleteDoc(completedRef);
+        await setDoc(libraryRef, {
+          ...buildBaseGamePayload(),
+          inLibrary: true,
+          status: "backlog",
+          addedAt: new Date().toISOString(),
+        });
         setIsCompleted(false);
       } else {
         await setDoc(completedRef, {
           ...buildBaseGamePayload(),
           inLibrary: false,
+          addedAt: new Date().toISOString(),
           completedAt: new Date().toISOString(),
         });
+        await deleteDoc(libraryRef);
         setIsCompleted(true);
       }
     } catch (error) {

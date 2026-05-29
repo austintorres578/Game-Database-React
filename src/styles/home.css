@@ -41,7 +41,7 @@
     padding-bottom: 0px;
   }
 
-  body .home-page .feature-card{
+  body .home-page .feature-card {
     box-shadow: 0 3px 20px rgba(34, 197, 94, 0.2);
   }
 
@@ -50,20 +50,20 @@
     padding: 30px;
   }
 
-  body .home-page .home-hero .home-hero-wrapper > div {
+  body .home-page .home-hero .home-hero-wrapper>div {
     width: 100%;
     /* margin-bottom: 30px; */
   }
 
-  body .home-page .home-hero .home-hero-wrapper > div:first-child {
+  body .home-page .home-hero .home-hero-wrapper>div:first-child {
     width: 100%;
   }
 
-  body .home-page .home-hero .home-hero-wrapper > div:last-child {
+  body .home-page .home-hero .home-hero-wrapper>div:last-child {
     width: 100%;
   }
 
-  body .home-page .home-hero-games > div {
+  body .home-page .home-hero-games>div {
     margin-right: auto;
   }
 
@@ -136,7 +136,7 @@
     flex-direction: column;
   }
 
-  body .home-page .stat-grid > div {
+  body .home-page .stat-grid>div {
     width: 100%;
   }
 
@@ -240,7 +240,7 @@ body {
   transition: top 0.5s ease;
 }
 
-.home-page .home-hero-games > div {
+.home-page .home-hero-games>div {
   max-width: 350px;
   width: 100%;
   border: solid 1px rgba(15, 23, 42, 0.85);
@@ -257,7 +257,7 @@ body {
   cursor: pointer;
 }
 
-.home-page .home-hero-games > div:hover {
+.home-page .home-hero-games>div:hover {
   border: solid 1px #22c55e;
   box-shadow:
     0 16px 40px rgba(0, 0, 0, 0.5),
@@ -307,6 +307,12 @@ body {
 
 .home-page .home-hero-games div svg {
   height: 90px;
+}
+
+.home-page .home-hero-games div img {
+  height: 90px;
+  width: 65px;
+  object-fit: cover;
 }
 
 .home-page .home-hero-wrapper {
@@ -363,11 +369,9 @@ body {
   height: 500px;
   bottom: -80px;
   right: 5%;
-  background: radial-gradient(
-    circle,
-    rgba(59, 130, 246, 0.14),
-    transparent 70%
-  );
+  background: radial-gradient(circle,
+      rgba(59, 130, 246, 0.14),
+      transparent 70%);
   animation: glowPulse 10s ease-in-out infinite reverse;
 }
 
@@ -543,9 +547,13 @@ body {
 
 .home-page .game-page-preview {
   animation: float 4s ease-in-out infinite;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 @keyframes float {
+
   0%,
   100% {
     transform: translateY(0);
@@ -557,7 +565,7 @@ body {
 }
 
 .home-page .game-page-preview img {
-  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+  /* box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
   border-radius: 32px;
   height: 300px;
   width: auto;
@@ -565,12 +573,57 @@ body {
   margin-left: auto;
   margin-right: auto;
   display: block;
-  transition: 0.25s;
+  transition: 0.25s; */
+      height: 185px;
+    width: 100%;
+    object-fit: contain;
+    object-position: top;
 }
 
-.home-page .game-page-preview img:hover {
+.home-page .game-page-preview .game-preview {
+  /* height: 325px; */
+  width: 315px;
+  background-color: #0f172a;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: .25s;
+}
+
+.home-page .game-page-preview .game-preview-content {
+  background-color: #0f172a;
+  padding: 15px;
+}
+
+.home-page .game-page-preview .game-preview-content p {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  
+}
+
+.home-page .game-page-preview .game-preview-content div {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  margin-top: 5px;
+}
+
+.home-page .game-page-preview .game-preview-content div p{
+  color: #6b7280;
+}
+
+.home-page .game-page-preview .game-preview-content div p:after {
+  content: "•";
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.home-page .game-page-preview .game-preview-content div p:last-of-type:after {
+  display: none;
+}
+
+.home-page .game-preview:hover {
   transform: translateY(-6px) rotate(-1deg);
-  box-shadow: 0 22px 40px rgba(34, 197, 94, 0.2);
+  box-shadow: 0 0px 40px rgba(34, 197, 94, 0.2);
 }
 
 @keyframes ticker-scroll {
@@ -678,7 +731,7 @@ body {
   margin-top: 30px;
 }
 
-.home-page .stat-grid > div {
+.home-page .stat-grid>div {
   text-align: center;
   height: 100px;
   display: flex;
@@ -735,11 +788,11 @@ body {
   width: 50%;
 } */
 
-.home-page .home-hero .home-hero-wrapper > div:first-child {
+.home-page .home-hero .home-hero-wrapper>div:first-child {
   width: 540px;
 }
 
-.home-page .home-hero .home-hero-wrapper > div:last-child {
+.home-page .home-hero .home-hero-wrapper>div:last-child {
   width: 392px;
 }
 
@@ -817,11 +870,9 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: radial-gradient(
-    ellipse,
-    rgba(34, 197, 94, 0.12),
-    transparent 70%
-  );
+  background: radial-gradient(ellipse,
+      rgba(34, 197, 94, 0.12),
+      transparent 70%);
   pointer-events: none;
   z-index: 0;
 }

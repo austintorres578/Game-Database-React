@@ -62,27 +62,29 @@ export default function Header() {
               value={headerSearch}
               onChange={(e) => setHeaderSearch(e.target.value)}
             />
-            <svg class="search-icon" viewBox="0 0 20 20" fill="none">
-              <circle
-                cx="8.5"
-                cy="8.5"
-                r="5.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-              ></circle>
-              <path
-                d="M13 13l3.5 3.5"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-              ></path>
-            </svg>
+            <button type="submit">
+              <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+                <circle
+                  cx="8.5"
+                  cy="8.5"
+                  r="5.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                ></circle>
+                <path
+                  d="M13 13l3.5 3.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                ></path>
+              </svg>
+            </button>
           </form>
           <div className="desk-nav">
             <NavLink to="/" className={navClass}>
               Home
             </NavLink>
-<NavLink to="/search" className={navClass}>
+            <NavLink to="/search" className={navClass}>
               Search For Games
             </NavLink>
             {user ? (

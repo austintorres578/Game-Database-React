@@ -1,10 +1,19 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import placeholderImg from "../../assets/images/greenPlaceholder.png";
 
 import "../../styles/yourLibrary.css";
 
 export default function YourLibraryMobile() {
   const [viewMode, setViewMode] = useState("row");
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  const navigate = useNavigate();
+
+  function handleMobileSearch(e) {
+    e.preventDefault();
+    if (!mobileSearchQuery.trim()) return;
+    navigate("/search", { state: { query: mobileSearchQuery.trim() } });
+  }
 
   return (
     <main className="mobile-library">
@@ -83,7 +92,9 @@ export default function YourLibraryMobile() {
         </button>
       </section>
       <section className="mobile-search-container">
-        <input type="text" placeholder="Search your library"></input>
+        <form onSubmit={handleMobileSearch}>
+        <input type="text" placeholder="Search your library" value={mobileSearchQuery} onChange={(e) => setMobileSearchQuery(e.target.value)}></input>
+        </form>
         <button className="sort-button">
           <svg
             width="15"

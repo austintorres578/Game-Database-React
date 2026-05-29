@@ -827,6 +827,8 @@
 .profile-shell .jump-to-con{
   display:flex;
   align-items: center;
+  justify-content: center;
+  margin-top: 10px;
 }
 
 .profile-shell .jump-to-con p{
@@ -1188,6 +1190,7 @@
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
 .profile-shell .game-con>.rating {
@@ -1214,7 +1217,7 @@
   align-items: center;
   padding: 20px 0px 10px 0px;
   overflow-x: scroll;
-  scrollbar-color: rgb(11 17 32) transparent;
+  scrollbar-color: rgb(38 47 68) transparent;
   scrollbar-width: thin;
   /* flex-wrap: wrap; */
 }
@@ -1351,6 +1354,7 @@
   overflow: hidden;
   border: 1px solid #94a3b81f;
   margin: 0px;
+  height: fit-content;
 }
 
 .profile-shell .dropdown-menu button {

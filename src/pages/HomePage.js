@@ -1,7 +1,11 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
-import gamePreviewImage from "../assets/images/game-preview-card.png";
+import baldurCover from '../assets/images/baldurCover.jpg'
+import redDeadCover from '../assets/images/redDeadCover.jpg'
+import animalCrossingCover from '../assets/images/animalCrossingCover.jpg'
+
+import gamePreviewImage from '../assets/images/redDeadPreview.jpeg'
 
 import "../styles/home.css";
 import { RevealWrapper } from "../components/RevealWrapper";
@@ -168,112 +172,40 @@ export default function HomePage({ user }) {
           <RevealWrapper direction="right" delay={150}>
             <div className="home-hero-games">
               <div>
-                <svg viewBox="0 0 80 110" fill="none">
-                  <rect width="80" height="110" fill="url(#g1)"></rect>
-                  <defs>
-                    <linearGradient
-                      id="g1"
-                      x1="0"
-                      y1="0"
-                      x2="80"
-                      y2="110"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stopColor="#7c3aed"></stop>
-                      <stop offset="1" stopColor="#1e1b4b"></stop>
-                    </linearGradient>
-                  </defs>
-                  <text
-                    x="40"
-                    y="60"
-                    fontSize="36"
-                    textAnchor="middle"
-                    fill="rgba(255,255,255,0.15)"
-                  >
-                    ◈
-                  </text>
-                </svg>
+                <img src={baldurCover}></img>
                 <div className="home-hero-game-content">
                   <p className="game-title">
                     <strong>Baldur's Gate 3</strong>
                   </p>
                   <div className="game-info">
                     <p className="genre">Action</p>
-                    <p className="rating">99</p>
+                    <p className="rating">97</p>
                   </div>
                 </div>
               </div>
 
               <div className="second-game">
-                <svg viewBox="0 0 80 110" fill="none">
-                  <rect width="80" height="110" fill="url(#g2)"></rect>
-                  <defs>
-                    <linearGradient
-                      id="g2"
-                      x1="0"
-                      y1="0"
-                      x2="80"
-                      y2="110"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stopColor="#b45309"></stop>
-                      <stop offset="1" stopColor="#1c0a00"></stop>
-                    </linearGradient>
-                  </defs>
-                  <text
-                    x="40"
-                    y="60"
-                    fontSize="36"
-                    textAnchor="middle"
-                    fill="rgba(255,255,255,0.15)"
-                  >
-                    ◈
-                  </text>
-                </svg>
+                <img src={redDeadCover}></img>
                 <div className="home-hero-game-content">
                   <p className="game-title">
                     <strong>Red Dead Redemption 2</strong>
                   </p>
                   <div className="game-info">
                     <p className="genre">Action</p>
-                    <p className="rating">99</p>
+                    <p className="rating">96</p>
                   </div>
                 </div>
               </div>
 
               <div>
-                <svg viewBox="0 0 80 110" fill="none">
-                  <rect width="80" height="110" fill="url(#g3)"></rect>
-                  <defs>
-                    <linearGradient
-                      id="g3"
-                      x1="0"
-                      y1="0"
-                      x2="80"
-                      y2="110"
-                      gradientUnits="userSpaceOnUse"
-                    >
-                      <stop stopColor="#065f46"></stop>
-                      <stop offset="1" stopColor="#022c22"></stop>
-                    </linearGradient>
-                  </defs>
-                  <text
-                    x="40"
-                    y="60"
-                    fontSize="36"
-                    textAnchor="middle"
-                    fill="rgba(255,255,255,0.15)"
-                  >
-                    ◈
-                  </text>
-                </svg>
+                <img src={animalCrossingCover}></img>
                 <div className="home-hero-game-content">
                   <p className="game-title">
                     <strong>Animal Crossing: New Horizons</strong>
                   </p>
                   <div className="game-info">
                     <p className="genre">Simulation</p>
-                    <p className="rating">99</p>
+                    <p className="rating">90</p>
                   </div>
                 </div>
               </div>
@@ -444,7 +376,17 @@ export default function HomePage({ user }) {
               </div>
             </div> */}
             <div className="game-page-preview">
-              <img src={gamePreviewImage} alt="Game Preview"></img>
+              <div className="game-preview">
+                <img className="screenshot" src={gamePreviewImage}></img>
+                <div className="game-preview-content">
+                  <p><strong>Red Dead Redemption 2</strong></p>
+                  <div>
+                    <p>Action</p>
+                    <p>Rockstar Games</p>
+                    <p>2018</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </RevealWrapper>
         </div>

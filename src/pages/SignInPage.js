@@ -123,9 +123,6 @@ export default function SignInPage(props) {
       {user ? (
         <section className="sucessful-signin-block">
           <h2>You’re signed in!</h2>
-          <Link to="/profile" className="auth-submit-btn">
-            View Profile
-          </Link>
         </section>
       ) : (
         <section className="auth-card">
