@@ -56,7 +56,7 @@
   margin-bottom: 15px;
 }
 
-.profile-settings-shell .identity-con>.title {
+.profile-settings-shell .identity-con > .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -98,7 +98,7 @@
   object-fit: cover;
 }
 
-.profile-settings-shell .avatar-con .avatar-customization>div h3 {
+.profile-settings-shell .avatar-con .avatar-customization > div h3 {
   margin: 0px;
   font-size: 1rem;
   font-weight: 700;
@@ -107,7 +107,7 @@
   font-family: "Syne", sans-serif;
 }
 
-.profile-settings-shell .avatar-con .avatar-customization>div p {
+.profile-settings-shell .avatar-con .avatar-customization > div p {
   margin: 0px;
   font-size: 0.75rem;
   color: rgb(107 114 128);
@@ -116,7 +116,7 @@
   margin-bottom: 3px;
 }
 
-.profile-settings-shell .avatar-con .avatar-customization>div button {
+.profile-settings-shell .avatar-con .avatar-customization > div button {
   display: flex;
   align-items: center;
   border: 2px solid #94a3b833;
@@ -127,12 +127,12 @@
   cursor: pointer;
 }
 
-.profile-settings-shell .avatar-con .avatar-customization>div button:hover {
+.profile-settings-shell .avatar-con .avatar-customization > div button:hover {
   color: rgb(229 231 235);
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-.profile-settings-shell .avatar-con .avatar-customization>div button svg {
+.profile-settings-shell .avatar-con .avatar-customization > div button svg {
   margin-right: 5px;
 }
 
@@ -141,7 +141,7 @@
   margin-bottom: 15px;
 }
 
-.profile-settings-shell .profile-banner>span {
+.profile-settings-shell .profile-banner > span {
   display: block;
   margin-bottom: 5px;
   text-transform: uppercase;
@@ -152,13 +152,13 @@
   font-family: "Syne", sans-serif;
 }
 
-.profile-settings-shell .profile-banner>div {
+.profile-settings-shell .profile-banner > div {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
 }
 
-.profile-settings-shell .profile-banner>div button {
+.profile-settings-shell .profile-banner > div button {
   height: 30px;
   width: 50px;
   margin: 0px 10px 10px 0px;
@@ -168,15 +168,15 @@
   cursor: pointer;
 }
 
-.profile-settings-shell .profile-banner>div button.active {
+.profile-settings-shell .profile-banner > div button.active {
   border: solid 2px rgb(34 197 94);
 }
 
-.profile-settings-shell .profile-banner>div button:hover {
+.profile-settings-shell .profile-banner > div button:hover {
   transform: scale(105%);
 }
 
-.profile-settings-shell .profile-banner>div .upload-button {
+.profile-settings-shell .profile-banner > div .upload-button {
   border: 2px solid #94a3b833;
   color: rgb(156 163 175);
   background: none;
@@ -187,12 +187,12 @@
   cursor: pointer;
 }
 
-.profile-settings-shell .profile-banner>div .upload-button svg {
+.profile-settings-shell .profile-banner > div .upload-button svg {
   margin-left: auto;
   margin-right: auto;
 }
 
-.profile-settings-shell .profile-banner>div .upload-button:hover {
+.profile-settings-shell .profile-banner > div .upload-button:hover {
   color: rgb(229 231 235);
   border-color: rgba(255, 255, 255, 0.3);
 }
@@ -204,20 +204,20 @@
   flex-direction: column;
 }
 
-.profile-settings-shell .name-con>div {
+.profile-settings-shell .name-con > div {
   width: 100%;
   position: relative;
   padding-bottom: 15px;
 }
 
-.profile-settings-shell .name-con>div>div {
+.profile-settings-shell .name-con > div > div {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 5px;
 }
 
-.profile-settings-shell .name-con>div>div span:first-of-type {
+.profile-settings-shell .name-con > div > div span:first-of-type {
   text-transform: uppercase;
   color: rgb(107 114 128);
   letter-spacing: 1.5px;
@@ -227,7 +227,7 @@
   font-family: "Syne", sans-serif;
 }
 
-.profile-settings-shell .name-con>div>div span:last-of-type {
+.profile-settings-shell .name-con > div > div span:last-of-type {
   color: rgb(107 114 128);
   letter-spacing: 1px;
   font-weight: 600;
@@ -235,7 +235,7 @@
   display: block;
 }
 
-.profile-settings-shell .name-con>div input {
+.profile-settings-shell .name-con > div input {
   width: stretch;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
@@ -244,7 +244,7 @@
   border-radius: 10px;
 }
 
-.profile-settings-shell .name-con>div .char-count {
+.profile-settings-shell .name-con > div .char-count {
   position: absolute;
   margin-left: auto;
   display: block;
@@ -257,14 +257,14 @@
   margin-top: 15px;
 }
 
-.profile-settings-shell .short-bio-con>div {
+.profile-settings-shell .short-bio-con > div {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 5px;
 }
 
-.profile-settings-shell .short-bio-con>div span:first-of-type {
+.profile-settings-shell .short-bio-con > div span:first-of-type {
   text-transform: uppercase;
   color: rgb(107 114 128);
   letter-spacing: 1.5px;
@@ -273,20 +273,22 @@
   font-family: "Syne", sans-serif;
 }
 
-.profile-settings-shell .short-bio-con>div span:last-of-type {
+.profile-settings-shell .short-bio-con > div span:last-of-type {
   color: rgb(107 114 128);
   letter-spacing: 1px;
   font-weight: 600;
   font-size: 0.625rem;
 }
 
-.profile-settings-shell .short-bio-con input {
-  width: stretch;
+.profile-settings-shell .short-bio-con textarea {
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
   color: rgb(229 231 235);
   padding: 10px;
   border-radius: 10px;
+  min-height: 80px;
+  display: block;
+  width: stretch;
 }
 
 .profile-settings-shell .short-bio-con .char-count {
@@ -301,14 +303,14 @@
   width: stretch;
 }
 
-.profile-settings-shell .about-me-con>div {
+.profile-settings-shell .about-me-con > div {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 5px;
 }
 
-.profile-settings-shell .about-me-con>div span:first-of-type {
+.profile-settings-shell .about-me-con > div span:first-of-type {
   text-transform: uppercase;
   color: rgb(107 114 128);
   letter-spacing: 1.5px;
@@ -317,7 +319,7 @@
   font-family: "Syne", sans-serif;
 }
 
-.profile-settings-shell .about-me-con>div span:last-of-type {
+.profile-settings-shell .about-me-con > div span:last-of-type {
   color: rgb(107 114 128);
   letter-spacing: 1px;
   font-weight: 600;
@@ -331,6 +333,7 @@
   color: rgb(229 231 235);
   padding: 10px;
   border-radius: 10px;
+  min-height:80px;
 }
 
 .profile-settings-shell .about-me-con .char-count {
@@ -350,7 +353,7 @@
   margin-bottom: 15px;
 }
 
-.profile-settings-shell .tags-con>.title {
+.profile-settings-shell .tags-con > .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -366,7 +369,7 @@
   padding-right: 15px;
 }
 
-.profile-settings-shell .selected-tags-con>.title {
+.profile-settings-shell .selected-tags-con > .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -439,7 +442,7 @@
   padding-bottom: 15px;
 }
 
-.profile-settings-shell .genres-con>.title {
+.profile-settings-shell .genres-con > .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -455,7 +458,7 @@
   padding-right: 15px;
 }
 
-.profile-settings-shell .selected-genres-con>.title {
+.profile-settings-shell .selected-genres-con > .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -528,7 +531,7 @@
   margin-bottom: 15px;
 }
 
-.profile-settings-shell .platforms-con>.title {
+.profile-settings-shell .platforms-con > .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -544,7 +547,7 @@
   padding-right: 15px;
 }
 
-.profile-settings-shell .selected-platforms-con>.title {
+.profile-settings-shell .selected-platforms-con > .title {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -601,7 +604,10 @@
   color: white;
 }
 
-.profile-settings-shell .selected-platforms-con .platform-results button.active {
+.profile-settings-shell
+  .selected-platforms-con
+  .platform-results
+  button.active {
   opacity: 1;
   background: #22c55e1a;
   border-color: #22c55e47;
@@ -751,7 +757,7 @@
   margin-top: 3px;
 }
 
-.profile-settings-shell .preview-pro-content>p {
+.profile-settings-shell .preview-pro-content > p {
   font-size: 10px;
 }
 
@@ -780,7 +786,7 @@
   padding-top: 2px;
 }
 
-.profile-settings-shell .preview-platforms>span {
+.profile-settings-shell .preview-platforms > span {
   text-transform: uppercase;
   letter-spacing: 2px;
   font-size: 10px;
@@ -817,7 +823,7 @@
   align-items: center;
 }
 
-.profile-settings-shell .actions-con span.changed:before{
+.profile-settings-shell .actions-con span.changed:before {
   background-color: #d5ba0b;
 }
 
@@ -852,27 +858,24 @@
     top: 0px;
     margin-bottom: 15px;
   }
-
 }
 
-@media(max-width:765px) {
+@media (max-width: 765px) {
   body .profile-settings-shell-header h1 {
     display: none;
   }
 
-  body .profile-settings-shell{
+  body .profile-settings-shell {
     padding-top: 90px;
   }
-
 }
 
-@media(max-width:600px) {
+@media (max-width: 600px) {
   body .profile-settings-shell .name-con {
     flex-direction: column;
   }
 
-  body .profile-settings-shell .name-con>div {
-    width: 100%
+  body .profile-settings-shell .name-con > div {
+    width: 100%;
   }
-
 }
