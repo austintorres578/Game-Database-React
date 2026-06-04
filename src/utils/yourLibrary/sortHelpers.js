@@ -108,6 +108,20 @@ export function compareByRawg(a, b, dir = "desc") {
 }
 
 /**
+ * Comparator for sorting games by addedAt date.
+ * Games with no addedAt sort to the bottom. Ties broken alphabetically.
+ */
+export function compareByAddedAt(a, b, dir = "desc") {
+  const da = a?.addedAt ? new Date(a.addedAt).getTime() : 0;
+  const db = b?.addedAt ? new Date(b.addedAt).getTime() : 0;
+  if (da === 0 && db === 0) return compareByTitle(a, b, "asc");
+  if (da === 0) return 1;
+  if (db === 0) return -1;
+  const diff = da - db;
+  return dir === "desc" ? -diff : diff;
+}
+
+/**
  * Returns the human-readable label for a given sort key.
  */
 export function getSortLabel(sortValue) {
@@ -118,6 +132,10 @@ export function getSortLabel(sortValue) {
       return "Metacritic (High-Low)";
     case "meta_asc":
       return "Metacritic (Low-High)";
+    case "added_desc":
+      return "Added (Newest)";
+    case "added_asc":
+      return "Added (Oldest)";
     case "name_asc":
     default:
       return "Name (A-Z)";

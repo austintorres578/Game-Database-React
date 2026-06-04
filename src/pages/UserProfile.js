@@ -91,7 +91,7 @@ export default function UserProfile() {
   // 🔹 Stats
   const totalTracked = libraryGames.length;
   const completedCount = completedGames.length;
-  const backlogCount = libraryGames.length;
+  const backlogCount = libraryGames.filter((g) => g.status === "backlog").length;
 
   const completionRate =
     totalTracked > 0 ? ((completedCount / totalTracked) * 100).toFixed(1) : 0;

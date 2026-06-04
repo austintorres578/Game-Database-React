@@ -9,7 +9,7 @@ import SearchPagination from "../components/searchPage/SearchPagination";
 import { buildLink } from "../utils/searchPage/buildLink";
 import { scrollToTop } from "../utils/searchPage/scrollHelpers";
 import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
-import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags } from "../services/searchPage/rawgService";
+import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags, searchRawgGenres } from "../services/searchPage/rawgService";
 import { useClickOutside } from "../hooks/searchPage/useClickOutside";
 import { RevealWrapper } from "../components/RevealWrapper";
 
@@ -59,6 +59,7 @@ export default function SearchPage({ user }) {
   const [pillSearch, setPillSearch] = useState("");
   const [tagSearchResults, setTagSearchResults] = useState([]);
   const [isTagSearching, setIsTagSearching] = useState(false);
+  const [isGenreSearching, setIsGenreSearching] = useState(false);
   const filterAreaRef = useRef(null);
   useClickOutside(filterAreaRef, () => setActiveFilterCategory(null));
 
@@ -78,6 +79,24 @@ export default function SearchPage({ user }) {
       const results = await searchRawgTags(pillSearch);
       setTagSearchResults(results);
       setIsTagSearching(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [pillSearch, activeFilterCategory]);
+
+  useEffect(() => {
+    if (activeFilterCategory !== "genre" || pillSearch.trim().length < 2) {
+      setIsGenreSearching(false);
+      return;
+    }
+    setIsGenreSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchRawgGenres(pillSearch);
+      setGenreFilters((prev) => {
+        const baseIds = new Set(prev.map((g) => g.id));
+        const newOnes = results.filter((r) => !baseIds.has(r.id));
+        return [...prev, ...newOnes];
+      });
+      setIsGenreSearching(false);
     }, 400);
     return () => clearTimeout(timer);
   }, [pillSearch, activeFilterCategory]);
@@ -589,6 +608,7 @@ export default function SearchPage({ user }) {
 
           <div ref={filterAreaRef} style={{ position: "relative" }}>
             <div className="platform-flex">
+              
               <button
                 type="button"
                 className={`filter-category-btn${selectedPlatforms.length > 0 ? " has-value" : ""}${activeFilterCategory === "platform" ? " open" : ""}`}
@@ -635,6 +655,7 @@ export default function SearchPage({ user }) {
                   : { filters: tagFilters,      isActive: (i) => isTagActive(i, selectedTags),           onClick: handleTagClick };
               return (
                 <div className="filter-pill-container">
+                  
                   {activeFilterCategory === "tag" && (
                     <input
                       type="text"

@@ -47,6 +47,22 @@ export default function SortSelector({
               Metacritic (Low-High)
             </button>
 
+            <button
+              type="button"
+              className={sortBy === "added_desc" ? "active" : ""}
+              onClick={() => onSortOptionClick("added_desc")}
+            >
+              Added (Newest)
+            </button>
+
+            <button
+              type="button"
+              className={sortBy === "added_asc" ? "active" : ""}
+              onClick={() => onSortOptionClick("added_asc")}
+            >
+              Added (Oldest)
+            </button>
+
           </div>
         </div>
       </div>

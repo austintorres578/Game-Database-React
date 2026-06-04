@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import {
   createGroupInFirestore,
@@ -19,7 +19,7 @@ import GroupPanel from "../components/yourLibrary/GroupPanel";
 import ImportPanel from "../components/yourLibrary/ImportPanel";
 import CandidateList from "../components/yourLibrary/CandidateList";
 
-import { safeText, compareByTitle, compareByMetacritic, compareByRawg } from "../utils/yourLibrary/sortHelpers";
+import { safeText, compareByTitle, compareByMetacritic, compareByRawg, compareByAddedAt } from "../utils/yourLibrary/sortHelpers";
 
 import { useLibraryData } from "../hooks/yourLibrary/useLibraryData";
 import { useSteamSync } from "../hooks/yourLibrary/useSteamSync";
@@ -86,6 +86,9 @@ export default function YourLibrary() {
   /* -----------------------------------------------------------------------
     STATE: GROUP BUILDER (PANEL)
   ----------------------------------------------------------------------- */
+  const [jumpPageInput, setJumpPageInput] = useState("1");
+  const [isJumpInputActive, setIsJumpInputActive] = useState(false);
+
   const [panelMode, setPanelMode] = useState("group");
   const [textImportGenerating, setTextImportGenerating] = useState(false);
   const [showGameSelection, setShowGameSelection] = useState(false);
@@ -215,7 +218,9 @@ export default function YourLibrary() {
   // Exclude any game that only exists in favorites and not in library or completed.
   const allGames = [
     ...libraryGames.filter((g) => !completedGameIds.has(String(g.id)) && !favoritesOnlyIds.has(String(g.id))),
-    ...completedGames.filter((g) => !favoritesOnlyIds.has(String(g.id))).map((g) => ({ ...g, status: "completed" })),
+    ...completedGames
+      .filter((g) => libraryGameIds.has(String(g.id)) && !favoritesOnlyIds.has(String(g.id)))
+      .map((g) => ({ ...g, status: "completed" })),
   ];
   const customCount = allGames.filter((g) => g.isCustom).length;
 
@@ -296,6 +301,10 @@ export default function YourLibrary() {
         return compareByRawg(a, b, "desc");
       case "rawg_asc":
         return compareByRawg(a, b, "asc");
+      case "added_desc":
+        return compareByAddedAt(a, b, "desc");
+      case "added_asc":
+        return compareByAddedAt(a, b, "asc");
       case "name_asc":
       default:
         return compareByTitle(a, b, "asc");
@@ -330,6 +339,12 @@ export default function YourLibrary() {
   );
 
   const pageGames = sortedGames.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    if (!isJumpInputActive) {
+      setJumpPageInput(String(safeCurrentPage));
+    }
+  }, [safeCurrentPage, isJumpInputActive]);
 
   const scanImportedCount = Object.values(
     importFlow.candidateImportStatus || {},
@@ -537,6 +552,19 @@ export default function YourLibrary() {
       return;
     }
     openGroupModalForGroup(realSelectedGroupIds[0], String(gameId));
+  }
+
+  /* -----------------------------------------------------------------------
+    JUMP-TO-PAGE HANDLER
+  ----------------------------------------------------------------------- */
+  function handleJumpInputBlur() {
+    setIsJumpInputActive(false);
+    const nextPage = Number(jumpPageInput);
+    if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages) {
+      setJumpPageInput(String(safeCurrentPage));
+      return;
+    }
+    setCurrentPage(nextPage);
   }
 
   /* -----------------------------------------------------------------------
@@ -873,7 +901,26 @@ export default function YourLibrary() {
           </button>
         </div>
       </section>
-
+          {filteredGames.length > 0 && (
+            <div className="jump-to-con">
+              <p>Jump to page</p>
+              <input
+                type="number"
+                value={jumpPageInput}
+                readOnly={!isJumpInputActive}
+                onClick={() => setIsJumpInputActive(true)}
+                onChange={(e) => setJumpPageInput(e.target.value)}
+                onBlur={handleJumpInputBlur}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleJumpInputBlur();
+                  }
+                }}
+              />
+              <p>of {totalPages}</p>
+            </div>
+          )}
     </main>
   );
 }

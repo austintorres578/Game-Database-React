@@ -150,17 +150,20 @@
   justify-content: flex-start;
   border-radius: 999px;
   color: #9ca3af;
-  padding: 5px 14px;
+  padding: 5px 20px 5px 14px;
   font-size: 12px;
   cursor: pointer;
   transition: 0.25s;
-  width: 125px;
+  min-width: 125px;
+  position: relative;
 }
 
 .search-container .sort-by-con button:after {
   content: "▾";
   display: block;
-  margin-left: auto;
+  margin-left: 5px;
+  position: absolute;
+  right: 5px;
 }
 
 .search-container .sort-by-con button.open:after {

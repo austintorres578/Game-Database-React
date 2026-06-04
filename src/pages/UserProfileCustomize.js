@@ -426,7 +426,7 @@ export default function UserProfileCustomizer() {
                   <span>Short Bio</span>
                   <span>Shown on profile header</span>
                 </div>
-                <input
+                <textarea
                   type="text"
                   placeholder="Tell us about yourself"
                   value={shortAboutMe}

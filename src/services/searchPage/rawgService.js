@@ -79,6 +79,22 @@ export async function fetchRawgGenres() {
   }));
 }
 
+export async function searchRawgGenres(query) {
+  if (!query.trim()) return [];
+  const res = await fetch(
+    `${RAWG_ORIGIN}genres?key=${RAWG_QUERY_KEY}&page_size=20&search=${encodeURIComponent(query)}`,
+    { method: "GET", headers: RAWG_HEADERS }
+  );
+  const data = await res.json();
+  if (!data.results) return [];
+  return data.results.map((g) => ({
+    id: String(g.id),
+    label: g.name,
+    slug: g.slug,
+    kind: "genre",
+  }));
+}
+
 export async function searchRawgTags(query) {
   if (!query.trim()) return [];
   const res = await fetch(

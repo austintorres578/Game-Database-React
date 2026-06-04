@@ -203,6 +203,8 @@ export function useImportFlow({
       const q = String(c.cleaned || "").trim();
       if (!q) continue;
 
+      console.log(`\n[IMPORT] Processing: "${q}"`);
+
       setCandidateImportStatus((prev) => ({
         ...(prev || {}),
         [c.id]: { state: "importing" },
@@ -212,6 +214,7 @@ export function useImportFlow({
         // eslint-disable-next-line no-await-in-loop
         const results = await searchGameByTitle(q);
         if (results.length === 0) {
+          console.log(`[IMPORT] ❌ Not found on RAWG: "${q}"`);
           notFound.push({ id: c.id, title: q });
           setImportSummary(prev => ({ ...prev, notFound: prev.notFound + 1 }));
           setCandidateImportStatus((prev) => ({
@@ -223,6 +226,7 @@ export function useImportFlow({
 
         const chosen = pickBestResult(results, q);
         if (!chosen) {
+          console.log(`[IMPORT] ❌ No best match found for: "${q}" — RAWG returned ${results.length} result(s)`);
           notFound.push({ id: c.id, title: q });
           setImportSummary(prev => ({ ...prev, notFound: prev.notFound + 1 }));
           setCandidateImportStatus((prev) => ({
@@ -234,6 +238,7 @@ export function useImportFlow({
 
         const resultId = getResultId(chosen);
         if (!resultId) {
+          console.log(`[IMPORT] ❌ Could not extract ID from best match for: "${q}"`, chosen);
           notFound.push({ id: c.id, title: q });
           setImportSummary(prev => ({ ...prev, notFound: prev.notFound + 1 }));
           setCandidateImportStatus((prev) => ({
@@ -264,6 +269,7 @@ export function useImportFlow({
         }
 
         if (alreadyInTarget) {
+          console.log(`[IMPORT] ⏭ Skipped: "${q}" (${targetIsNone ? "already ungrouped in library" : "already in selected group"})`);
           skippedCount += 1;
           setImportSummary(prev => ({ ...prev, skipped: prev.skipped + 1 }));
           setCandidateImportStatus((prev) => ({
@@ -303,12 +309,14 @@ export function useImportFlow({
 
           importedCount += 1;
           setImportSummary(prev => ({ ...prev, imported: prev.imported + 1 }));
+          console.log(`[IMPORT] ✅ Imported new game: "${q}" → ID: ${docIdStr}`);
 
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: { state: "imported" },
           }));
         } else {
+          console.log(`[IMPORT] 📚 Already in library: "${q}" → ID: ${docIdStr} — ${importTargetGroupId === "none" ? "not ungrouped, adding anyway" : "will add to group"}`);
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: {
@@ -321,6 +329,7 @@ export function useImportFlow({
           }));
         }
       } catch (e) {
+        console.log(`[IMPORT] 🔥 Error importing "${q}":`, e);
         const msg = e?.message || "Import failed";
         setCandidateImportStatus((prev) => ({
           ...(prev || {}),
@@ -338,6 +347,7 @@ export function useImportFlow({
       }
     }
 
+    console.log(`\n[IMPORT COMPLETE] ✅ Imported: ${importedCount} | ⏭ Skipped: ${skippedCount} | ❌ Not found: ${notFound.length}`);
     setNotFoundCandidates(notFound);
     } finally {
       setIsImporting(false);
@@ -347,8 +357,8 @@ export function useImportFlow({
   /* -------------------------------------------------------------------------
     REGENERATE CANDIDATES FROM TEXTAREA
   -------------------------------------------------------------------------- */
-  function handleRegenerateCandidatesFromTextarea() {
-    const titles = parseTitlesFromTextarea(scanCleanText);
+  function handleRegenerateCandidatesFromTextarea(overrideText) {
+    const titles = parseTitlesFromTextarea(overrideText ?? scanCleanText);
 
     setCandidateImportStatus({});
     setNotFoundCandidates([]);

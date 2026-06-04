@@ -212,13 +212,8 @@ export default function GamePage({ auth }) {
 
       if (isCompleted) {
         await deleteDoc(completedRef);
-        await setDoc(libraryRef, {
-          ...buildBaseGamePayload(),
-          inLibrary: true,
-          status: "backlog",
-          addedAt: new Date().toISOString(),
-        });
         setIsCompleted(false);
+        setIsInLibrary(false);
       } else {
         await setDoc(completedRef, {
           ...buildBaseGamePayload(),

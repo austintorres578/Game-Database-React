@@ -29,7 +29,7 @@ import playstationLogo from '../assets/images/playstationLogo.png'
 import "../styles/accountSettingsPage.css";
 import { RevealWrapper } from "../components/RevealWrapper";
 
-const LIBRARY_SUBCOLLECTIONS = ["library", "completed", "favorites", "groups"];
+const LIBRARY_SUBCOLLECTIONS = ["library"];
 
 async function deleteCustomGameFiles(userId, docId, data) {
   const storage = getStorage(app);
@@ -287,7 +287,7 @@ export default function AccountSettingsPage() {
   async function handleClearLibrary() {
     if (
       !window.confirm(
-        "Are you sure? This will remove all games, groups, and import history.",
+        "Are you sure? This will remove all games from your library.",
       )
     )
       return;
@@ -959,7 +959,7 @@ export default function AccountSettingsPage() {
               <div className="danger-row">
                 <div className="danger-content">
                   <h3>Clear Library</h3>
-                  <span>Removes all games, groups, and import history from your account. Your profile and settings are kept.</span>
+                  <span>Removes all games from your account's library. Your profile, settings, groups and favorites are all kept the same.</span>
                 </div>
                 <div>
                   <button onClick={handleClearLibrary} disabled={busy}>

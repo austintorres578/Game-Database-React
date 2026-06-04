@@ -507,14 +507,19 @@ export default function ImportPanel({
                   const lines = scanCleanText
                     .split("\n")
                     .filter((l) => l.trim() !== "");
-                  const selectedTitles = lines
+
+                  const correctedLines = lines.map((line, i) =>
+                    savedTitles[i] !== undefined ? savedTitles[i] : line
+                  );
+
+                  const selectedTitles = correctedLines
                     .filter((_, i) => selectedGames.has(i))
                     .join("\n");
                   onScanCleanTextChange(selectedTitles);
                   const {
                     candidates: freshCandidates,
                     selectedIds: freshSelectedIds,
-                  } = await onRegenerate();
+                  } = await onRegenerate(selectedTitles);
                   onImport(freshCandidates, freshSelectedIds);
                 }}
               >

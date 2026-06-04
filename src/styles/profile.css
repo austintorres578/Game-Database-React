@@ -1388,9 +1388,12 @@
   /* number of lines */
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 36px;
   font-size: 14px;
   margin-bottom: 0px;
+}
+
+.profile-shell .completed-con .completed-games .completed .completed-content .title{
+  min-height:36px;
 }
 
 .profile-shell .completed-con .completed-games .completed .completed-content p:last-of-type {
