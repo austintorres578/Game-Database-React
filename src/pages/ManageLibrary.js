@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getAuth } from "firebase/auth";
 import { collection, getDocs, db, doc, setDoc, deleteDoc } from "../firebase/firestore";
+import { createGroupInFirestore } from "../services/yourLibrary/groupService";
 
 import redDeadCover from '../assets/images/redDeadCover.jpg'
 import noGameBackground from '../assets/images/noGameBackground.svg'
@@ -26,6 +27,8 @@ export default function ManageLibrary() {
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedGames, setSelectedGames] = useState([])
     const [pagnOpen, setPagnOpen] = useState(false)
+    const [jumpPageInput, setJumpPageInput] = useState("1")
+    const [isJumpInputActive, setIsJumpInputActive] = useState(false)
     const [sortBy, setSortBy] = useState("")
     const [sheetOpen, setSheetOpen] = useState(false)
 
@@ -35,6 +38,13 @@ export default function ManageLibrary() {
     }
     const [groupTriggerOpen, setGroupTriggerOpen] = useState(false)
     const [desktopGroupTriggerOpen, setDesktopGroupTriggerOpen] = useState(false)
+    const [activeManagementTab, setActiveManagementTab] = useState("library")
+    const [selectedGroupRows, setSelectedGroupRows] = useState(new Set())
+    const [editingGroupRowId, setEditingGroupRowId] = useState(null)
+    const [editingGroupRowName, setEditingGroupRowName] = useState("")
+    const [groupPage, setGroupPage] = useState(1)
+    const [groupPageTriggerOpen, setGroupPageTriggerOpen] = useState(false)
+    const GROUPS_PER_PAGE = 10
     const [bulkAction, setBulkAction] = useState("")
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 765)
     const [addToGroupModalOpen, setAddToGroupModalOpen] = useState(false)
@@ -42,6 +52,9 @@ export default function ManageLibrary() {
     const [isApplying, setIsApplying] = useState(false)
     const [groupRemovalModalOpen, setGroupRemovalModalOpen] = useState(false)
     const [groupRemovalSelected, setGroupRemovalSelected] = useState("")
+    const [newGroupName, setNewGroupName] = useState("")
+    const [isCreatingGroup, setIsCreatingGroup] = useState(false)
+    const [groupBulkAction, setGroupBulkAction] = useState("")
 
     useEffect(() => {
         const handler = () => setIsMobile(window.innerWidth <= 765)
@@ -214,6 +227,78 @@ export default function ManageLibrary() {
         setBulkAction("")
     }
 
+    async function handleGroupBulkApply() {
+        if (!groupBulkAction || selectedGroupRows.size === 0) return
+        const user = getAuth().currentUser
+        if (!user) return
+
+        if (groupBulkAction === "delete") {
+            if (!window.confirm(`Delete ${selectedGroupRows.size} group(s)?`)) return
+            await Promise.all(
+                [...selectedGroupRows].map((groupId) =>
+                    deleteDoc(doc(db, "users", user.uid, "groups", groupId))
+                )
+            )
+            setGroups((prev) => prev.filter((g) => !selectedGroupRows.has(g.id)))
+            setSelectedGroupRows(new Set())
+            setGroupBulkAction("")
+        }
+    }
+
+    async function handleCreateGroupRow() {
+        if (!newGroupName.trim()) return
+
+        const isDuplicate = groups.some(
+            (g) => g.name.toLowerCase() === newGroupName.trim().toLowerCase()
+        )
+        if (isDuplicate) {
+            alert(`A group named "${newGroupName.trim()}" already exists.`)
+            return
+        }
+
+        const user = getAuth().currentUser
+        if (!user) return
+        setIsCreatingGroup(true)
+        try {
+            const savedGroup = await createGroupInFirestore(user.uid, { name: newGroupName.trim(), gameIds: [] })
+            setGroups((prev) => [...prev, savedGroup])
+            setNewGroupName("")
+        } catch (err) {
+            console.error("Error creating group:", err)
+        } finally {
+            setIsCreatingGroup(false)
+        }
+    }
+
+    async function handleDeleteGroupRow(groupId) {
+        if (!window.confirm("Delete this group?")) return
+        const user = getAuth().currentUser
+        if (!user) return
+        await deleteDoc(doc(db, "users", user.uid, "groups", groupId))
+        setGroups((prev) => prev.filter((g) => g.id !== groupId))
+        setSelectedGroupRows((prev) => { const next = new Set(prev); next.delete(groupId); return next })
+    }
+
+    async function handleUpdateGroupRow(groupId) {
+        if (!editingGroupRowName.trim()) return
+        const user = getAuth().currentUser
+        if (!user) return
+        await setDoc(doc(db, "users", user.uid, "groups", groupId), { name: editingGroupRowName.trim() }, { merge: true })
+        setGroups((prev) => prev.map((g) => g.id === groupId ? { ...g, name: editingGroupRowName.trim() } : g))
+        setEditingGroupRowId(null)
+        setEditingGroupRowName("")
+    }
+
+    function handleJumpInputBlur() {
+        setIsJumpInputActive(false)
+        const nextPage = Number(jumpPageInput)
+        if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages) {
+            setJumpPageInput(String(currentPage))
+            return
+        }
+        setCurrentPage(nextPage)
+    }
+
     function handleGameSelect(game) {
         setSelectedGames((prev) => {
             const exists = prev.some((g) => g.id === game.id)
@@ -249,6 +334,7 @@ export default function ManageLibrary() {
     const filteredGames = groupFilteredGames
         .filter((game) => {
             if (statusFilter === "all") return true
+            if (statusFilter === "custom") return game.isCustom === true
             return game.status === statusFilter
         })
         .filter((game) => {
@@ -271,16 +357,34 @@ export default function ManageLibrary() {
 
     const allSelected = filteredGames.length > 0 && filteredGames.every((g) => selectedGames.some((s) => s.id === g.id))
 
-    const groupStats = {
-        total: groupFilteredGames.length,
-        backlog: groupFilteredGames.filter((g) => g.status === "backlog").length,
-        completed: groupFilteredGames.filter((g) => g.status === "completed").length,
-    }
+    const totalGroupPages = Math.max(1, Math.ceil(groups.length / GROUPS_PER_PAGE))
+    const pagedGroups = groups.slice((groupPage - 1) * GROUPS_PER_PAGE, groupPage * GROUPS_PER_PAGE)
+    const allGroupRowsSelected = groups.length > 0 && groups.every((g) => selectedGroupRows.has(g.id))
+
+    const filteredBeforeStatus = groupFilteredGames.filter((game) => {
+        if (!searchTerm.trim()) return true
+        return game.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    })
+
+    const groupStats = filteredBeforeStatus.reduce((acc, game) => {
+        acc.total += 1
+        if (game.status === "backlog") acc.backlog += 1
+        if (game.status === "completed") acc.completed += 1
+        if (game.status === "playing") acc.playing += 1
+        if (game.isCustom === true) acc.custom += 1
+        return acc
+    }, { total: 0, backlog: 0, completed: 0, playing: 0, custom: 0 })
 
     console.log(libInfo)
     useEffect(() => {
         console.log("games on page:", filteredGames.slice((currentPage - 1) * GAMES_PER_PAGE, currentPage * GAMES_PER_PAGE))
     }, [filteredGames, currentPage])
+
+    useEffect(() => {
+        if (!isJumpInputActive) {
+            setJumpPageInput(String(currentPage))
+        }
+    }, [currentPage, isJumpInputActive])
 
     async function loadLibrary() {
         const user = getAuth().currentUser;
@@ -332,7 +436,11 @@ export default function ManageLibrary() {
                     <div><p>{stats.completed}</p><span>Completed</span></div>
                     <div><p>{stats.custom}</p><span>Custom</span></div>
                 </section>
-                <section className='manage-library-con'>
+                <section className="management-buttons">
+                    <button className={activeManagementTab === "library" ? "active" : ""} onClick={() => setActiveManagementTab("library")}>Game Library</button>
+                    <button className={activeManagementTab === "groups" ? "active" : ""} onClick={() => setActiveManagementTab("groups")}>Groups</button>
+                </section>
+                <section className='manage-library-con' style={{ display: activeManagementTab === "library" ? undefined : "none" }}>
                     <div className='manage-library-top'>
                         <div className='quick-actions'>
                             <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}>
@@ -349,6 +457,7 @@ export default function ManageLibrary() {
                             <button className={statusFilter === "all" ? "active" : ""} onClick={() => { setStatusFilter("all"); setCurrentPage(1); }}>All<span>{groupStats.total}</span></button>
                             <button className={statusFilter === "backlog" ? "active" : ""} onClick={() => { setStatusFilter("backlog"); setCurrentPage(1); }}>Backlog<span>{groupStats.backlog}</span></button>
                             <button className={statusFilter === "completed" ? "active" : ""} onClick={() => { setStatusFilter("completed"); setCurrentPage(1); }}>Complete<span>{groupStats.completed}</span></button>
+                            <button className={statusFilter === "custom" ? "active" : ""} onClick={() => { setStatusFilter("custom"); setCurrentPage(1); }}>Custom<span>{groupStats.custom}</span></button>
                         </div>
                         <div className='library-search'>
                             <div className="search-con">
@@ -530,9 +639,142 @@ export default function ManageLibrary() {
                             </div>
                         ))}
                     </div>
+
                 </section>
-                <section className='library-table-bottom'>
-                    <p>Jump to page <input type="number" value={currentPage} min={1} max={totalPages} onChange={(e) => { const val = Math.min(Math.max(1, Number(e.target.value)), totalPages); if (!isNaN(val)) setCurrentPage(val); }}></input> of {totalPages}</p>
+
+                <section className="group-management-con" style={{ display: activeManagementTab === "groups" ? "flex" : "none" }}>
+                    <div className="group-creation-con">
+                        <h3>Add A New Group</h3>
+                        <div>
+                            <p>Name</p>
+                            <input
+                                type="text"
+                                value={newGroupName}
+                                onChange={(e) => setNewGroupName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") handleCreateGroupRow() }}
+                                placeholder="Group name..."
+                            />
+                        </div>
+                        <button
+                            onClick={handleCreateGroupRow}
+                            disabled={
+                                !newGroupName.trim() ||
+                                isCreatingGroup ||
+                                groups.some((g) => g.name.toLowerCase() === newGroupName.trim().toLowerCase())
+                            }
+                        >
+                            {isCreatingGroup ? "Adding..." : "Add Group"}
+                        </button>
+                    </div>
+                    <div className="right-col">
+                        <div className="group-actions-con">
+                            <div>
+                                <select value={groupBulkAction} onChange={(e) => setGroupBulkAction(e.target.value)}>
+                                    <option value="">Bulk Actions</option>
+                                    <option value="delete">Delete</option>
+                                </select>
+                                <button onClick={handleGroupBulkApply} disabled={!groupBulkAction || selectedGroupRows.size === 0}>Apply</button>
+                            </div>
+                            <p style={{ color: allGroupRowsSelected ? "rgb(34 197 94)" : undefined, fontWeight: allGroupRowsSelected ? "bold" : undefined }}>
+                                {allGroupRowsSelected ? "All Items" : <><span>{selectedGroupRows.size}</span> items</>}
+                            </p>
+                        </div>
+                        <div className="group-management">
+
+                            <div className="group-management-top">
+                                <div>
+                                    <div
+                                        className={`branded-check ${allGroupRowsSelected ? "active" : ""}`}
+                                        onClick={() => {
+                                            if (allGroupRowsSelected) {
+                                                setSelectedGroupRows(new Set());
+                                            } else {
+                                                setSelectedGroupRows(new Set(groups.map((g) => g.id)));
+                                            }
+                                        }}
+                                    />
+                                </div>
+                                <div>
+                                    <span>Name</span>
+                                </div>
+                                <div>
+                                    <span>Count</span>
+                                </div>
+                            </div>
+                            {pagedGroups.length === 0 ? (
+                                <p className="no-group-text">No groups yet.</p>
+                            ) : pagedGroups.map((group) => (
+                                <div key={group.id} className="group-row">
+                                    <div className="checkbox-con">
+                                        <div
+                                            className={`branded-check ${selectedGroupRows.has(group.id) ? "active" : ""}`}
+                                            onClick={() => setSelectedGroupRows((prev) => {
+                                                const next = new Set(prev);
+                                                next.has(group.id) ? next.delete(group.id) : next.add(group.id);
+                                                return next;
+                                            })}
+                                        />
+                                    </div>
+                                    <div className="title-con">
+                                        <div className="title" style={{ display: editingGroupRowId === group.id ? "none" : "flex" }}>
+                                            <p>{group.name}</p>
+                                            <div className="sub-actions">
+                                                <button onClick={() => { setEditingGroupRowId(group.id); setEditingGroupRowName(group.name) }}>Edit</button>
+                                                <button onClick={() => handleDeleteGroupRow(group.id)}>Delete</button>
+                                            </div>
+                                        </div>
+                                        <div className="edit-con" style={{ display: editingGroupRowId === group.id ? "flex" : "none" }}>
+                                            <input
+                                                type="text"
+                                                value={editingGroupRowName}
+                                                onChange={(e) => setEditingGroupRowName(e.target.value)}
+                                                onKeyDown={(e) => { if (e.key === "Enter") handleUpdateGroupRow(group.id) }}
+                                            />
+                                            <div>
+                                                <button onClick={() => handleUpdateGroupRow(group.id)}>Update Group</button>
+                                                <button onClick={() => setEditingGroupRowId(null)}>Cancel</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="count-num-con">
+                                        <p>{group.gameIds?.length || 0}</p>
+                                    </div>
+                                </div>
+                            ))}
+                            
+                        </div>
+                        <div className="pagination-row">
+                            <div className="jump-to-section">
+                                <p>Jump to page <input type="number" value={groupPage} min={1} max={totalGroupPages} onChange={(e) => { const v = Math.min(Math.max(1, Number(e.target.value)), totalGroupPages); if (!isNaN(v)) setGroupPage(v) }} /> of <span>{totalGroupPages}</span></p>
+                            </div>
+                            <div className="group-pagination">
+                                <button className={groupPage === 1 ? "disabled" : ""} onClick={() => setGroupPage((p) => Math.max(1, p - 1))}>Prev</button>
+                                <div className={`page-trigger${groupPageTriggerOpen ? " active" : ""}`} onClick={() => setGroupPageTriggerOpen((v) => !v)}>
+                                    <p>Page <span>{groupPage}</span> of <span>{totalGroupPages}</span></p>
+                                    <div className="page-options">
+                                        {Array.from({ length: totalGroupPages }, (_, i) => i + 1).map((p) => (
+                                            <button key={p} className={p === groupPage ? "active" : ""} onClick={() => setGroupPage(p)}>{p}</button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button className={groupPage === totalGroupPages ? "disabled" : ""} onClick={() => setGroupPage((p) => Math.min(totalGroupPages, p + 1))}>Next</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </section>
+
+                <section className='library-table-bottom library-management-pagnation' style={{ display: activeManagementTab === "library" ? undefined : "none" }}>
+                    <p>Jump to page <input
+                        type="number"
+                        value={jumpPageInput}
+                        readOnly={!isJumpInputActive}
+                        onClick={() => setIsJumpInputActive(true)}
+                        onChange={(e) => setJumpPageInput(e.target.value)}
+                        onBlur={handleJumpInputBlur}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleJumpInputBlur(); } }}
+                    /> of {totalPages}</p>
                     <div className='library-table-pagination'>
                         <button
                             disabled={currentPage === 1}
@@ -566,12 +808,13 @@ export default function ManageLibrary() {
                         >Next</button>
                     </div>
                 </section>
+
             </div>
             <div className="add-to-group-modal-con" style={{ opacity: addToGroupModalOpen ? 1 : 0, pointerEvents: addToGroupModalOpen ? "all" : "none" }}>
                 <div className="add-to-group-modal">
                     <button onClick={() => { setAddToGroupModalOpen(false); setAddToGroupSelected(""); }}>✕</button>
-                     <h3>Which group would you like to add the selected games to?</h3>
-                     <select value={addToGroupSelected} onChange={(e) => setAddToGroupSelected(e.target.value)}>
+                    <h3>Which group would you like to add the selected games to?</h3>
+                    <select value={addToGroupSelected} onChange={(e) => setAddToGroupSelected(e.target.value)}>
                         <option value="">Select A Group</option>
                         {groups.map((g) => (
                             <option key={g.id} value={g.id}>{g.name}</option>
@@ -583,6 +826,9 @@ export default function ManageLibrary() {
                         disabled={!addToGroupSelected || selectedGames.length === 0}
                     >Add to Group</button>
                 </div>
+            </div>
+            <div className="delete-group-modal">
+
             </div>
             <div className="loading-action-modal-con" style={{ opacity: isApplying ? 1 : 0, pointerEvents: isApplying ? "all" : "none" }}>
                 <div className="loading-action-modal">
@@ -608,7 +854,7 @@ export default function ManageLibrary() {
                 </div>
             </div>
             <div className="mobile-hidden-menu" style={{ opacity: sheetOpen ? 1 : 0, pointerEvents: sheetOpen ? "all" : "none" }} onClick={() => closeSheet()}>
-                <div className="mobile-hidden-menu-wrapper" style={{ transform: sheetOpen ? "translate(-50%, -25%)" : "translate(-50%, 100%)" }} onClick={(e) => e.stopPropagation()}>
+                <div className="mobile-hidden-menu-wrapper" style={{ transform: sheetOpen ? "translate(-50%, -35%)" : "translate(-50%, 100%)" }} onClick={(e) => e.stopPropagation()}>
                     <div className="sheet-handle-wrapper">
                         <div className="sheet-handle" onClick={() => closeSheet()}></div>
                     </div>

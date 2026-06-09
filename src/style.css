@@ -67,6 +67,10 @@ h1, h2, h3, h4, h5, h6 {
     background-repeat: no-repeat;
 }
 
+textarea{
+    font-family: 'DM Sans';
+}
+
 /* removed: .home-page-section (used by SearchPage) */
 
 @media(max-height:1005px){

@@ -80,7 +80,7 @@ export default function GameHeroActions({
             className="btn btn-ghost dropdown-trigger"
             onClick={() => setGroupDropdownOpen((prev) => !prev)}
           >
-            Add to Group ▾
+            Add to Group 
           </button>
 
           {groupDropdownOpen && (
@@ -115,7 +115,7 @@ export default function GameHeroActions({
                       {isBusy
                         ? "Updating..."
                         : inGroup
-                          ? "✓ In group (click to remove)"
+                          ? "✓"
                           : "＋ Add"}
                     </span>
                   </button>

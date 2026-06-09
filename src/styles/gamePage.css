@@ -32,7 +32,9 @@
     padding-top: 90px;
   } */
 
-
+  body .game-page-shell .dropdown-menu{
+    width: 100%;
+  }
 
   body .game-page-shell .video-modal {
     width: 95%;
@@ -42,7 +44,7 @@
     text-align: center;
   }
 
-  body .game-page-shell .rating-con>div {
+  body .game-page-shell .rating-con > div {
     margin: 15px;
   }
 
@@ -247,11 +249,11 @@ body {
   /* Chrome/Safari/Opera */
 }
 
-.game-page-shell .storefronts .store-pills>div {
+.game-page-shell .storefronts .store-pills > div {
   width: 100%;
 }
 
-.game-page-shell .storefronts>p {
+.game-page-shell .storefronts > p {
   margin-bottom: 0px;
   font-family: "Syne", sans-serif;
   text-transform: uppercase;
@@ -463,7 +465,7 @@ body {
   font-size: 12px;
   letter-spacing: 2px;
   font-weight: 700;
-  text-transform: uppercase
+  text-transform: uppercase;
 }
 
 .game-page-shell .desc-toggle:hover {
@@ -563,7 +565,7 @@ body {
   font-size: 10px;
 }
 
-.game-page-shell .rating-con>div {
+.game-page-shell .rating-con > div {
   margin: 10px 30px 10px 0px;
 }
 
@@ -855,6 +857,10 @@ body {
   cursor: pointer;
 }
 
+.game-page-shell .group-dropdown .btn:after{
+  content:"▾"
+}
+
 /* .game-page-shell .video-modal-iframe-wrap{
   position: absolute;
   top: 50%;
@@ -1083,9 +1089,11 @@ body {
 .game-page-shell .stat-item {
   padding: 0.7rem 0.7rem;
   border-radius: 0.9rem;
-  background: radial-gradient(circle at top left,
-      rgba(15, 23, 42, 0.95),
-      rgba(15, 23, 42, 0.9));
+  background: radial-gradient(
+    circle at top left,
+    rgba(15, 23, 42, 0.95),
+    rgba(15, 23, 42, 0.9)
+  );
   border: 1px solid rgba(51, 65, 85, 0.95);
   font-size: 0.86rem;
   margin: 5px;
@@ -1247,7 +1255,7 @@ body {
 
 /* ============ RESPONSIVE ============ */
 
-@media(max-width:1025px) {
+@media (max-width: 1025px) {
   body .game-page-shell .game-main-layout {
     grid-template-columns: minmax(0, 1fr);
     flex-direction: column-reverse;
@@ -1269,20 +1277,20 @@ body {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  body .game-page-shell .game-desc{
+  body .game-page-shell .game-desc {
     width: 100%;
   }
 
-  body .game-page-shell .game-hero-con .col-wrapper{
+  body .game-page-shell .game-hero-con .col-wrapper {
     flex-direction: column;
   }
 
-  body .game-page-shell .game-hero-con .right-col{
+  body .game-page-shell .game-hero-con .right-col {
     width: 100%;
   }
 
-  body .game-page-shell .game-hero-con .left-col{
-    width:100%
+  body .game-page-shell .game-hero-con .left-col {
+    width: 100%;
   }
 
   /* body .game-page-shell .game-hero-con .game-art-con{
@@ -1304,7 +1312,7 @@ body {
     width: 100%;
   } */
 
-  body .game-page-shell .store-pills>div {
+  body .game-page-shell .store-pills > div {
     margin: 0px 3px;
   }
 
@@ -1313,8 +1321,6 @@ body {
     grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     height: auto;
   } */
-
-
 
   body .game-page-shell .screenshots-row {
     grid-template-columns: 50% 50%;
@@ -1334,8 +1340,6 @@ body {
   .game-page-shell .game-description {
     width: auto;
   }
-
-
 
   .game-page-shell .game-hero-actions {
     justify-content: center;
@@ -1403,9 +1407,11 @@ body {
   height: fit-content;
   width: fit-content;
   border: solid 1px red;
-  background: radial-gradient(circle at top left,
-      rgba(15, 23, 42, 0.96),
-      rgba(15, 23, 42, 0.9));
+  background: radial-gradient(
+    circle at top left,
+    rgba(15, 23, 42, 0.96),
+    rgba(15, 23, 42, 0.9)
+  );
   border-radius: 1.5rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
   box-shadow: 0 26px 70px rgba(15, 23, 42, 0.95);
@@ -1481,6 +1487,11 @@ body {
   position: relative;
 }
 
+.game-page-shell .group-dropdown.open .btn:after{
+  content:"▾";
+  transform:rotate(90deg);
+}
+
 .game-page-shell .digital-store-dis {
   font-size: 12px;
 }
@@ -1491,7 +1502,7 @@ body {
   text-align: left;
 } */
 
-.game-page-shell .store-pills>div a {
+.game-page-shell .store-pills > div a {
   display: flex;
   justify-content: space-between;
   width: auto;
@@ -1504,7 +1515,7 @@ body {
   transition: 0.25s;
 }
 
-.game-page-shell .store-pills>div a:hover {
+.game-page-shell .store-pills > div a:hover {
   border-color: #22c55e;
   color: #22c55e;
   background: #22c55e1f;
@@ -1533,26 +1544,41 @@ body {
 .game-page-shell .dropdown-menu {
   position: absolute;
   bottom: auto;
-  top: 42px;
-  left: auto;
-  border: solid 1px rgba(148, 163, 184, 0.7);
+  top: 50%;
+  left: 50%;
+  transform:translate(-50%,10%);
+  border: solid 1px rgba(148, 163, 184, 0.5);
   border-radius: 8px;
-  overflow: hidden;
-  width: 100%;
+  width: 250px;
+  overflow-y: scroll;
+  height: 260px;
+  z-index: 1;
 }
 
 .game-page-shell .dropdown-menu button {
   width: 100%;
-  padding: 5px 0px;
+  padding: 5px 10px;
   background: rgba(15, 23, 42, 1);
   color: #9ca3af;
   border-top: none;
   border-right: none;
   border-left: none;
-  border-bottom: solid 1px rgba(148, 163, 184);
+  border-bottom: solid 1px rgba(148, 163, 184, .25);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: .25s;
 }
 
-.game-page-shell .dropdown-menu button:last-of-type{
+.game-page-shell .dropdown-menu button:hover{
+    color: rgb(229 231 235);
+    background: #1a2030;
+}
+
+.game-page-shell .group-dropdown.open 
+
+.game-page-shell .dropdown-menu button:last-of-type {
   border-bottom: none;
 }
 

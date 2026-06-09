@@ -221,7 +221,7 @@ export default function Footer() {
           </div>
 
           <div className="footer-column">
-            <h3>Popular Tags</h3>
+            <h3>Popular Genres</h3>
             <div className="footer-tags">
               <button
                 type="button"

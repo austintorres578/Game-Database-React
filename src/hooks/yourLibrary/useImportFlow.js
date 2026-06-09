@@ -54,6 +54,7 @@ export function useImportFlow({
   });
   const [importTargetGroupId, setImportTargetGroupId] = useState("none");
   const [isImporting, setIsImporting] = useState(false);
+  const [importComplete, setImportComplete] = useState(false);
 
   /* -------------------------------------------------------------------------
     EFFECT: CLEANUP PREVIEW URLS ON UNMOUNT
@@ -181,6 +182,7 @@ export function useImportFlow({
     const selected = activeCandidates.filter((c) => activeSelectedIds.has(c.id));
     if (selected.length === 0) return;
 
+    setImportComplete(false);
     setNotFoundCandidates([]);
     setImportSummary({ imported: 0, notFound: 0, skipped: 0 });
 
@@ -351,6 +353,13 @@ export function useImportFlow({
     setNotFoundCandidates(notFound);
     } finally {
       setIsImporting(false);
+      setImportComplete(true);
+      if (notFound.length > 0) {
+        alert(
+          `${notFound.length} game(s) could not be found:\n\n` +
+          notFound.map((g, i) => `${i + 1}. "${g.title}"`).join("\n")
+        );
+      }
     }
   }
 
@@ -467,6 +476,8 @@ export function useImportFlow({
     removeCandidate,
     addGameIdsToGroup,
     isImporting,
+    importComplete,
+    setImportComplete,
     importSelectedCandidatesDirect,
     handleRegenerateCandidatesFromTextarea,
     handleScanFileChange,

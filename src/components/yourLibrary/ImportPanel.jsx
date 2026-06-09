@@ -238,9 +238,26 @@ export default function ImportPanel({
         <div className="import-options-header">
           <span className="pre-header">Game Library</span>
           <h3>Review Detected Games</h3>
-          {/* <span className="post-header">
-          Pick a method — you can always change this later.
-        </span> */}
+        </div>
+        <div className="missing-game-header">
+          <span className="pre-header yellow">Import Results</span>
+          <h3>Some games weren't found</h3>
+          <p>These titles couldn't be matched to our database. You can skip them, or save selected titles as custom games.</p>
+        </div>
+        <div className="unmatched-disclaimer">
+          <div className="disclaimer-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+          </div>
+          <div className="disclaimer-text">
+            <p className="title">Unmatched Games</p>
+            <p>These may be typos, regional titles, or games not yet in our database</p>
+          </div>
+          <div className="unmatched-count">
+            <p className="count">6</p>
+            <p>Unmatched</p>
+          </div>
         </div>
         {/* <div className="textarea-pre">
           <span>Detected games — editable</span>
@@ -304,6 +321,15 @@ export default function ImportPanel({
             <button
               onClick={async () => {
                 if (!newGroupName.trim()) return;
+
+                const isDuplicate = customFilters?.some(
+                  (g) => g.name?.toLowerCase() === newGroupName.trim().toLowerCase()
+                );
+                if (isDuplicate) {
+                  alert(`A group named "${newGroupName.trim()}" already exists.`);
+                  return;
+                }
+
                 const newId = await onCreateGroup?.(newGroupName.trim());
                 if (newId) onImportTargetGroupChange({ target: { value: newId } });
                 setNewGroupName("");
@@ -383,16 +409,16 @@ export default function ImportPanel({
                         key={i}
                         className={`detected-game${selectedGames.has(i) ? " selected" : ""}`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedGames.has(i)}
-                          onChange={() =>
+                        <div
+                          className={`branded-check ${selectedGames.has(i) ? "active" : ""}`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
                             setSelectedGames((prev) => {
                               const next = new Set(prev);
                               next.has(i) ? next.delete(i) : next.add(i);
                               return next;
-                            })
-                          }
+                            });
+                          }}
                         />
                         <div className="detected-title-con">
                           {!editingGames.has(i) && (
@@ -486,6 +512,23 @@ export default function ImportPanel({
                   });
               })()}
           </div>
+          <div className="custom-game-disclaimer">
+            <div className="disclaimer-icon">
+              🎮
+            </div>
+            <div className="disclaimer-text">
+              <p className="title">Save As Custom Games</p>
+              <p>These may be typos, regional titles, or games not yet in our database</p>
+            </div>
+            <div className="cta-con">
+              <button className="disabled">Create As Custom Game</button>
+            </div>
+          </div>
+          <div className="missing-ctas">
+            <button>Skip Selected</button>
+            <button>Skip All</button>
+            <button className="yellow-button">Done</button>
+          </div>
           <div className="detected-cta-con">
             <div>
               <span>
@@ -546,15 +589,7 @@ export default function ImportPanel({
             </div>
           </div>
         </div>
-        <div
-          className="import-comp-modal"
-          style={{ display: hasImportStarted && !isImporting ? "block" : "none" }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-          </svg>
-          <p>Import Complete!</p>
-        </div>
+
       </div>
       <div
         className="text-import-con"

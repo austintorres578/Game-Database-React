@@ -24,8 +24,9 @@ import { safeText, compareByTitle, compareByMetacritic, compareByRawg, compareBy
 import { useLibraryData } from "../hooks/yourLibrary/useLibraryData";
 import { useSteamSync } from "../hooks/yourLibrary/useSteamSync";
 
-import { RevealWrapper } from "../components/RevealWrapper";
 import { useImportFlow } from "../hooks/yourLibrary/useImportFlow";
+
+import loadingGif from "../assets/images/loading.gif"
 
 /* =============================================================================
   CONFIG
@@ -626,89 +627,81 @@ export default function YourLibrary() {
   return (
     <main className="library-page">
 
-      <RevealWrapper direction="up">
-        <LibraryStatsHeader
-          total={total}
-          completed={completed}
-          backlog={backlog}
-          custom={customCount}
-          loadingStats={loadingStats}
-          onOpenImportPanel={openImportPanel}
-          onOpenTextImportPanel={openTextImportPanel}
-        />
-      </RevealWrapper>
+      <LibraryStatsHeader
+        total={total}
+        completed={completed}
+        backlog={backlog}
+        custom={customCount}
+        loadingStats={loadingStats}
+        onOpenImportPanel={openImportPanel}
+        onOpenTextImportPanel={openTextImportPanel}
+      />
 
-      <RevealWrapper direction="up" delay={100}>
-        <StatusFiltersBar
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusFilterChange}
+      <StatusFiltersBar
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
+        loadingStats={loadingStats}
+        groupStats={groupStats}
+        customFilters={customFilters}
+        safeActiveGroupIds={safeActiveGroupIds}
+        onToggleGroup={handleToggleGroup}
+        realSelectedGroupIds={realSelectedGroupIds}
+        onHeaderAddToGroup={handleHeaderAddToGroup}
+        onOpenNewGroupPanel={openNewGroupPanel}
+      />
+
+      <LibrarySearchBar
+        searchTerm={searchTerm}
+        onSearchChange={(e) => {
+          setSearchTerm(e.target.value);
+          setCurrentPage(1);
+          setIsPageDropdownOpen(false);
+        }}
+        onClear={() => {
+          setSearchTerm("");
+          setCurrentPage(1);
+          setIsPageDropdownOpen(false);
+        }}
+        sortBy={sortBy}
+        sortedGamesCount={sortedGames.length}
+        onRevealDrop={revealSortingDrop}
+        onSortOptionClick={handleSortingOptionClick}
+      />
+
+      <section className="library-grid">
+
+        <GameGrid
           loadingStats={loadingStats}
-          groupStats={groupStats}
+          pageGames={pageGames}
           customFilters={customFilters}
-          safeActiveGroupIds={safeActiveGroupIds}
-          onToggleGroup={handleToggleGroup}
-          realSelectedGroupIds={realSelectedGroupIds}
-          onHeaderAddToGroup={handleHeaderAddToGroup}
-          onOpenNewGroupPanel={openNewGroupPanel}
+          onAddToGroup={handleAddToGroupFromGame}
         />
-      </RevealWrapper>
 
-      <RevealWrapper direction="up" delay={200}>
-        <LibrarySearchBar
-          searchTerm={searchTerm}
-          onSearchChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-            setIsPageDropdownOpen(false);
-          }}
-          onClear={() => {
-            setSearchTerm("");
-            setCurrentPage(1);
-            setIsPageDropdownOpen(false);
-          }}
-          sortBy={sortBy}
-          sortedGamesCount={sortedGames.length}
-          onRevealDrop={revealSortingDrop}
-          onSortOptionClick={handleSortingOptionClick}
-        />
-      </RevealWrapper>
-
-      <RevealWrapper direction="up" delay={300}>
-        <section className="library-grid">
-
-          <GameGrid
-            loadingStats={loadingStats}
-            pageGames={pageGames}
-            customFilters={customFilters}
-            onAddToGroup={handleAddToGroupFromGame}
+        {!loadingStats && sortedGames.length > 0 && (
+          <LibraryPagination
+            safeCurrentPage={safeCurrentPage}
+            totalPages={totalPages}
+            isPageDropdownOpen={isPageDropdownOpen}
+            setIsPageDropdownOpen={setIsPageDropdownOpen}
+            dropdownPages={dropdownPages}
+            onPrevPage={() => {
+              setCurrentPage((prev) => Math.max(1, prev - 1));
+              setIsPageDropdownOpen(false);
+              document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            onNextPage={() => {
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1));
+              setIsPageDropdownOpen(false);
+              document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
+            }}
+            onGoToPage={(pageNumber) => {
+              setCurrentPage(pageNumber);
+              setIsPageDropdownOpen(false);
+              document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
+            }}
           />
-
-          {!loadingStats && sortedGames.length > 0 && (
-            <LibraryPagination
-              safeCurrentPage={safeCurrentPage}
-              totalPages={totalPages}
-              isPageDropdownOpen={isPageDropdownOpen}
-              setIsPageDropdownOpen={setIsPageDropdownOpen}
-              dropdownPages={dropdownPages}
-              onPrevPage={() => {
-                setCurrentPage((prev) => Math.max(1, prev - 1));
-                setIsPageDropdownOpen(false);
-                document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              onNextPage={() => {
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1));
-                setIsPageDropdownOpen(false);
-                document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              onGoToPage={(pageNumber) => {
-                setCurrentPage(pageNumber);
-                setIsPageDropdownOpen(false);
-                document.querySelector(".library-filters")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            />
-          )}
-        </section>
-      </RevealWrapper>
+        )}
+      </section>
 
       {/* ===========================
           GROUP / IMPORT MODAL
@@ -901,26 +894,65 @@ export default function YourLibrary() {
           </button>
         </div>
       </section>
-          {filteredGames.length > 0 && (
-            <div className="jump-to-con">
-              <p>Jump to page</p>
-              <input
-                type="number"
-                value={jumpPageInput}
-                readOnly={!isJumpInputActive}
-                onClick={() => setIsJumpInputActive(true)}
-                onChange={(e) => setJumpPageInput(e.target.value)}
-                onBlur={handleJumpInputBlur}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleJumpInputBlur();
-                  }
-                }}
-              />
-              <p>of {totalPages}</p>
+      {filteredGames.length > 0 && (
+        <div className="jump-to-con">
+          <p>Jump to page</p>
+          <input
+            type="number"
+            value={jumpPageInput}
+            readOnly={!isJumpInputActive}
+            onClick={() => setIsJumpInputActive(true)}
+            onChange={(e) => setJumpPageInput(e.target.value)}
+            onBlur={handleJumpInputBlur}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleJumpInputBlur();
+              }
+            }}
+          />
+          <p>of {totalPages}</p>
+        </div>
+      )}
+      <div
+        className="import-comp-modal-con"
+        style={{
+          opacity: importFlow.importComplete ? 1 : 0,
+          pointerEvents: importFlow.importComplete ? "all" : "none",
+        }}
+      >
+        <div className="import-comp-modal">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+          </svg>
+          <p>Import Complete!</p>
+          <button className="close-button" onClick={() => importFlow.setImportComplete(false)}>
+            <span>✕</span>
+          </button>
+        </div>
+      </div>
+
+      <div
+        className="loading-modal-con"
+        style={{
+          opacity: importFlow.isImporting ? 1 : 0,
+          pointerEvents: importFlow.isImporting ? "all" : "none",
+        }}
+      >
+        <div className="loading-action-modal">
+          <img src={loadingGif} alt="Loading" />
+          <h3>Importing...</h3>
+        </div>
+      </div>
+
+      {/* <div className="missing-game-modal-con">
+            <div className="missing-game-modal">
+              <button className="close-button">X</button>
+              <div className="title">
+                <h3>Some games weren't</h3>
+              </div>
             </div>
-          )}
+          </div> */}
     </main>
   );
 }

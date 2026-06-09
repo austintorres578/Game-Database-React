@@ -62,13 +62,13 @@ export default function StatusFiltersBar({
         </div>
 
         <div className="group-man-con">
-          <a href="#filter-settings">
+          {/* <a href="#filter-settings">
             <button className="btn btn-primary" onClick={onOpenNewGroupPanel}>
               + Create New Group
             </button>
-          </a>
+          </a> */}
           <Link to="/library/manage" className="manage-games-btn">
-            <button>Manage Library</button>
+            <button>Manage Library/Groups</button>
           </Link>
         </div>
         {/* <a href="#filter-settings">

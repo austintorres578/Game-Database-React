@@ -1024,12 +1024,12 @@
     padding-top: 90px;
   }
 
-  body .cg-shell .save-section{
+  body .cg-shell .save-section {
     flex-direction: column;
     justify-content: center;
   }
 
-  body .cg-shell .save-section span{
+  body .cg-shell .save-section span {
     margin-bottom: 10px;
   }
 
@@ -1052,11 +1052,11 @@
     flex-direction: column;
   }
 
-  body .cg-shell .custom-hero .right-col .title-input-row > div {
+  body .cg-shell .custom-hero .right-col .title-input-row>div {
     width: 100%;
   }
 
-  body .cg-shell .custom-hero .right-col .title-input-row > div:first-of-type {
+  body .cg-shell .custom-hero .right-col .title-input-row>div:first-of-type {
     margin-bottom: 15px;
   }
 }
@@ -1065,6 +1065,25 @@
   body .cg-shell .page-title div:last-of-type {
     margin-top: 15px;
   }
+
+  /* body .cg-shell .video-section .title-row{
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-bottom: 15px;
+  } */
+
+  /* body .cg-shell .video-section .title-row h3{
+    text-align: left;
+    width: 100%;
+  }
+
+    body .cg-shell .video-section .title-row div{
+      width: 100%;
+    }
+
+    body .cg-shell .video-section .title-row button{
+      margin-left: 0px;
+    } */
 }
 
 .cg-shell {
@@ -1107,7 +1126,7 @@
   justify-content: space-between;
 }
 
-.cg-shell .drop-row > div {
+.cg-shell .drop-row>div {
   width: 49.5%;
 }
 
@@ -1209,7 +1228,7 @@
   border-radius: 5px;
 }
 
-.cg-shell .dev-row > div {
+.cg-shell .dev-row>div {
   width: 49.5%;
   display: flex;
   flex-direction: column;
@@ -1225,6 +1244,9 @@
   transition: 0.25s;
   position: relative;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
 }
 
 .cg-shell .custom-hero .cover-upload-con span {
@@ -1237,7 +1259,16 @@
   color: rgb(107 114 128);
 }
 
-.cg-shell .custom-hero .cover-upload-con:after {
+.cg-shell .custom-hero .cover-upload-con svg {
+  height: 60px;
+  width: 40px;
+  object-fit: contain;
+  margin-left: auto;
+  margin-right: auto;
+  color: rgb(107 114 128);
+}
+
+/* .cg-shell .custom-hero .cover-upload-con:after {
   content: "+";
   height: 50px;
   width: 50px;
@@ -1253,9 +1284,9 @@
   border-radius: 99px;
   color: #94a3b8;
   transition: 0.25s;
-}
+} */
 
-.cg-shell .custom-hero .cover-upload-con::before {
+/* .cg-shell .custom-hero .cover-upload-con::before {
   content: "";
   height: 50px;
   width: 50px;
@@ -1271,19 +1302,27 @@
   border-radius: 99px;
   color: #94a3b8;
   transition: 0.25s;
-}
+} */
 
-.cg-shell .custom-hero .cover-upload-con.active::before{
+.cg-shell .custom-hero .cover-upload-con.active::before {
   display: none;
 }
 
-.cg-shell .custom-hero .cover-upload-con.active::after{
+.cg-shell .custom-hero .cover-upload-con.active::after {
   display: none;
 }
 
 .cg-shell .custom-hero .cover-upload-con:hover {
   border-color: rgb(34 197 94);
   box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+}
+
+.cg-shell .custom-hero .cover-upload-con:hover span {
+  color: rgb(34 197 94);
+}
+
+.cg-shell .custom-hero .cover-upload-con:hover svg {
+  color: rgb(34 197 94);
 }
 
 .cg-shell .page-title {
@@ -1372,7 +1411,7 @@
   font-weight: 700;
 }
 
-.cg-shell .genre-row > span {
+.cg-shell .genre-row>span {
   margin-bottom: 10px;
   display: block;
   letter-spacing: 2px;
@@ -1398,7 +1437,7 @@
   border-radius: 5px;
 }
 
-.cg-shell .platforms-row > span {
+.cg-shell .platforms-row>span {
   margin-bottom: 10px;
   display: block;
   letter-spacing: 2px;
@@ -1622,6 +1661,9 @@
   max-width: 350px;
   width: 100%;
   padding-left: 10px;
+  background: rgb(15 23 42);
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  color: rgb(156 163 175);
 }
 
 .cg-shell .video-section .title-row div {
@@ -1820,7 +1862,7 @@
   position: relative;
 }
 
-.cg-shell .screenshots .filled-screenshot{
+.cg-shell .screenshots .filled-screenshot {
   border: 1.5px solid #94a3b838;
 }
 
@@ -1840,7 +1882,7 @@
   pointer-events: none;
 }
 
-.cg-shell .screenshots .filled-screenshot:hover .close-button{
+.cg-shell .screenshots .filled-screenshot:hover .close-button {
   opacity: 1;
   pointer-events: all;
 }
@@ -1893,12 +1935,7 @@
   cursor: pointer;
 }
 
-.cg-shell
-  .game-details-con
-  .left-col
-  .screenshot-section
-  .title-row
-  button:hover {
+.cg-shell .game-details-con .left-col .screenshot-section .title-row button:hover {
   color: rgb(229 231 235);
   border-color: rgba(255, 255, 255, 0.3);
 }
