@@ -44,6 +44,48 @@ export async function scanImageForText(file) {
   return String(raw || "").trim();
 }
 
+export async function scanImageWithGemini(file) {
+  const fd = new FormData();
+  fd.append("image", file);
+
+  const res = await fetch(`${BACKEND_BASE}/api/scan-image-gemini`, {
+    method: "POST",
+    body: fd,
+    credentials: "include",
+  });
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data?.error || data?.message || "Gemini scan failed");
+  }
+
+  const titles = Array.isArray(data?.titles) ? data.titles : [];
+  const uncertain = Array.isArray(data?.uncertain) ? data.uncertain : [];
+
+  const seen = new Set();
+  const uniq = [];
+  for (const t of titles) {
+    const s = String(t || "").trim();
+    if (!s) continue;
+    const key = s.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    uniq.push(s);
+  }
+
+  const sortedTitles = sortStringsAlpha(uniq);
+  const now = Date.now();
+  const nextCandidates = sortCandidatesAlpha(
+    sortedTitles.map((t, idx) => ({
+      id: `${now}_${idx}`,
+      raw: t,
+      cleaned: t,
+    }))
+  );
+
+  return { sortedTitles, nextCandidates, uncertain };
+}
+
 /**
  * Sends raw text to the backend LLM endpoint to extract a clean list of
  * game titles. Returns { sortedTitles, nextCandidates } ready for the

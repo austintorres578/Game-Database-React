@@ -1155,7 +1155,7 @@ body {
 
 .game-page-shell .screenshots-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   justify-content: center;
   padding: 15px;
   scrollbar-width: thin;
@@ -1322,11 +1322,11 @@ body {
     height: auto;
   } */
 
-  body .game-page-shell .screenshots-row {
+  /* body .game-page-shell .screenshots-row {
     grid-template-columns: 50% 50%;
     padding-top: 15px;
     padding-bottom: 15px;
-  }
+  } */
 
   body .game-page-shell .related-con {
     grid-template-columns: 50% 50%;

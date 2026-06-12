@@ -23,18 +23,28 @@
 }
 
 @media (max-width: 765px) {
-
   body .manage-library-page .library-stats {
     display: grid;
     grid-template-columns: 50% 50%;
     gap: 0px;
   }
 
+  body .manage-library-page .library-table-game .game-details-con a {
+    pointer-events: none;
+  }
+
   body .manage-library-page .library-stats div {
     margin: 5px;
   }
 
-  body .manage-library-page .group-management-con .group-management .group-row .title-con .edit-con input {
+  body
+    .manage-library-page
+    .group-management-con
+    .group-management
+    .group-row
+    .title-con
+    .edit-con
+    input {
     width: 100%;
   }
 
@@ -62,7 +72,11 @@
     flex-direction: column;
   }
 
-  body .manage-library-page .group-management-con .pagination-row .group-pagination {
+  body
+    .manage-library-page
+    .group-management-con
+    .pagination-row
+    .group-pagination {
     justify-content: center;
     margin-bottom: 15px;
   }
@@ -113,11 +127,21 @@
     display: block;
   }
 
-  body .manage-library-page .manage-library-con .manage-library-top .quick-actions {
+  body
+    .manage-library-page
+    .manage-library-con
+    .manage-library-top
+    .quick-actions {
     display: none;
   }
 
-  body .manage-library-page .library-table-game .game-details-con a div .mobile-rating {
+  body
+    .manage-library-page
+    .library-table-game
+    .game-details-con
+    a
+    div
+    .mobile-rating {
     display: flex;
   }
 
@@ -143,7 +167,11 @@
     width: stretch;
   }
 
-  body .manage-library-page .manage-library-con .manage-library-top .library-buttons {
+  body
+    .manage-library-page
+    .manage-library-con
+    .manage-library-top
+    .library-buttons {
     margin: 15px 15px 0px 15px;
     width: 100%;
     display: flex;
@@ -216,7 +244,7 @@
     gap: 10px;
   }
 
-  body .manage-library-page .library-table-bottom>p {
+  body .manage-library-page .library-table-bottom > p {
     margin-top: 0px;
     margin-bottom: 0px;
   }
@@ -291,7 +319,11 @@
   padding: 0px 15px 15px 15px;
 } */
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .options-wrapper {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .options-wrapper {
   height: 220px;
   overflow-y: scroll;
 }
@@ -313,7 +345,12 @@
   padding-bottom: 5px;
 } */
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group>span {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  > span {
   padding: 0px 15px;
 }
 
@@ -322,7 +359,12 @@
   padding-right: 15px;
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group button {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  button {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -335,16 +377,34 @@
   background: transparent;
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group button.active {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  button.active {
   background: rgba(34, 197, 94, 0.12);
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group button div {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  button
+  div {
   display: flex;
   align-items: center;
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group button div p {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  button
+  div
+  p {
   font-weight: 500;
   color: white;
 }
@@ -358,7 +418,13 @@
   font-weight: 500;
 } */
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group button .icon {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  button
+  .icon {
   width: 36px;
   height: 36px;
   border-radius: 10px;
@@ -385,15 +451,30 @@
   color: #22c55e;
 } */
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group button .enabled-sym {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  button
+  .enabled-sym {
   color: #22c55e;
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .title {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .title {
   border-bottom: 1px solid #94a3b81a;
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sort-options .option-group>span {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sort-options
+  .option-group
+  > span {
   margin-top: 10px;
   margin-bottom: 10px;
   display: block;
@@ -404,12 +485,18 @@
   font-weight: 600;
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sheet-handle-wrapper {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sheet-handle-wrapper {
   padding-top: 15px;
   padding-bottom: 15px;
 }
 
-.manage-library-page .mobile-hidden-menu .mobile-hidden-menu-wrapper .sheet-handle {
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-hidden-menu-wrapper
+  .sheet-handle {
   width: 36px;
   height: 4px;
   background: #94a3b838;
@@ -458,7 +545,10 @@
   flex-wrap: wrap;
 }
 
-.manage-library-page .mobile-sort-buttons-con .mobile-sort-buttons-wrapper button {
+.manage-library-page
+  .mobile-sort-buttons-con
+  .mobile-sort-buttons-wrapper
+  button {
   background: none;
   border: 1px solid #94a3b838;
   color: rgb(156 163 175);
@@ -467,7 +557,10 @@
   transition: 0.25s;
 }
 
-.manage-library-page .mobile-sort-buttons-con .mobile-sort-buttons-wrapper button:hover {
+.manage-library-page
+  .mobile-sort-buttons-con
+  .mobile-sort-buttons-wrapper
+  button:hover {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: #0b1120;
 }
@@ -501,7 +594,12 @@
   font-weight: 500;
 }
 
-.manage-library-page .mobile-hidden-menu .group-trigger-con .group-trigger p span {
+.manage-library-page
+  .mobile-hidden-menu
+  .group-trigger-con
+  .group-trigger
+  p
+  span {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   font-size: 14px;
   padding: 0px 8px;
@@ -526,7 +624,10 @@
   position: relative;
 }
 
-.manage-library-page .mobile-hidden-menu .group-trigger-con.active .group-options {
+.manage-library-page
+  .mobile-hidden-menu
+  .group-trigger-con.active
+  .group-options {
   display: block;
 }
 
@@ -557,18 +658,29 @@
   padding: 12px 10px;
 }
 
-.manage-library-page .mobile-hidden-menu .group-trigger-con .group-options p.active {
+.manage-library-page
+  .mobile-hidden-menu
+  .group-trigger-con
+  .group-options
+  p.active {
   background: rgba(34, 197, 94, 0.12);
 }
 
-.manage-library-page .mobile-hidden-menu .group-trigger-con .group-options .active:after {
+.manage-library-page
+  .mobile-hidden-menu
+  .group-trigger-con
+  .group-options
+  .active:after {
   position: absolute;
   content: "✓";
   color: #22c55e;
   right: 15px;
 }
 
-.manage-library-page .mobile-hidden-menu .group-trigger-con .group-trigger:after {
+.manage-library-page
+  .mobile-hidden-menu
+  .group-trigger-con
+  .group-trigger:after {
   content: "▾";
   margin-left: auto;
   color: #6b7280;
@@ -578,7 +690,10 @@
   transform: rotate(180deg);
 }
 
-.manage-library-page .mobile-hidden-menu .group-trigger-con.active .group-trigger:after {
+.manage-library-page
+  .mobile-hidden-menu
+  .group-trigger-con.active
+  .group-trigger:after {
   transform: rotate(180deg);
 }
 
@@ -590,6 +705,7 @@
 .manage-library-page .library-search .group-trigger-con {
   position: relative;
   margin-left: 10px;
+  cursor: pointer;
 }
 
 .manage-library-page .library-search .group-trigger-con.active .group-options {
@@ -618,19 +734,27 @@
   position: relative;
   color: rgb(156 163 175);
   cursor: pointer;
-  transition: .25s;
+  transition: 0.25s;
 }
 
-.manage-library-page .library-search .group-trigger-con .group-options p:hover{
-      color: rgb(229 231 235);
-    background: rgba(255, 255, 255, 0.05);
+.manage-library-page .library-search .group-trigger-con .group-options p:hover {
+  color: rgb(229 231 235);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.manage-library-page .library-search .group-trigger-con .group-options p.active {
+.manage-library-page
+  .library-search
+  .group-trigger-con
+  .group-options
+  p.active {
   background: rgba(34, 197, 94, 0.12);
 }
 
-.manage-library-page .library-search .group-trigger-con .group-options p.active:after {
+.manage-library-page
+  .library-search
+  .group-trigger-con
+  .group-options
+  p.active:after {
   content: "✓";
   color: #22c55e;
   position: absolute;
@@ -674,7 +798,14 @@
   margin-left: 5px;
 }
 
-.manage-library-page .library-search .group-trigger-con .group-options .manage-library-page .library-search .group-trigger p:after {
+.manage-library-page
+  .library-search
+  .group-trigger-con
+  .group-options
+  .manage-library-page
+  .library-search
+  .group-trigger
+  p:after {
   content: "▾";
   margin-left: auto;
   display: block;
@@ -715,7 +846,6 @@
   margin-bottom: 15px;
   /* padding: 15px; */
   border-radius: 15px;
-  overflow: hidden;
 }
 
 .manage-library-page .manage-library-con .manage-library-top {
@@ -741,7 +871,11 @@
   align-items: center;
 }
 
-.manage-library-page .manage-library-con .manage-library-top .quick-actions select {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .quick-actions
+  select {
   width: 100px;
   margin-right: 5px;
   height: 33px;
@@ -771,12 +905,12 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   color: rgb(156 163 175);
 }
 
-.manage-library-page .library-table-bottom>p {
+.manage-library-page .library-table-bottom > p {
   color: #9ca3af;
   font-size: 12px;
 }
 
-.manage-library-page .library-table-bottom>p input {
+.manage-library-page .library-table-bottom > p input {
   background: #0f172a;
   border: 1px solid #94a3b81f;
   width: 38px;
@@ -785,13 +919,16 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   border-radius: 2px;
 }
 
-.manage-library-page .library-table-bottom>p input::-webkit-outer-spin-button,
-.manage-library-page .library-table-bottom>p input::-webkit-inner-spin-button {
+.manage-library-page .library-table-bottom > p input::-webkit-outer-spin-button,
+.manage-library-page
+  .library-table-bottom
+  > p
+  input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.manage-library-page .library-table-bottom>p input[type="number"] {
+.manage-library-page .library-table-bottom > p input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
@@ -801,7 +938,7 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   align-items: center;
 }
 
-.manage-library-page .library-table-pagination>button {
+.manage-library-page .library-table-pagination > button {
   background: rgb(11 17 32);
   border: 1px solid #94a3b81a;
   color: rgb(156 163 175);
@@ -811,12 +948,12 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   transition: 0.25s;
 }
 
-.manage-library-page .library-table-pagination>button:not(:disabled):hover {
+.manage-library-page .library-table-pagination > button:not(:disabled):hover {
   border-color: #22c55e;
   color: #bbf7d0;
 }
 
-.manage-library-page .library-table-pagination>button:disabled {
+.manage-library-page .library-table-pagination > button:disabled {
   cursor: auto;
 }
 
@@ -882,7 +1019,11 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   color: #cbd5e1;
 }
 
-.manage-library-page .manage-library-con .manage-library-top .quick-actions button {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .quick-actions
+  button {
   height: 33px;
   padding: 5px 15px;
   border-radius: 5px;
@@ -893,7 +1034,11 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   transition: 0.25s;
 }
 
-.manage-library-page .manage-library-con .manage-library-top .quick-actions button:hover {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .quick-actions
+  button:hover {
   color: rgb(229 231 235);
   background: rgba(255, 255, 255, 0.05);
 }
@@ -962,16 +1107,16 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   border: solid 1.5px #19ac4f;
 }
 
-.manage-library-page .group-management-con .branded-check.active:after{
-    content: "✓";
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 12px;
-    position: absolute;
-    opacity: 1;
-    color: black;
-    font-weight: bold;
+.manage-library-page .group-management-con .branded-check.active:after {
+  content: "✓";
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  position: absolute;
+  opacity: 1;
+  color: black;
+  font-weight: bold;
 }
 
 .manage-library-page .add-to-group-modal {
@@ -1160,7 +1305,11 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   text-align: center;
 }
 
-.manage-library-page .manage-library-con .manage-library-top .library-buttons .active {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .library-buttons
+  .active {
   background: #22c55e1a;
   color: rgb(34 197 94);
 }
@@ -1199,13 +1348,21 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   padding-left: 0px;
 }
 
-.manage-library-page .group-management .group-row .sub-actions button:first-of-type {
+.manage-library-page
+  .group-management
+  .group-row
+  .sub-actions
+  button:first-of-type {
   color: #16a34a;
   border: none;
   background: none;
 }
 
-.manage-library-page .group-management .group-row .sub-actions button:last-of-type {
+.manage-library-page
+  .group-management
+  .group-row
+  .sub-actions
+  button:last-of-type {
   color: #b32d2e;
   border: none;
   background: none;
@@ -1248,7 +1405,11 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   margin-bottom: 10px;
 }
 
-.manage-library-page .group-management-con .right-col .group-actions-con select {
+.manage-library-page
+  .group-management-con
+  .right-col
+  .group-actions-con
+  select {
   width: 100px;
   margin-right: 5px;
   height: 33px;
@@ -1259,7 +1420,12 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   cursor: pointer;
 }
 
-.manage-library-page .group-management-con .right-col .group-actions-con div:first-of-type button {
+.manage-library-page
+  .group-management-con
+  .right-col
+  .group-actions-con
+  div:first-of-type
+  button {
   height: 33px;
   padding: 5px 15px;
   border-radius: 5px;
@@ -1270,7 +1436,12 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   transition: 0.25s;
 }
 
-.manage-library-page .group-management-con .right-col .group-actions-con div:first-of-type button:hover {
+.manage-library-page
+  .group-management-con
+  .right-col
+  .group-actions-con
+  div:first-of-type
+  button:hover {
   color: rgb(229 231 235);
   background: rgba(255, 255, 255, 0.05);
 }
@@ -1282,7 +1453,7 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   font-size: 12px;
 }
 
-.manage-library-page .group-management-con .group-management>div {
+.manage-library-page .group-management-con .group-management > div {
   padding-left: 5px;
   padding-right: 5px;
   border-bottom: 1px solid #94a3b81a;
@@ -1294,32 +1465,63 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   padding-bottom: 5px;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con {
   display: flex;
   align-items: baseline;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con:hover .sub-actions {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con:hover
+  .sub-actions {
   display: flex;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con .title {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con
+  .title {
   flex-direction: column;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con .edit-con {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con
+  .edit-con {
   position: relative;
   display: none;
   flex-direction: column;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con .edit-con div {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con
+  .edit-con
+  div {
   display: flex;
   gap: 10px;
   margin-top: 5px;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con .edit-con input {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con
+  .edit-con
+  input {
   height: 20px;
   width: 300px;
   background: rgb(15 23 42);
@@ -1327,11 +1529,23 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   color: rgb(156 163 175);
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con .edit-con button {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con
+  .edit-con
+  button {
   cursor: pointer;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con .edit-con button:first-of-type {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con
+  .edit-con
+  button:first-of-type {
   width: fit-content;
   height: 100%;
   background: linear-gradient(135deg, #22c55e, #16a34a);
@@ -1342,7 +1556,13 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   padding: 3px 10px;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .title-con .edit-con button:last-of-type {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .title-con
+  .edit-con
+  button:last-of-type {
   background: transparent;
   width: fit-content;
   height: 100%;
@@ -1354,17 +1574,28 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   border: solid 1px #22c55e;
 }
 
-.manage-library-page .group-management-con .group-management .group-row .checkbox-con {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .group-row
+  .checkbox-con {
   display: flex;
   justify-content: center;
   align-items: flex-start;
 }
 
-.manage-library-page .group-management-con .group-management>div:last-of-type {
+.manage-library-page
+  .group-management-con
+  .group-management
+  > div:last-of-type {
   border-bottom: none;
 }
 
-.manage-library-page .group-management-con .group-management .title-con:hover .sub-actions {
+.manage-library-page
+  .group-management-con
+  .group-management
+  .title-con:hover
+  .sub-actions {
   display: flex;
 }
 
@@ -1375,7 +1606,7 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   font-weight: 500;
 }
 
-.manage-library-page .group-management-con .group-management>div span {
+.manage-library-page .group-management-con .group-management > div span {
   color: #6b7280;
   text-transform: uppercase;
   font-weight: bold;
@@ -1396,12 +1627,20 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   align-items: center;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination button.disabled {
-  opacity: .5;
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  button.disabled {
+  opacity: 0.5;
   pointer-events: none;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination .page-trigger {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  .page-trigger {
   background: rgb(11 17 32);
   padding: 4px 12px;
   border-radius: 999px;
@@ -1416,17 +1655,29 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   align-items: center;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination .page-trigger.active:after {
-  transform: rotate(180deg)
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  .page-trigger.active:after {
+  transform: rotate(180deg);
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination .page-trigger:after {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  .page-trigger:after {
   content: "▾";
   margin-left: 5px;
   display: inline-block;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination .page-options {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  .page-options {
   position: absolute;
   display: none;
   flex-direction: column;
@@ -1437,11 +1688,21 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   bottom: 115%;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination .page-trigger.active .page-options {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  .page-trigger.active
+  .page-options {
   display: flex;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination .page-options button {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  .page-options
+  button {
   background-color: #0f172a;
   border: none;
   color: #9ca3af;
@@ -1452,12 +1713,21 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   cursor: pointer;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination .page-options button:hover {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  .page-options
+  button:hover {
   background-color: #1a2847;
   color: #cbd5e1;
 }
 
-.manage-library-page .group-management-con .pagination-row .group-pagination>button {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .group-pagination
+  > button {
   background: rgb(11 17 32);
   border: 1px solid #94a3b81a;
   color: rgb(156 163 175);
@@ -1481,11 +1751,21 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   align-items: center;
 }
 
-.manage-library-page .group-management-con .pagination-row .jump-to-section p span {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .jump-to-section
+  p
+  span {
   margin-left: 5px;
 }
 
-.manage-library-page .group-management-con .pagination-row .jump-to-section p input {
+.manage-library-page
+  .group-management-con
+  .pagination-row
+  .jump-to-section
+  p
+  input {
   margin-left: 5px;
   margin-right: 5px;
   width: 38px;
@@ -1499,7 +1779,7 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   appearance: textfield;
 }
 
-.manage-library-page .group-management>div:last-of-type {
+.manage-library-page .group-management > div:last-of-type {
   margin-bottom: 0px;
 }
 
@@ -1560,31 +1840,54 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   border-radius: 15px 15px 0px 0px;
 }
 
-.manage-library-page .group-management-con .group-management-top div:first-of-type {
+.manage-library-page
+  .group-management-con
+  .group-management-top
+  div:first-of-type {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-.manage-library-page .group-management-con .group-management-top div:first-of-type input {
+.manage-library-page
+  .group-management-con
+  .group-management-top
+  div:first-of-type
+  input {
   margin: 0px;
 }
 
-.manage-library-page .group-management-con .group-management-top div:last-of-type {
+.manage-library-page
+  .group-management-con
+  .group-management-top
+  div:last-of-type {
   display: flex;
   justify-content: center;
 }
 
-.manage-library-page .manage-library-page .group-management-con .group-management-top div:last-of-type {
+.manage-library-page
+  .manage-library-page
+  .group-management-con
+  .group-management-top
+  div:last-of-type {
   text-align: right;
 }
 
-.manage-library-page .manage-library-con .manage-library-top .library-buttons .active span {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .library-buttons
+  .active
+  span {
   background: rgba(34, 197, 94, 0.18);
   color: rgb(34 197 94);
 }
 
-.manage-library-page .manage-library-con .manage-library-top .library-buttons button {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .library-buttons
+  button {
   padding: 5px 12px;
   border-radius: 15px;
   border: none;
@@ -1594,12 +1897,21 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   transition: 0.25s;
 }
 
-.manage-library-page .manage-library-con .manage-library-top .library-buttons button:hover {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .library-buttons
+  button:hover {
   color: rgb(229 231 235);
   background: rgba(255, 255, 255, 0.05);
 }
 
-.manage-library-page .manage-library-con .manage-library-top .library-buttons button span {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .library-buttons
+  button
+  span {
   margin-left: 5px;
   background: rgba(255, 255, 255, 0.07);
   color: rgb(107 114 128);
@@ -1607,7 +1919,11 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   border-radius: 999px;
 }
 
-.manage-library-page .manage-library-con .manage-library-top .library-buttons button:last-of-type {
+.manage-library-page
+  .manage-library-con
+  .manage-library-top
+  .library-buttons
+  button:last-of-type {
   margin-right: 0px;
 }
 
@@ -1803,7 +2119,12 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   flex-wrap: wrap;
 }
 
-.manage-library-page .library-table-game .game-details-con a div .mobile-rating {
+.manage-library-page
+  .library-table-game
+  .game-details-con
+  a
+  div
+  .mobile-rating {
   margin-left: 5px;
   margin-right: 5px;
   /* display: flex; */
@@ -1814,21 +2135,36 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   color: #22c55e;
 }
 
-.manage-library-page .library-table-game .game-details-con a div .mobile-rating:before {
+.manage-library-page
+  .library-table-game
+  .game-details-con
+  a
+  div
+  .mobile-rating:before {
   content: "·";
   padding-right: 5px;
   font-weight: bold;
   color: #6b7280;
 }
 
-.manage-library-page .library-table-game .game-details-con a div .mobile-rating:after {
+.manage-library-page
+  .library-table-game
+  .game-details-con
+  a
+  div
+  .mobile-rating:after {
   content: "·";
   padding-left: 5px;
   font-weight: bold;
   color: #6b7280;
 }
 
-.manage-library-page .library-table-game .game-details-con a div .mobile-status {
+.manage-library-page
+  .library-table-game
+  .game-details-con
+  a
+  div
+  .mobile-status {
   border: solid 1px #6b7280;
   padding: 2px 8px;
   border-radius: 99px;
@@ -1837,7 +2173,12 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   font-weight: 500;
 }
 
-.manage-library-page .library-table-game .game-details-con a div .mobile-status.completed {
+.manage-library-page
+  .library-table-game
+  .game-details-con
+  a
+  div
+  .mobile-status.completed {
   background: #60a5fa1a;
   border-color: #60a5fa40;
   color: #60a5fa;
@@ -2074,7 +2415,6 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   height: 1px;
   width: 100%;
   background-color: rgb(156 163 175);
-  ;
 }
 
 .manage-library-page .groups-con {
@@ -2100,4 +2440,299 @@ body .manage-library-page .manage-library-con .library-search .search-con svg {
   height: 36px;
   border-radius: 5px;
   object-fit: cover;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .title-con {
+  padding: 0px 15px;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .title h3 {
+  font-size: 16px;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .title span {
+  display: inline-block;
+  border-radius: 5px;
+  padding: 0px 6px;
+  background: #22c55e;
+  color: black;
+  font-weight: bold;
+  font-size: 18px;
+  font-family: "Syne", sans-serif;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.5);
+  flex-shrink: 0;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .change-status-con
+  .change-status-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #94a3b81a;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .change-status-con
+  .change-status-action
+  > p {
+  color: #17ad58;
+  font-weight: bold;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .change-status-con
+  .change-status-action
+  .icon {
+  border: solid 1px red;
+  height: 30px;
+  width: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .change-status-con
+  .change-status-action
+  .icon
+  svg {
+  height: 20px;
+  width: 20px;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .change-status-con
+  .change-status-action
+  div:first-of-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.manage-library-page .mobile-hidden-menu .change-status-con > span {
+  color: #9ca3af;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.manage-library-page .mobile-hidden-menu .change-status-con {
+  margin-top: 15px;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .change-status-con
+  .change-status-action
+  p {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.manage-library-page .mobile-hidden-menu .actions-con .action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #94a3b81a;
+}
+
+.manage-library-page .mobile-hidden-menu .actions-con .action .icon {
+  border: solid 1px #ef4444;
+  height: 30px;
+  width: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  background: #ef44441a;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .actions-con
+  .action
+  div:first-of-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.manage-library-page .mobile-hidden-menu .actions-con .action a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-decoration: none;
+  width: 100%;
+}
+
+.manage-library-page .loading-library-state{
+  display:flex;
+  justify-content: center;
+  flex-direction: column;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.manage-library-page .loading-library-state img{
+  height: 50px;
+  width: 50px;
+  object-fit: contain;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 10px;
+}
+
+.manage-library-page .loading-library-state p{
+  margin-top: 0px;
+  margin-bottom: 0px;
+  text-align: center;
+}
+
+.manage-library-page .mobile-hidden-menu .actions-con {
+  margin-top: 15px;
+}
+
+.manage-library-page .mobile-hidden-menu .actions-con > span {
+  color: #9ca3af;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.manage-library-page .mobile-hidden-menu .actions-con p {
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .group-row {
+  margin-bottom: 15px;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .group-row div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin-top: 15px;
+  padding-bottom: 10px;
+  position: relative;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .group-row span {
+  color: #9ca3af;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .group-row div p {
+  font-size: 12px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  text-align: center;
+  width: -moz-fit-content;
+  width: fit-content;
+  border: solid 1px #22c55e;
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: #22c55e;
+  background: #22c55e1a;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .platform-row div {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin-top: 15px;
+  padding-bottom: 10px;
+  position: relative;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .platform-row {
+  position: relative;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-game-info
+  .platform-row::after {
+  content: "";
+  position: absolute;
+  bottom: 7px;
+  right: 0px;
+  width: 24px;
+  height: 35px;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  mask-image: linear-gradient(to left, black, transparent);
+  -webkit-mask-image: linear-gradient(to left, black, transparent);
+  z-index: 1;
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-game-info
+  .platform-row
+  div::before {
+  left: 0;
+  mask-image: linear-gradient(to right, black, transparent);
+  -webkit-mask-image: linear-gradient(to right, black, transparent);
+}
+
+.manage-library-page
+  .mobile-hidden-menu
+  .mobile-game-info
+  .platform-row
+  div::after {
+  right: 0;
+  mask-image: linear-gradient(to left, black, transparent);
+  -webkit-mask-image: linear-gradient(to left, black, transparent);
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .platform-row span {
+  color: #9ca3af;
+  font-size: 10px;
+  letter-spacing: 2px;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.manage-library-page .mobile-hidden-menu .mobile-game-info .platform-row div p {
+  font-size: 12px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  text-align: center;
+  width: -moz-fit-content;
+  width: fit-content;
+  flex-shrink: 0;
+  border: solid 1px #22c55e;
+  padding: 3px 6px;
+  border-radius: 5px;
+  color: #22c55e;
+  background: #22c55e1a;
 }

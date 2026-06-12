@@ -61,6 +61,7 @@ export default function ImportPanel({
   const [hasImportStarted, setHasImportStarted] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [groupSelectOpen, setGroupSelectOpen] = useState(false);
   const textareaRef = useRef(null);
 
   useEffect(() => {
@@ -291,15 +292,15 @@ export default function ImportPanel({
         </button> */}
         <div className="import-group-con">
           <div>
-            <span>Group options:</span>
+            <span>Import games to group:</span>
           </div>
           <div className="import-options" style={{ display: showNewGroup ? "none" : undefined }}>
-            <select
+            {/* <select
               className="group-select"
               value={importTargetGroupId}
               onChange={onImportTargetGroupChange}
             >
-              <option value="">None</option>
+              <option value="">Select Group</option>
               {customFilters
                 .filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped")
                 .map((g) => (
@@ -307,7 +308,46 @@ export default function ImportPanel({
                     {g.name}
                   </option>
                 ))}
-            </select>
+            </select> */}
+            <div className={`group-select-con ${groupSelectOpen ? "active" : ""}`}>
+              <div
+                className="group-select-trigger"
+                onClick={() => setGroupSelectOpen((v) => !v)}
+              >
+                <p>
+                  {importTargetGroupId
+                    ? customFilters.find((g) => g.id === importTargetGroupId)?.name || "Select A Group"
+                    : "Select A Group"}
+                </p>
+              </div>
+              <div className="group-options">
+                <p
+                  className={importTargetGroupId === "" ? "active" : ""}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    onImportTargetGroupChange({ target: { value: "" } });
+                    setGroupSelectOpen(false);
+                  }}
+                >
+                  No Group
+                </p>
+                {customFilters
+                  .filter((g) => g.id !== "all-platforms" && g.id !== "ungrouped")
+                  .map((g) => (
+                    <p
+                      key={g.id}
+                      className={importTargetGroupId === g.id ? "active" : ""}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        onImportTargetGroupChange({ target: { value: g.id } });
+                        setGroupSelectOpen(false);
+                      }}
+                    >
+                      {g.name}
+                    </p>
+                  ))}
+              </div>
+            </div>
             <p>Or</p>
             <button onClick={() => setShowNewGroup(true)}>Add To New Group</button>
           </div>
@@ -331,12 +371,27 @@ export default function ImportPanel({
                 }
 
                 const newId = await onCreateGroup?.(newGroupName.trim());
-                if (newId) onImportTargetGroupChange({ target: { value: newId } });
+                if (!newId) return;
+
+                onImportTargetGroupChange({ target: { value: newId } });
                 setNewGroupName("");
                 setShowNewGroup(false);
+
+                const lines = scanCleanText.split("\n").filter((l) => l.trim() !== "");
+                const correctedLines = lines.map((line, i) =>
+                  savedTitles[i] !== undefined ? savedTitles[i] : line
+                );
+                const selectedTitles = correctedLines
+                  .filter((_, i) => selectedGames.has(i))
+                  .join("\n");
+
+                onScanCleanTextChange(selectedTitles);
+                const { candidates: freshCandidates, selectedIds: freshSelectedIds } =
+                  await onRegenerate(selectedTitles);
+                onImport(freshCandidates, freshSelectedIds, newId);
               }}
             >
-              Save
+              Import
             </button>
             <button onClick={() => setShowNewGroup(false)}>Cancel</button>
           </div>

@@ -197,6 +197,10 @@
   border-color: rgba(255, 255, 255, 0.3);
 }
 
+.profile-settings-shell .profile-banner > div .upload-button.active {
+  border: solid 2px rgb(34 197 94);
+}
+
 .profile-settings-shell .name-con {
   display: flex;
   align-items: center;

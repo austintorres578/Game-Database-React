@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  scanImageForText,
-  extractGameTitlesWithLLM,
+  scanImageWithGemini,
+  // scanImageForText,
+  // extractGameTitlesWithLLM,
 } from "../../services/yourLibrary/scanService";
 import {
   searchGameByTitle,
@@ -171,11 +172,13 @@ export function useImportFlow({
   /* -------------------------------------------------------------------------
     IMPORT SELECTED CANDIDATES
   -------------------------------------------------------------------------- */
-  async function importSelectedCandidatesDirect(candidatesOverride, selectedIdsOverride) {
+  async function importSelectedCandidatesDirect(candidatesOverride, selectedIdsOverride, overrideGroupId) {
     if (!authUser) {
       alert("You must be signed in to import games.");
       return;
     }
+
+    const targetGroupIdValue = overrideGroupId ?? importTargetGroupId;
 
     const activeCandidates = candidatesOverride ?? candidates;
     const activeSelectedIds = selectedIdsOverride ?? selectedCandidateIds;
@@ -255,8 +258,8 @@ export function useImportFlow({
           (g) => String(g.id) === docIdStr,
         );
 
-        const targetIsNone = importTargetGroupId === "none";
-        const targetGroupId = targetIsNone ? null : importTargetGroupId;
+        const targetIsNone = targetGroupIdValue === "none";
+        const targetGroupId = targetIsNone ? null : targetGroupIdValue;
 
         let alreadyInTarget = false;
         if (targetIsNone) {
@@ -286,7 +289,7 @@ export function useImportFlow({
           continue;
         }
 
-        if (importTargetGroupId !== "none") {
+        if (targetGroupIdValue !== "none") {
           toAddToGroupIds.push(docIdStr);
         }
 
@@ -318,13 +321,13 @@ export function useImportFlow({
             [c.id]: { state: "imported" },
           }));
         } else {
-          console.log(`[IMPORT] 📚 Already in library: "${q}" → ID: ${docIdStr} — ${importTargetGroupId === "none" ? "not ungrouped, adding anyway" : "will add to group"}`);
+          console.log(`[IMPORT] 📚 Already in library: "${q}" → ID: ${docIdStr} — ${targetGroupIdValue === "none" ? "not ungrouped, adding anyway" : "will add to group"}`);
           setCandidateImportStatus((prev) => ({
             ...(prev || {}),
             [c.id]: {
               state: "imported",
               message:
-                importTargetGroupId === "none"
+                targetGroupIdValue === "none"
                   ? "Already in library (but not ungrouped)"
                   : "Already in library — will add to group",
             },
@@ -340,10 +343,10 @@ export function useImportFlow({
       }
     }
 
-    if (importTargetGroupId !== "none" && toAddToGroupIds.length > 0) {
+    if (targetGroupIdValue !== "none" && toAddToGroupIds.length > 0) {
       try {
         const uniq = Array.from(new Set(toAddToGroupIds.map(String)));
-        await addGameIdsToGroup(importTargetGroupId, uniq);
+        await addGameIdsToGroup(targetGroupIdValue, uniq);
       } catch (e) {
         console.error("Failed adding imports to group:", e);
       }
@@ -424,22 +427,21 @@ export function useImportFlow({
     setScanPreviewUrls(nextUrls);
 
     try {
-      const results = [];
       for (const file of files) {
         // eslint-disable-next-line no-await-in-loop
-        const raw = await scanImageForText(file);
-        results.push(raw);
+        const { sortedTitles, nextCandidates, uncertain } = await scanImageWithGemini(file);
+        setScanCleanText(sortedTitles.join("\n"));
+        setCandidates(nextCandidates);
+        setSelectedCandidateIds(new Set(nextCandidates.map((c) => c.id)));
+
+        if (uncertain.length > 0) {
+          alert(
+            `${uncertain.length} game(s) couldn't be matched to a known game:\n\n` +
+            uncertain.map((t, i) => `${i + 1}. "${t}"`).join("\n") +
+            "\n\nThese were excluded from the import list."
+          );
+        }
       }
-
-      const combined = results.filter(Boolean).join("\n\n---\n\n");
-      setScanText(combined);
-
-      const { sortedTitles, nextCandidates } =
-        await extractGameTitlesWithLLM(combined);
-
-      setScanCleanText(sortedTitles.join("\n"));
-      setCandidates(nextCandidates);
-      setSelectedCandidateIds(new Set(nextCandidates.map((c) => c.id)));
     } catch (err) {
       console.error("🔥 Scan request error:", err);
       setScanError(err?.message || "Scan request failed.");

@@ -145,17 +145,40 @@ export default function CustomGame() {
     return () => clearTimeout(timer);
   }, [tagSearch]);
 
+  const MAX_SCREENSHOTS = 6;
+
   const coverFileInputRef = useRef(null);
   const screenshotFileInputRef = useRef(null);
 
   function handleScreenshotFileChange(e) {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     if (!files.length) return;
-    const newShots = files.map((file) => {
-      const url = URL.createObjectURL(file);
-      return { id: url, image: url, file };
-    });
-    handleAddScreenshots(newShots);
+
+    const remaining = MAX_SCREENSHOTS - formData.screenshots.length;
+    if (remaining <= 0) {
+      alert(`Maximum ${MAX_SCREENSHOTS} screenshots allowed.`);
+      e.target.value = "";
+      return;
+    }
+
+    const allowed = files.slice(0, remaining);
+    if (files.length > remaining) {
+      alert(`Only ${remaining} more screenshot(s) can be added. ${files.length - remaining} file(s) were ignored.`);
+    }
+
+    const newShots = allowed.map((file) => ({
+      id: URL.createObjectURL(file),
+      preview: URL.createObjectURL(file),
+      image: URL.createObjectURL(file),
+      file,
+      storagePath: null,
+    }));
+
+    setFormData((prev) => ({
+      ...prev,
+      screenshots: [...prev.screenshots, ...newShots],
+    }));
+
     e.target.value = "";
   }
 
@@ -542,7 +565,7 @@ export default function CustomGame() {
                 <div>
                   <div className="title-row">
                     <h3>Screenshots</h3>
-                    <button type="button" onClick={() => screenshotFileInputRef.current.click()}>+ Add Screenshots</button>
+                    <button type="button" onClick={() => screenshotFileInputRef.current.click()} disabled={formData.screenshots.length >= MAX_SCREENSHOTS}>+ Add Screenshots {formData.screenshots.length}/{MAX_SCREENSHOTS}</button>
                   </div>
                   <input
                     ref={screenshotFileInputRef}

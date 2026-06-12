@@ -139,6 +139,7 @@
   display: flex;
   align-items: center;
   position: relative;
+  gap:5px;
 }
 
 .search-container .sort-by-con button {
@@ -575,7 +576,7 @@
 
 .search-container .pagination-info {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   max-width: 995px;
   margin-left: auto;
   margin-right: auto;

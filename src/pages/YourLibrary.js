@@ -870,7 +870,9 @@ export default function YourLibrary() {
               onToggleCandidate={importFlow.toggleCandidate}
               onSelectAll={importFlow.selectAllCandidates}
               onDeselectAll={importFlow.deselectAllCandidates}
-              onImport={importFlow.importSelectedCandidatesDirect}
+              onImport={(candidates, ids, overrideGroupId) =>
+                importFlow.importSelectedCandidatesDirect(candidates, ids, overrideGroupId)
+              }
               isImporting={importFlow.isImporting}
               onRemoveCandidate={importFlow.removeCandidate}
               importSummary={importFlow.importSummary}

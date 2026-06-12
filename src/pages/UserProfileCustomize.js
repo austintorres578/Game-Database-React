@@ -264,6 +264,7 @@ export default function UserProfileCustomizer() {
     if (!file || !file.type.startsWith("image/")) return;
     setBannerFile(file);
     setSelectedBanner(`url(${URL.createObjectURL(file)}) center/cover no-repeat`);
+    alert("Banner image uploaded successfully! Press Save Changes to apply it to your profile.");
   };
 
   const prepareSave = async (e) => {
