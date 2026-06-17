@@ -1,0 +1,896 @@
+import { useState, useEffect, useRef } from "react";
+import { useLocation, Link } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
+import Games from "../components/Games";
+import NoResultsMessage from "../components/searchPage/NoResultsMessage";
+import SearchPagination from "../components/searchPage/SearchPagination";
+
+import { buildLink } from "../utils/searchPage/buildLink";
+import { scrollToTop } from "../utils/searchPage/scrollHelpers";
+import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
+import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags, searchRawgGenres, autocompleteRawgGames } from "../services/searchPage/rawgService";
+import { useClickOutside } from "../hooks/searchPage/useClickOutside";
+import { RevealWrapper } from "../components/RevealWrapper";
+
+import "../styles/gameSearch.css";
+
+function SuggestionThumb({ src, alt }) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (!src) {
+    return <div className="autocomplete-thumb" />;
+  }
+
+  return (
+    <div className={`autocomplete-thumb${loaded ? " is-loaded" : " is-loading"}`}>
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
+
+function highlightMatch(name, query) {
+  const q = (query || "").trim();
+  if (!q) return name;
+  const idx = name.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return name;
+  return (
+    <>
+      {name.slice(0, idx)}
+      <mark className="ac-highlight">{name.slice(idx, idx + q.length)}</mark>
+      {name.slice(idx + q.length)}
+    </>
+  );
+}
+
+export default function SearchPage({ user }) {
+  const location = useLocation();
+  const pageSize = 12;
+
+  const [loading, setLoading] = useState(false);
+
+  const [gatheredData, setGatheredData] = useState([
+    { results: [], next: "", previous: "", loaded: false },
+  ]);
+
+  const [pageNumber, setPageNumber] = useState(1);
+  const [totalResults, setTotalResults] = useState(0);
+
+  const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [selectedTags, setSelectedTags] = useState([]);
+
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const [platformFilters, setPlatformFilters] = useState([
+    { id: "all", label: "All Platforms", platformId: null },
+  ]);
+
+  const [genreFilters, setGenreFilters] = useState([
+    { id: "all", label: "All Genres", slug: "", kind: "all" },
+  ]);
+
+  const [tagFilters, setTagFilters] = useState([
+    { id: "all", label: "All Tags", slug: "", kind: "all" },
+  ]);
+
+  const [sortBy, setSortBy] = useState("-metacritic");
+
+  const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [isJumpInputActive, setIsJumpInputActive] = useState(false);
+  const [jumpPageInput, setJumpPageInput] = useState("1");
+  const dropdownRef = useRef(null);
+
+  const [activeFilterCategory, setActiveFilterCategory] = useState(null);
+  const [filtersLoading, setFiltersLoading] = useState(true);
+  const [pillSearch, setPillSearch] = useState("");
+  const [tagSearchResults, setTagSearchResults] = useState([]);
+  const [isTagSearching, setIsTagSearching] = useState(false);
+  const [isGenreSearching, setIsGenreSearching] = useState(false);
+  const filterAreaRef = useRef(null);
+  useClickOutside(filterAreaRef, () => setActiveFilterCategory(null));
+
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionRef = useRef(null);
+  useClickOutside(suggestionRef, () => setShowSuggestions(false));
+  const userTypingRef = useRef(false);
+
+  useEffect(() => {
+    setPillSearch("");
+    setTagSearchResults([]);
+  }, [activeFilterCategory]);
+
+  useEffect(() => {
+    if (activeFilterCategory !== "tag" || pillSearch.trim().length < 2) {
+      setIsTagSearching(false);
+      setTagSearchResults([]);
+      return;
+    }
+    setIsTagSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchRawgTags(pillSearch);
+      setTagSearchResults(results);
+      setIsTagSearching(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [pillSearch, activeFilterCategory]);
+
+  useEffect(() => {
+    if (activeFilterCategory !== "genre" || pillSearch.trim().length < 2) {
+      setIsGenreSearching(false);
+      return;
+    }
+    setIsGenreSearching(true);
+    const timer = setTimeout(async () => {
+      const results = await searchRawgGenres(pillSearch);
+      setGenreFilters((prev) => {
+        const baseIds = new Set(prev.map((g) => g.id));
+        const newOnes = results.filter((r) => !baseIds.has(r.id));
+        return [...prev, ...newOnes];
+      });
+      setIsGenreSearching(false);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [pillSearch, activeFilterCategory]);
+
+  useEffect(() => {
+    if (searchTerm.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    if (!userTypingRef.current) return;
+    const timer = setTimeout(async () => {
+      const results = await autocompleteRawgGames(searchTerm);
+      setSuggestions(results);
+      setShowSuggestions(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const fetchLink = buildRawgFetchBase(pageSize);
+
+  const totalPages = Math.max(1, Math.ceil((totalResults || 0) / pageSize));
+
+  // runs the request + stores "last search" meta in localStorage
+  function runSearch(link, metaState) {
+    setLoading(true);
+
+    fetchRawgGames(link)
+      .then((res) => {
+        setLoading(false);
+        setTotalResults(res.count);
+
+        if (res.count === 0 && res.results.length === 0) {
+          // ⚠️ TEMP diagnostic — distinguishes a real zero-match from a silent failure.
+          console.warn("Search returned 0 results for link:", link);
+          // Uncomment the next line if you want a visible alert on empty results too:
+          // alert("Search returned 0 results (diagnostic):\n\n" + link);
+        }
+
+        localStorage.setItem("currentLink", link);
+        if (metaState) {
+          localStorage.setItem("searchState", JSON.stringify(metaState));
+          if (typeof metaState.page === "number") {
+            localStorage.setItem("currentPage", String(metaState.page));
+          }
+          if (metaState.tags) {
+            localStorage.setItem("selectedTags", JSON.stringify(metaState.tags));
+          }
+        }
+
+        setGatheredData([
+          {
+            results: res.results.slice(0, pageSize),
+            next: res.next,
+            previous: res.previous,
+            loaded: true,
+          },
+        ]);
+      })
+      .catch((err) => {
+        setLoading(false);
+        console.error("Search failed:", err);
+        // ⚠️ TEMP diagnostic — remove once the intermittent issue is identified.
+        alert(
+          "Search failed (diagnostic):\n\n" +
+          (err?.status ? `HTTP status: ${err.status}\n` : "") +
+          `Message: ${err?.message || err}\n\n` +
+          `Link: ${link}`
+        );
+      });
+  }
+
+  // Scroll to top when page loads
+  useEffect(() => {
+    scrollToTop();
+  }, []);
+
+  // Handle incoming search query from mobile library
+  useEffect(() => {
+    const q = location.state?.query;
+    if (!q) return;
+    const page = 1;
+    setSearchTerm(q);
+    setSelectedPlatforms([]);
+    setSelectedGenres([]);
+    setSelectedTags([]);
+    setPageNumber(page);
+    const link = buildLink(fetchLink, q, [], [], [], page, sortBy);
+    runSearch(link, { term: q, platforms: [], genres: [], tags: [], page, sortBy });
+    scrollToTop();
+  }, [location.state?.query]);
+
+  // fetch platform + genre + tag filters
+  useEffect(() => {
+    Promise.all([
+      fetchRawgPlatforms().then((platforms) => {
+        setPlatformFilters((prev) => [prev[0], ...platforms]);
+      }),
+      fetchRawgGenres().then((genres) => {
+        setGenreFilters((prev) => [prev[0], ...genres]);
+      }),
+      fetchRawgTags().then((tags) => {
+        setTagFilters((prev) => {
+          const baseIds = new Set(["all", ...tags.map((t) => t.id)]);
+          const customSelected = prev.filter((t) => !baseIds.has(t.id));
+          return [prev[0], ...customSelected, ...tags];
+        });
+      }),
+    ])
+      .catch((err) => console.error("Error fetching filters:", err))
+      .finally(() => setFiltersLoading(false));
+  }, []);
+
+  // close page dropdown when clicking outside
+  useClickOutside(dropdownRef, () => setIsPageDropdownOpen(false));
+
+  // On mount: if there's a saved search, restore it and re-run it
+  useEffect(() => {
+    if (location.state?.headerSearch) return;
+
+    const savedLink = localStorage.getItem("currentLink");
+    const savedStateRaw = localStorage.getItem("searchState");
+
+    if (savedLink && savedStateRaw) {
+      try {
+        const savedState = JSON.parse(savedStateRaw);
+
+        setSearchTerm(savedState.term || "");
+        setSelectedPlatforms(savedState.platforms || []);
+        setSelectedGenres(savedState.genres || []);
+        setSelectedTags(savedState.tags || []);
+        setPageNumber(savedState.page || 1);
+        if (savedState.sortBy) setSortBy(savedState.sortBy);
+
+        const savedTags = localStorage.getItem("selectedTags");
+        if (savedTags) {
+          try { setSelectedTags(JSON.parse(savedTags)); } catch {}
+        }
+
+        runSearch(savedLink, savedState);
+      } catch (err) {
+        console.error("Failed to parse saved searchState", err);
+      }
+    } else {
+      const page = 1;
+      const defaultSort = "-metacritic";
+      setSortBy(defaultSort);
+      const link = buildLink(fetchLink, "", [], [], [], page, defaultSort);
+      runSearch(link, { term: "", platforms: [], genres: [], tags: [], page, sortBy: defaultSort });
+    }
+  }, []);
+
+  useEffect(() => {
+    const term = location.state?.headerSearch;
+    if (!term) return;
+
+    const page = 1;
+    setSearchTerm(term);
+    setSelectedPlatforms([]);
+    setSelectedGenres([]);
+    setSelectedTags([]);
+    setPageNumber(page);
+
+    const link = buildLink(fetchLink, term, [], [], [], page, sortBy);
+    runSearch(link, { term, platforms: [], genres: [], tags: [], page, sortBy });
+    scrollToTop();
+  }, [location.state?.headerSearch]);
+
+  useEffect(() => {
+    const quickTag = location.state?.quickTag;
+    const quickTagSlug = location.state?.quickTagSlug;
+
+    if (!quickTag && !quickTagSlug) return;
+
+    // If a slug was passed directly (e.g. from GamePage), use it without
+    // needing to wait for or match against the loaded filter lists.
+    if (quickTagSlug) {
+      const page = 1;
+      const nextTags = [quickTagSlug];
+
+      // Ensure the tag exists as a pill in the filter list
+      setTagFilters((prev) => {
+        const exists = prev.some((t) => t.slug === quickTagSlug);
+        if (exists) return prev;
+        return [
+          ...prev,
+          { id: `quick-${quickTagSlug}`, label: quickTag, slug: quickTagSlug, kind: "tag" },
+        ];
+      });
+
+      setSearchTerm("");
+      setSelectedPlatforms([]);
+      setSelectedGenres([]);
+      setSelectedTags(nextTags);
+      setPageNumber(page);
+      setIsPageDropdownOpen(false);
+
+      const link = buildLink(fetchLink, "", [], [], nextTags, page, sortBy);
+
+      runSearch(link, {
+        term: "",
+        platforms: [],
+        genres: [],
+        tags: nextTags,
+        page,
+        sortBy,
+      });
+
+      scrollToTop();
+      return;
+    }
+
+    // Footer quick-tags: match by label against loaded filters
+    if (genreFilters.length <= 1 && tagFilters.length <= 1) return;
+
+    const matchedGenre = genreFilters.find(
+      (genre) => genre.label.toLowerCase() === quickTag.toLowerCase(),
+    );
+
+    const matchedTag = tagFilters.find(
+      (tag) => tag.label.toLowerCase() === quickTag.toLowerCase(),
+    );
+
+    const page = 1;
+
+    setSearchTerm("");
+    setSelectedPlatforms([]);
+    setPageNumber(page);
+    setIsPageDropdownOpen(false);
+
+    if (matchedGenre?.slug) {
+      const nextGenres = [matchedGenre.slug];
+
+      setSelectedGenres(nextGenres);
+      setSelectedTags([]);
+
+      const link = buildLink(fetchLink, "", [], nextGenres, [], page, sortBy);
+
+      runSearch(link, {
+        term: "",
+        platforms: [],
+        genres: nextGenres,
+        tags: [],
+        page,
+        sortBy,
+      });
+
+      scrollToTop();
+      return;
+    }
+
+    if (matchedTag?.slug) {
+      const nextTags = [matchedTag.slug];
+
+      setSelectedGenres([]);
+      setSelectedTags(nextTags);
+
+      const link = buildLink(fetchLink, "", [], [], nextTags, page, sortBy);
+
+      runSearch(link, {
+        term: "",
+        platforms: [],
+        genres: [],
+        tags: nextTags,
+        page,
+        sortBy,
+      });
+
+      scrollToTop();
+    }
+  }, [location.state, genreFilters, tagFilters]);
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    const page = 1;
+
+    setPageNumber(page);
+    localStorage.setItem("currentPage", String(page));
+
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      page,
+      sortBy,
+    );
+
+    runSearch(link, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page,
+      sortBy,
+    });
+
+    scrollToTop();
+  }
+
+  function nextPage() {
+    if (loading || pageNumber >= totalPages) return;
+
+    const newPage = pageNumber + 1;
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      newPage,
+      sortBy,
+    );
+
+    setPageNumber(newPage);
+    localStorage.setItem("currentPage", String(newPage));
+
+    runSearch(link, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page: newPage,
+      sortBy,
+    });
+
+    scrollToTop();
+  }
+
+  function prevPage() {
+    if (loading || pageNumber <= 1) return;
+
+    const newPage = pageNumber - 1;
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      newPage,
+      sortBy,
+    );
+
+    setPageNumber(newPage);
+    localStorage.setItem("currentPage", String(newPage));
+
+    runSearch(link, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page: newPage,
+      sortBy,
+    });
+
+    scrollToTop();
+  }
+
+  function goToPage(num) {
+    if (loading || num === pageNumber) return;
+
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      num,
+      sortBy,
+    );
+
+    setPageNumber(num);
+    localStorage.setItem("currentPage", String(num));
+
+    runSearch(link, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page: num,
+      sortBy,
+    });
+
+    scrollToTop();
+  }
+
+  function handleJumpInputBlur() {
+    setIsJumpInputActive(false);
+    const nextPage = Number(jumpPageInput);
+    if (!Number.isInteger(nextPage) || nextPage < 1 || nextPage > totalPages) {
+      setJumpPageInput(String(pageNumber));
+      return;
+    }
+    if (nextPage !== pageNumber) {
+      goToPage(nextPage);
+    }
+  }
+
+  useEffect(() => {
+    if (!isJumpInputActive) {
+      setJumpPageInput(String(pageNumber));
+    }
+  }, [pageNumber, isJumpInputActive]);
+
+  function handleSortChange(nextSort) {
+    setSortBy(nextSort);
+    const page = 1;
+    setPageNumber(page);
+
+    const link = buildLink(
+      fetchLink,
+      searchTerm,
+      selectedPlatforms,
+      selectedGenres,
+      selectedTags,
+      page,
+      nextSort,
+    );
+
+    runSearch(link, {
+      term: searchTerm,
+      platforms: selectedPlatforms,
+      genres: selectedGenres,
+      tags: selectedTags,
+      page,
+      sortBy: nextSort,
+    });
+
+    scrollToTop();
+  }
+
+  function makeFilterToggler(setter, getKey) {
+    return (item) => {
+      if (item.id === "all") return setter([]);
+      const key = getKey(item);
+      setter((prev) => prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]);
+    };
+  }
+
+  const handlePlatformClick = makeFilterToggler(setSelectedPlatforms, (p) => p.platformId);
+  const handleGenreClick    = makeFilterToggler(setSelectedGenres,    (g) => g.slug);
+
+  function handleTagClick(item) {
+    if (item.id === "all") return setSelectedTags([]);
+    const isSelected = selectedTags.includes(item.slug);
+    if (isSelected) {
+      setSelectedTags((prev) => prev.filter((s) => s !== item.slug));
+      setTagFilters((prev) => {
+        const baseIds = prev.slice(0, 41).map((t) => t.id);
+        if (!baseIds.includes(item.id)) return prev.filter((t) => t.id !== item.id);
+        return prev;
+      });
+    } else {
+      setTagFilters((prev) => {
+        if (prev.find((t) => t.id === item.id)) return prev;
+        return [prev[0], item, ...prev.slice(1)];
+      });
+      setSelectedTags((prev) => [...prev, item.slug]);
+      setTagSearchResults([]);
+      setPillSearch("");
+    }
+  }
+
+  function resetSearch() {
+    setSearchTerm("");
+    setSelectedPlatforms([]);
+    setSelectedGenres([]);
+    setSelectedTags([]);
+    setSortBy("-metacritic");
+    setPageNumber(1);
+    setIsPageDropdownOpen(false);
+    setActiveFilterCategory(null);
+
+    setGatheredData([{ results: [], next: "", previous: "", loaded: false }]);
+    setTotalResults(0);
+    localStorage.removeItem("currentLink");
+    localStorage.removeItem("searchState");
+    localStorage.removeItem("currentPage");
+
+    scrollToTop();
+  }
+
+  const games = gatheredData[0].results.map((game, index) => (
+    <Games
+      key={game.id}
+      index={index}
+      user={user}
+      id={game.id}
+      name={game.name}
+      rating={game.metacritic}      rawgRating={game.rating}      developers={game.developers}
+      genre={game.genres}
+      background={game.background_image}
+      consoleList={game.platforms}
+      pageNumber={pageNumber}
+      esrb_rating={game.esrb_rating}
+      tag={game.tags}
+      stores={game.stores}
+      released={game.released}
+    />
+  ));
+
+
+  const skeletonCards = Array.from({ length: pageSize }).map((_, i) => (
+    <div className="game-wrapper game-skeleton" key={`skeleton-${i}`}>
+      <div className="game-card">
+        <div className="game-img skeleton-shimmer" />
+        <div className="game-info">
+          <div className="skeleton-line skeleton-shimmer skeleton-title" />
+          <div className="skeleton-line skeleton-shimmer skeleton-sub" />
+        </div>
+      </div>
+    </div>
+  ));
+
+  const pageOptions = getPageOptions(totalPages, pageNumber);
+
+
+  const hasResults =
+    gatheredData[0].loaded && gatheredData[0].results.length > 0;
+  const noResults =
+    gatheredData[0].loaded && !loading && gatheredData[0].results.length === 0;
+
+  return (
+    <div className="search-container">
+
+      <RevealWrapper direction="up">
+        
+        {/*  
+        <div className="search-header">
+          <h1 className="search-title">Find Your Next Game</h1>
+          <p className="search-subtitle">
+            Search thousands of titles across all platforms.
+          </p>
+        </div>
+        */}
+        
+      </RevealWrapper>
+
+      <div className="search-page-container">
+        <RevealWrapper direction="up" delay={100}>
+        <form onSubmit={handleSubmit}>
+          <div className="search-box-wrapper">
+            <svg class="search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"></circle><path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
+            <div ref={suggestionRef} style={{ position: "relative", flex: 1 }}>
+              <input
+                className="search-box"
+                type="text"
+                placeholder="Search By Game Title..."
+                value={searchTerm}
+                onChange={(e) => {
+                  userTypingRef.current = true;
+                  setSearchTerm(e.target.value);
+                }}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="autocomplete-dropdown">
+                  {suggestions.map((s) => (
+                    <Link
+                      key={s.id}
+                      to={gamePath(s.id, s.name)}
+                      className="autocomplete-item"
+                      onClick={() => {
+                        userTypingRef.current = false;
+                        setSearchTerm(s.name);
+                        setShowSuggestions(false);
+                        scrollToTop();
+                      }}
+                    >
+                      <SuggestionThumb src={s.background_image} alt={s.name} />
+                      <div>
+                        <p>{highlightMatch(s.name, searchTerm)}</p>
+                        <p>
+                          {s.genres.length > 0
+                            ? <span>{s.genres[0].name}</span>
+                            : <span>Unknown</span>}
+                          {s.released && <span> · {new Date(s.released).getFullYear()}</span>}
+                        </p>
+                      </div>
+                      <p className="rating">{s.metacritic ?? "N/A"}</p>
+
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button type="submit" className="search-button" disabled={loading}>
+              {loading ? "Searching..." : "Search"}
+            </button>
+          </div>
+
+          <div ref={filterAreaRef} style={{ position: "relative" }}>
+            <div className="platform-flex">
+              
+              <button
+                type="button"
+                className={`filter-category-btn${selectedPlatforms.length > 0 ? " has-value" : ""}${activeFilterCategory === "platform" ? " open" : ""}`}
+                onClick={() => setActiveFilterCategory((prev) => prev === "platform" ? null : "platform")}
+              >
+                Platforms <span className="filter-count-badge">{selectedPlatforms.length > 0 ? selectedPlatforms.length : "All"}</span> <span className="chevron">▾</span>
+              </button>
+
+              <button
+                type="button"
+                className={`filter-category-btn${selectedGenres.length > 0 ? " has-value" : ""}${activeFilterCategory === "genre" ? " open" : ""}`}
+                onClick={() => setActiveFilterCategory((prev) => prev === "genre" ? null : "genre")}
+              >
+                Genres <span className="filter-count-badge">{selectedGenres.length > 0 ? selectedGenres.length : "All"}</span> <span className="chevron">▾</span>
+              </button>
+
+              <button
+                type="button"
+                className={`filter-category-btn${selectedTags.length > 0 ? " has-value" : ""}${activeFilterCategory === "tag" ? " open" : ""}`}
+                onClick={() => {
+                  const saved = localStorage.getItem("selectedTags");
+                  if (saved) console.log(JSON.parse(saved));
+                  setActiveFilterCategory((prev) => prev === "tag" ? null : "tag");
+                }}
+              >
+                Tags <span className="filter-count-badge">{selectedTags.length > 0 ? selectedTags.length : "All"}</span> <span className="chevron">▾</span>
+              </button>
+
+              <button
+                type="button"
+                className="reset-search-button"
+                onClick={resetSearch}
+              >
+                Reset Search
+              </button>
+            </div>
+
+            {activeFilterCategory && (() => {
+              const { filters, isActive, onClick } =
+                activeFilterCategory === "platform"
+                  ? { filters: platformFilters, isActive: (i) => isPlatformActive(i, selectedPlatforms), onClick: handlePlatformClick }
+                  : activeFilterCategory === "genre"
+                  ? { filters: genreFilters,    isActive: (i) => isGenreActive(i, selectedGenres),       onClick: handleGenreClick }
+                  : { filters: tagFilters,      isActive: (i) => isTagActive(i, selectedTags),           onClick: handleTagClick };
+              return (
+                <div className="filter-pill-container">
+                  
+                  {activeFilterCategory === "tag" && (
+                    <input
+                      type="text"
+                      placeholder="Search tags"
+                      value={pillSearch}
+                      onChange={(e) => setPillSearch(e.target.value)}
+                    />
+                  )}
+                  <div className="pills">
+                    {filtersLoading && <span className="filter-loading">Loading filters...</span>}
+                    {activeFilterCategory === "tag" && isTagSearching && (
+                      <span className="filter-loading">Searching for tag...</span>
+                    )}
+                    {(activeFilterCategory === "tag" && pillSearch.trim().length >= 2
+                      ? tagSearchResults
+                      : filters
+                    ).map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        className={isActive(item) ? "active" : ""}
+                        onClick={() => onClick(item)}
+                      >
+                        {item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </form>
+        </RevealWrapper>
+
+        {hasResults && (
+          <RevealWrapper direction="up">
+            <div className="pagination-info">
+              <div className="sort-by-con">
+                <p>Sort By</p>
+                <div>
+                  <button className={isSortOpen ? "open" : ""} onClick={() => setIsSortOpen((prev) => !prev)}>
+                    {{ "name": "Name A-Z", "-name": "Name Z-A", "-metacritic": "Metacritic", "-released": "Release Date (Newest)", "released": "Release Date (Oldest)" }[sortBy] ?? "Metacritic"}
+                  </button>
+                  <div className={`sort-options${isSortOpen ? " open" : ""}`}>
+                    <p onClick={() => { handleSortChange("name");        setIsSortOpen(false); }}>Name A-Z</p>
+                    <p onClick={() => { handleSortChange("-name");       setIsSortOpen(false); }}>Name Z-A</p>
+                    <p onClick={() => { handleSortChange("-metacritic"); setIsSortOpen(false); }}>Metacritic</p>
+                    <p onClick={() => { handleSortChange("-released");   setIsSortOpen(false); }}>Release Date (Newest)</p>
+                    <p onClick={() => { handleSortChange("released");    setIsSortOpen(false); }}>Release Date (Oldest)</p>
+                  </div>
+                </div>
+              </div>
+              {/* <div className="jump-to-con">
+                <p>Jump to page </p>
+                <input
+                  type="number"
+                  value={jumpPageInput}
+                  readOnly={!isJumpInputActive}
+                  onClick={() => setIsJumpInputActive(true)}
+                  onChange={(e) => setJumpPageInput(e.target.value)}
+                  onBlur={handleJumpInputBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleJumpInputBlur();
+                    }
+                  }}
+                />
+                <p>of {totalPages}</p>
+              </div> */}
+              <p>Page {pageNumber} of {totalPages}</p>
+            </div>
+          </RevealWrapper>
+        )}
+
+        {loading
+          ? <div className="game-grid">{skeletonCards}</div>
+          : hasResults && <div className="game-grid">{games}</div>}
+
+        {!loading && noResults && <NoResultsMessage />}
+
+        {gatheredData[0].loaded && totalPages > 1 && hasResults && (
+          <SearchPagination
+            pageNumber={pageNumber}
+            totalPages={totalPages}
+            pageOptions={pageOptions}
+            isPageDropdownOpen={isPageDropdownOpen}
+            setIsPageDropdownOpen={setIsPageDropdownOpen}
+            dropdownRef={dropdownRef}
+            loading={loading}
+            onPrevPage={prevPage}
+            onNextPage={nextPage}
+            onGoToPage={goToPage}
+          />
+        )}
+        {hasResults && (
+          <div className="jump-to-con">
+            <p>Jump to page </p>
+            <input
+              type="number"
+              value={jumpPageInput}
+              readOnly={!isJumpInputActive}
+              onClick={() => setIsJumpInputActive(true)}
+              onChange={(e) => setJumpPageInput(e.target.value)}
+              onBlur={handleJumpInputBlur}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleJumpInputBlur();
+                }
+              }}
+            />
+            <p>of {totalPages}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -18,6 +18,8 @@ import Footer from './components/Footer';
 import ScrollProgressBar from './components/ScrollProgressBar';
 import CursorEffect from './components/CursorEffect';
 
+import loadingGif from './assets/images/loading.gif'
+
 import { auth } from "./firebase/fireAuth";
 import { useAuth } from "./hooks/useAuth";
 
@@ -32,7 +34,10 @@ function ScrollToTop() {
 /* 🔒 Protected wrapper that respects auth loading */
 function ProtectedRoute({ user, authLoading, children }) {
   if (authLoading) {
-    return <div>Loading...</div>;
+    return <div className="page-loading-state-con">
+      <img src={loadingGif}></img>
+      <p>Loading Page...</p>
+      </div>;
   }
 
   if (!user) {
@@ -46,7 +51,10 @@ function App() {
   const { user, authLoading } = useAuth();
 
   if (authLoading) {
-    return <div>Loading...</div>;
+    return <div className="page-loading-state-con">
+      <img src={loadingGif}></img>
+      <p>Loading Page...</p>
+      </div>;
   }
 
   return (
@@ -59,7 +67,8 @@ function App() {
           {/* ✅ Public routes */}
           <Route path="/" element={<HomePage user={user} />} />
           <Route path="/search" element={<SearchPage />} />
-          <Route path="/game" element={<GamePage auth={auth} />} />
+          <Route path="/game/:gameId" element={<GamePage auth={auth} />} />
+          <Route path="/game/:gameId/:slug" element={<GamePage auth={auth} />} />
           <Route path="/custom-game" element={<CustomGame auth={auth} />} />
           <Route path="/signup" element={<SignUpPage auth={auth} />} />
           <Route path="/signin" element={<SignInPage auth={auth}/>} />
