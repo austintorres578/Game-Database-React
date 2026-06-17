@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import checkIcon from "../../assets/images/check-icon.png";
 import { getPrimaryGenre } from "../../utils/userProfile/gameHelpers";
+import { gamePath } from "../../utils/slugify";
 
 export default function CompletedGamesSection({
   completedGames,
@@ -22,7 +23,7 @@ export default function CompletedGamesSection({
           paginatedCompletedGames.map((game) => (
             <Link
               key={game.id}
-              to={`/game#${game.id}`}
+              to={gamePath(game.id, game.title || game.name)}
               className="completed-game-card"
             >
               <div className="select-icon">

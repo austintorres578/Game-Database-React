@@ -4,12 +4,20 @@ import {
 } from "../../utils/gamePage/storeUtils";
 
 export default function StorePills({ storesChecked, combinedStores }) {
-  if (storesChecked && combinedStores.length === 0) {
-    return <p>No store links found.</p>;
+  if (!storesChecked) {
+    return (
+      <div className="store-pills">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div className="store-pill-card" key={`store-skeleton-${i}`}>
+            <span className="store-pill store-pill-skeleton cover-shimmer" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
-  if (!storesChecked || !combinedStores.length) {
-    return <p>Loading store links…</p>;
+  if (!combinedStores.length) {
+    return <p>No store links found.</p>;
   }
 
   return (

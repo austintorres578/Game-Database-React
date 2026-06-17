@@ -1,6 +1,5 @@
 // GamePage.jsx
 import { useState, useRef, useLayoutEffect } from "react";
-import loadingCircle from "../assets/images/loading.gif";
 import editIcon from "../assets/images/edit.png";
 
 import placeholderSvg from "../assets/images/placeholder.svg";
@@ -52,7 +51,7 @@ export default function GamePage({ auth }) {
   const navigate = useNavigate();
 
   // --- Data hooks ---
-  const { loading, gameData, gameScreenshots, gameVideos, isCustomGame } =
+  const { loading, gameData, gameScreenshots, gameVideos, isCustomGame, screenshotsLoading } =
     useGameData();
   const { itadCoverUrl, itadChecked, itadStores, itadStoresChecked } =
     useItadData(gameData);
@@ -421,10 +420,41 @@ export default function GamePage({ auth }) {
 
   if (!gameData) {
     return (
-      <div className="game-page-shell">
-        <div className="game-page-container loading-state">
-          <img src={loadingCircle} alt="Loading..." />
-          <p>Loading Game...</p>
+      <div className="game-page-shell game-page-skeleton">
+        <div className="top-buttons-con">
+          <button className="back-button" onClick={() => navigate(-1)}>← Go back</button>
+        </div>
+        <div className="game-page-container">
+          <section className="game-hero">
+            <div className="game-hero-con">
+              <div className="col-wrapper">
+                <div className="left-col">
+                  <div className="game-art-con">
+                    <div className="game-cover">
+                      <div className="game-cover-img cover-shimmer" />
+                    </div>
+                  </div>
+                  <div className="platform-con">
+                    <span className="sk-pill cover-shimmer" />
+                    <span className="sk-pill cover-shimmer" />
+                    <span className="sk-pill cover-shimmer" />
+                  </div>
+                </div>
+                <div className="right-col">
+                  <div className="genres">
+                    <span className="sk-pill cover-shimmer" />
+                    <span className="sk-pill cover-shimmer" />
+                  </div>
+                  <div className="sk-line cover-shimmer" style={{ width: "70%", height: "34px" }} />
+                  <div className="sk-line cover-shimmer" style={{ width: "60px" }} />
+                  <div className="sk-line cover-shimmer" style={{ width: "100%" }} />
+                  <div className="sk-line cover-shimmer" style={{ width: "95%" }} />
+                  <div className="sk-line cover-shimmer" style={{ width: "80%" }} />
+                  <div className="sk-line cover-shimmer" style={{ width: "40%", height: "44px", marginTop: "16px" }} />
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
     );
@@ -597,6 +627,7 @@ export default function GamePage({ auth }) {
             </article> */}
             <ScreenshotsRow
               gameScreenshots={gameScreenshots}
+              screenshotsLoading={screenshotsLoading}
               isDragging={isDragging}
               containerRef={screenshotsRowRef}
               onMouseDown={handleMouseDown}

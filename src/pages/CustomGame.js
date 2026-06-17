@@ -1,12 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
+import imageCompression from "browser-image-compression";
 import {
   getStorage,
   ref,
-  uploadBytes,
+  uploadBytesResumable,
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 import addImageIcon from "../../src/assets/images/add-image-icon.svg";
 import placeholderScreenImg from '../../src/assets/images/greenPlaceholder.png';
 import "../styles/customGame.css";
@@ -50,6 +53,28 @@ export default function CustomGame() {
   const [saveStatus, setSaveStatus] = useState("idle"); // "idle" | "saving" | "success" | "error"
   const [saveError, setSaveError] = useState("");
   const [coverFile, setCoverFile] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const COMPRESS_OPTS = {
+    maxSizeMB: 0.6,
+    maxWidthOrHeight: 1600,
+    useWebWorker: true,
+    fileType: "image/webp",
+  };
+
+  async function compressToWebp(file) {
+    try {
+      const compressed = await imageCompression(file, COMPRESS_OPTS);
+      return new File(
+        [compressed],
+        file.name.replace(/\.[^.]+$/, "") + ".webp",
+        { type: "image/webp" }
+      );
+    } catch (err) {
+      console.error("Compression failed, using original:", err);
+      return file;
+    }
+  }
 
   const [formData, setFormData] = useState(() => {
     if (gd) {
@@ -146,18 +171,31 @@ export default function CustomGame() {
   }, [tagSearch]);
 
   const MAX_SCREENSHOTS = 6;
+  const MAX_FILE_BYTES = 5 * 1024 * 1024;
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+  function validateImageFile(file) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return `"${file.name}" isn't a supported image type. Use JPEG, PNG, WebP, or GIF.`;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      const mb = (file.size / (1024 * 1024)).toFixed(1);
+      return `"${file.name}" is ${mb}MB. Images must be under 5MB.`;
+    }
+    return null;
+  }
 
   const coverFileInputRef = useRef(null);
   const screenshotFileInputRef = useRef(null);
 
-  function handleScreenshotFileChange(e) {
+  async function handleScreenshotFileChange(e) {
     const files = Array.from(e.target.files || []);
+    e.target.value = "";
     if (!files.length) return;
 
     const remaining = MAX_SCREENSHOTS - formData.screenshots.length;
     if (remaining <= 0) {
       alert(`Maximum ${MAX_SCREENSHOTS} screenshots allowed.`);
-      e.target.value = "";
       return;
     }
 
@@ -166,20 +204,24 @@ export default function CustomGame() {
       alert(`Only ${remaining} more screenshot(s) can be added. ${files.length - remaining} file(s) were ignored.`);
     }
 
-    const newShots = allowed.map((file) => ({
-      id: URL.createObjectURL(file),
-      preview: URL.createObjectURL(file),
-      image: URL.createObjectURL(file),
-      file,
-      storagePath: null,
-    }));
+    const newShots = await Promise.all(
+      allowed.map(async (file) => {
+        const compressed = await compressToWebp(file);
+        const url = URL.createObjectURL(compressed);
+        return {
+          id: url,
+          preview: url,
+          image: url,
+          file: compressed,
+          storagePath: null,
+        };
+      })
+    );
 
     setFormData((prev) => ({
       ...prev,
       screenshots: [...prev.screenshots, ...newShots],
     }));
-
-    e.target.value = "";
   }
 
   const handleChange = (e) => {
@@ -187,17 +229,23 @@ export default function CustomGame() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCoverFileChange = (e) => {
+  const handleCoverFileChange = async (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setCoverFile(file);
-      const localUrl = URL.createObjectURL(file);
-      setFormData((prev) => ({ ...prev, coverUrl: localUrl }));
-    }
+    e.target.value = "";
+    if (!file) return;
+    const compressed = await compressToWebp(file);
+    setCoverFile(compressed);
+    const localUrl = URL.createObjectURL(compressed);
+    setFormData((prev) => ({ ...prev, coverUrl: localUrl }));
   };
 
   async function handleAddToLibrary() {
     if (!user) {
+      // ⚠️ TEMP diagnostic — surface the auth-missing case instead of silent redirect.
+      alert(
+        "Auth error (diagnostic): no user at save time.\n\n" +
+        "useAuth() returned no user — you may have been signed out, or auth hadn't finished loading."
+      );
       navigate("/signin");
       return;
     }
@@ -214,14 +262,15 @@ export default function CustomGame() {
 
       const storage = getStorage(app);
 
+      const uploadJobs = [];
+
       let backgroundImage = formData.coverUrl || "";
       if (coverFile) {
-        const coverRef = ref(
-          storage,
-          `users/${user.uid}/customGameCovers/${docId}`,
-        );
-        await uploadBytes(coverRef, coverFile);
-        backgroundImage = await getDownloadURL(coverRef);
+        uploadJobs.push({
+          file: coverFile,
+          path: `users/${user.uid}/customGameCovers/${docId}`,
+          kind: "cover",
+        });
       }
 
       if (editState) {
@@ -232,28 +281,83 @@ export default function CustomGame() {
           .map((s) => s.storagePath)
           .filter((p) => p && !keptPaths.has(p));
         await Promise.all(
-          removedPaths.map((p) =>
-            deleteObject(ref(storage, p)).catch(() => { }),
-          ),
+          removedPaths.map((p) => deleteObject(ref(storage, p)).catch(() => {})),
         );
       }
 
-      const savedScreenshots = await Promise.all(
-        formData.screenshots.map(async (shot, i) => {
-          if (shot.file) {
-            const storagePath = `users/${user.uid}/customGameScreenshots/${docId}/${Date.now()}_${i}`;
-            const shotRef = ref(storage, storagePath);
-            await uploadBytes(shotRef, shot.file);
-            const url = await getDownloadURL(shotRef);
-            return { id: url, image: url, storagePath };
-          }
-          return {
-            id: shot.id,
-            image: shot.image,
-            storagePath: shot.storagePath,
-          };
-        }),
+      formData.screenshots.forEach((shot, i) => {
+        if (shot.file) {
+          uploadJobs.push({
+            file: shot.file,
+            path: `users/${user.uid}/customGameScreenshots/${docId}/${Date.now()}_${i}`,
+            kind: "screenshot",
+            index: i,
+          });
+        }
+      });
+
+      const totalBytes = uploadJobs.reduce((sum, j) => sum + j.file.size, 0) || 1;
+      const transferred = new Array(uploadJobs.length).fill(0);
+      setUploadProgress(0);
+
+      const settled = await Promise.allSettled(
+        uploadJobs.map(async (job, jobIdx) => {
+          const task = uploadBytesResumable(ref(storage, job.path), job.file);
+          task.on("state_changed", (snap) => {
+            transferred[jobIdx] = snap.bytesTransferred;
+            const pct = Math.round(
+              (transferred.reduce((a, b) => a + b, 0) / totalBytes) * 100
+            );
+            setUploadProgress(pct);
+          });
+          await task;
+          const url = await getDownloadURL(task.snapshot.ref);
+          return { ...job, url };
+        })
       );
+
+      setUploadProgress(100);
+
+      const succeeded = settled
+        .filter((r) => r.status === "fulfilled")
+        .map((r) => r.value);
+      const failed = settled.filter((r) => r.status === "rejected");
+
+      if (failed.length) {
+        console.error("Some image uploads failed:", failed.map((f) => f.reason));
+      }
+
+      const coverResult = succeeded.find((r) => r.kind === "cover");
+      if (coverResult) backgroundImage = coverResult.url;
+      const coverFailed = uploadJobs.some((j) => j.kind === "cover") && !coverResult;
+
+      const uploadedByIndex = {};
+      succeeded
+        .filter((r) => r.kind === "screenshot")
+        .forEach((r) => {
+          uploadedByIndex[r.index] = { id: r.url, image: r.url, storagePath: r.path };
+        });
+
+      const savedScreenshots = formData.screenshots
+        .map((shot, i) =>
+          shot.file
+            ? uploadedByIndex[i] || null
+            : { id: shot.id, image: shot.image, storagePath: shot.storagePath }
+        )
+        .filter(Boolean);
+
+      const failedShotCount =
+        uploadJobs.filter((j) => j.kind === "screenshot").length -
+        succeeded.filter((r) => r.kind === "screenshot").length;
+
+      if (coverFailed || failedShotCount > 0) {
+        const parts = [];
+        if (coverFailed) parts.push("the cover image");
+        if (failedShotCount > 0) parts.push(`${failedShotCount} screenshot(s)`);
+        alert(
+          `Saved, but ${parts.join(" and ")} failed to upload. You can edit the game to try again.`
+        );
+      }
 
       const payload = {
         title: formData.name.trim(),
@@ -281,16 +385,34 @@ export default function CustomGame() {
           : { status: "backlog", addedAt: new Date().toISOString() }),
       };
 
+      const liveUser = getAuth().currentUser;
+      if (!liveUser) {
+        alert(
+          "Auth error (diagnostic): user present in hook but getAuth().currentUser is null at write time.\n\n" +
+          "This points to an auth-state desync or expired session."
+        );
+        setSaveStatus("error");
+        setSaveError("You appear to be signed out. Please sign in again.");
+        return;
+      }
+
       await saveGameToLibraryFirestore(user.uid, docId, payload);
       initialFormData.current = formData;
       setCoverFile(null);
       setSaveStatus("success");
       setTimeout(
-        () => navigate(editState ? `/game#${docId}` : "/library"),
+        () => navigate(editState ? gamePath(docId, formData.name) : "/library"),
         1200,
       );
     } catch (err) {
       console.error("Failed to save custom game:", err);
+      // ⚠️ TEMP diagnostic — show the real failure so we can identify the auth error.
+      alert(
+        "Save failed (diagnostic):\n\n" +
+        `code: ${err?.code || "(none)"}\n` +
+        `message: ${err?.message || err}\n\n` +
+        `Stage: covers/screenshots upload or Firestore write.`
+      );
       setSaveError("Failed to save. Please try again.");
       setSaveStatus("error");
     }
@@ -432,7 +554,7 @@ export default function CustomGame() {
               <input
                 ref={coverFileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/webp,image/gif"
                 style={{ display: "none" }}
                 onChange={handleCoverFileChange}
               />
@@ -570,7 +692,7 @@ export default function CustomGame() {
                   <input
                     ref={screenshotFileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png,image/webp,image/gif"
                     multiple
                     onChange={handleScreenshotFileChange}
                     style={{ display: "none" }}
@@ -743,7 +865,7 @@ export default function CustomGame() {
                 <input
                   ref={coverFileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
                   onChange={handleCoverFileChange}
                   style={{ display: "none" }}
                 />

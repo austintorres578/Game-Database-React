@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { getPrimaryGenre } from "../../utils/userProfile/gameHelpers";
+import { gamePath } from "../../utils/slugify";
 
 export default function FavoriteGamesSection({ favoriteGames }) {
   return (
@@ -18,7 +19,7 @@ export default function FavoriteGamesSection({ favoriteGames }) {
           favoriteGames.slice(0, 12).map((game) => (
             <Link
               key={game.id}
-              to={`/game#${game.id}`}
+              to={gamePath(game.id, game.title || game.name)}
               className="favorite-game-card"
             >
               <div

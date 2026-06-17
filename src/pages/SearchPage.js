@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
-import loadingCircle from "../assets/images/loading.gif";
-
+import { useLocation, Link } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
 import Games from "../components/Games";
 import NoResultsMessage from "../components/searchPage/NoResultsMessage";
 import SearchPagination from "../components/searchPage/SearchPagination";
@@ -9,11 +8,44 @@ import SearchPagination from "../components/searchPage/SearchPagination";
 import { buildLink } from "../utils/searchPage/buildLink";
 import { scrollToTop } from "../utils/searchPage/scrollHelpers";
 import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
-import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags, searchRawgGenres } from "../services/searchPage/rawgService";
+import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags, searchRawgGenres, autocompleteRawgGames } from "../services/searchPage/rawgService";
 import { useClickOutside } from "../hooks/searchPage/useClickOutside";
 import { RevealWrapper } from "../components/RevealWrapper";
 
 import "../styles/gameSearch.css";
+
+function SuggestionThumb({ src, alt }) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (!src) {
+    return <div className="autocomplete-thumb" />;
+  }
+
+  return (
+    <div className={`autocomplete-thumb${loaded ? " is-loaded" : " is-loading"}`}>
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
+
+function highlightMatch(name, query) {
+  const q = (query || "").trim();
+  if (!q) return name;
+  const idx = name.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return name;
+  return (
+    <>
+      {name.slice(0, idx)}
+      <mark className="ac-highlight">{name.slice(idx, idx + q.length)}</mark>
+      {name.slice(idx + q.length)}
+    </>
+  );
+}
 
 export default function SearchPage({ user }) {
   const location = useLocation();
@@ -63,6 +95,12 @@ export default function SearchPage({ user }) {
   const filterAreaRef = useRef(null);
   useClickOutside(filterAreaRef, () => setActiveFilterCategory(null));
 
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionRef = useRef(null);
+  useClickOutside(suggestionRef, () => setShowSuggestions(false));
+  const userTypingRef = useRef(false);
+
   useEffect(() => {
     setPillSearch("");
     setTagSearchResults([]);
@@ -101,6 +139,20 @@ export default function SearchPage({ user }) {
     return () => clearTimeout(timer);
   }, [pillSearch, activeFilterCategory]);
 
+  useEffect(() => {
+    if (searchTerm.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    if (!userTypingRef.current) return;
+    const timer = setTimeout(async () => {
+      const results = await autocompleteRawgGames(searchTerm);
+      setSuggestions(results);
+      setShowSuggestions(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
   const fetchLink = buildRawgFetchBase(pageSize);
 
   const totalPages = Math.max(1, Math.ceil((totalResults || 0) / pageSize));
@@ -113,6 +165,13 @@ export default function SearchPage({ user }) {
       .then((res) => {
         setLoading(false);
         setTotalResults(res.count);
+
+        if (res.count === 0 && res.results.length === 0) {
+          // ⚠️ TEMP diagnostic — distinguishes a real zero-match from a silent failure.
+          console.warn("Search returned 0 results for link:", link);
+          // Uncomment the next line if you want a visible alert on empty results too:
+          // alert("Search returned 0 results (diagnostic):\n\n" + link);
+        }
 
         localStorage.setItem("currentLink", link);
         if (metaState) {
@@ -136,7 +195,14 @@ export default function SearchPage({ user }) {
       })
       .catch((err) => {
         setLoading(false);
-        console.error(err);
+        console.error("Search failed:", err);
+        // ⚠️ TEMP diagnostic — remove once the intermittent issue is identified.
+        alert(
+          "Search failed (diagnostic):\n\n" +
+          (err?.status ? `HTTP status: ${err.status}\n` : "") +
+          `Message: ${err?.message || err}\n\n` +
+          `Link: ${link}`
+        );
       });
   }
 
@@ -211,6 +277,12 @@ export default function SearchPage({ user }) {
       } catch (err) {
         console.error("Failed to parse saved searchState", err);
       }
+    } else {
+      const page = 1;
+      const defaultSort = "-metacritic";
+      setSortBy(defaultSort);
+      const link = buildLink(fetchLink, "", [], [], [], page, defaultSort);
+      runSearch(link, { term: "", platforms: [], genres: [], tags: [], page, sortBy: defaultSort });
     }
   }, []);
 
@@ -565,6 +637,18 @@ export default function SearchPage({ user }) {
   ));
 
 
+  const skeletonCards = Array.from({ length: pageSize }).map((_, i) => (
+    <div className="game-wrapper game-skeleton" key={`skeleton-${i}`}>
+      <div className="game-card">
+        <div className="game-img skeleton-shimmer" />
+        <div className="game-info">
+          <div className="skeleton-line skeleton-shimmer skeleton-title" />
+          <div className="skeleton-line skeleton-shimmer skeleton-sub" />
+        </div>
+      </div>
+    </div>
+  ));
+
   const pageOptions = getPageOptions(totalPages, pageNumber);
 
 
@@ -594,13 +678,48 @@ export default function SearchPage({ user }) {
         <form onSubmit={handleSubmit}>
           <div className="search-box-wrapper">
             <svg class="search-icon" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"></circle><path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path></svg>
-            <input
-              className="search-box"
-              type="text"
-              placeholder="Search By Game Title..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+            <div ref={suggestionRef} style={{ position: "relative", flex: 1 }}>
+              <input
+                className="search-box"
+                type="text"
+                placeholder="Search By Game Title..."
+                value={searchTerm}
+                onChange={(e) => {
+                  userTypingRef.current = true;
+                  setSearchTerm(e.target.value);
+                }}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="autocomplete-dropdown">
+                  {suggestions.map((s) => (
+                    <Link
+                      key={s.id}
+                      to={gamePath(s.id, s.name)}
+                      className="autocomplete-item"
+                      onClick={() => {
+                        userTypingRef.current = false;
+                        setSearchTerm(s.name);
+                        setShowSuggestions(false);
+                        scrollToTop();
+                      }}
+                    >
+                      <SuggestionThumb src={s.background_image} alt={s.name} />
+                      <div>
+                        <p>{highlightMatch(s.name, searchTerm)}</p>
+                        <p>
+                          {s.genres.length > 0
+                            ? <span>{s.genres[0].name}</span>
+                            : <span>Unknown</span>}
+                          {s.released && <span> · {new Date(s.released).getFullYear()}</span>}
+                        </p>
+                      </div>
+                      <p className="rating">{s.metacritic ?? "N/A"}</p>
+
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <button type="submit" className="search-button" disabled={loading}>
               {loading ? "Searching..." : "Search"}
             </button>
@@ -690,13 +809,6 @@ export default function SearchPage({ user }) {
         </form>
         </RevealWrapper>
 
-        {loading && (
-          <div className="loading-wrapper">
-            <img src={loadingCircle} alt="Loading..." />
-            <p>Searching For Games...</p>
-          </div>
-        )}
-
         {hasResults && (
           <RevealWrapper direction="up">
             <div className="pagination-info">
@@ -733,14 +845,16 @@ export default function SearchPage({ user }) {
                 />
                 <p>of {totalPages}</p>
               </div> */}
-              {/* <p>Page {pageNumber} of {totalPages}</p> */}
+              <p>Page {pageNumber} of {totalPages}</p>
             </div>
           </RevealWrapper>
         )}
 
-        {hasResults && <div className="game-grid">{games}</div>}
+        {loading
+          ? <div className="game-grid">{skeletonCards}</div>
+          : hasResults && <div className="game-grid">{games}</div>}
 
-        {noResults && <NoResultsMessage />}
+        {!loading && noResults && <NoResultsMessage />}
 
         {gatheredData[0].loaded && totalPages > 1 && hasResults && (
           <SearchPagination

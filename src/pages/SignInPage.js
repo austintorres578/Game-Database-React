@@ -31,8 +31,9 @@ export default function SignInPage(props) {
   }, [user]);
 
   const [rememberMe, setRememberMe] = useState(() => {
+    // Default to staying signed in; only honor an explicit opt-out.
     const stored = localStorage.getItem("rememberMe");
-    return stored === "true";
+    return stored === null ? true : stored === "true";
   });
 
   const handleLogin = async (e) => {
@@ -53,11 +54,6 @@ export default function SignInPage(props) {
         : browserSessionPersistence;
 
       await setPersistence(auth, persistence);
-
-      console.log(
-        "[AUTH PERSISTENCE SET]",
-        rememberMe ? "REMEMBER (IndexedDB)" : "SESSION (until browser closes)",
-      );
 
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -184,7 +180,7 @@ export default function SignInPage(props) {
                     localStorage.setItem("rememberMe", String(checked));
                   }}
                 />
-                <label htmlFor="remember">Remember me</label>
+                <label htmlFor="remember">Keep me signed in</label>
               </div>
               <span>Secure sign-in</span>
             </div>

@@ -1,12 +1,35 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
 
 import { getPlaceholderBackground } from "../utils/placeholderBackground";
+import { deleteCustomGameStorageFiles } from "../services/gamePage/groupService";
 import addIcon from "../assets/images/plus-icon.png";
 
 // 🔐 Firebase
 import { auth} from "../firebase/fireAuth";
 import { doc, setDoc, getDoc, deleteDoc, db } from "../firebase/firestore";
+
+function GameCover({ imageUrl }) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (!imageUrl) {
+    return <div className="game-img" />;
+  }
+
+  return (
+    <div className={`game-img${loaded ? " is-loaded" : " is-loading"}`}>
+      <img
+        className="game-img-el"
+        src={imageUrl}
+        alt=""
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
 
 export default function Games(props) {
   const [isHovered, setIsHovered] = useState(false);
@@ -153,7 +176,21 @@ export default function Games(props) {
 
     try {
       setSaving(true);
+
+      const snap = await getDoc(docRef);
+      const data = snap.exists() ? snap.data() : null;
+
       await deleteDoc(docRef);
+
+      if (data?.isCustom) {
+        await deleteCustomGameStorageFiles(
+          user.uid,
+          docId,
+          data.backgroundImage,
+          data.screenshots
+        );
+      }
+
       setIsInLibrary(false);
     } catch (err) {
       console.error("Error removing game from card:", err);
@@ -171,13 +208,10 @@ export default function Games(props) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* ✅ Keep RAWG id in the hash (game page fetches by RAWG id) */}
-      <Link to={"/game#" + props.id} className="game-link">
+      <Link to={gamePath(props.id, props.name)} className="game-link">
         <div className="game-card">
           <div className="metacritic-rating">{metaText}</div>
-          <div
-            className="game-img"
-            style={{ backgroundImage: `url('${img}')` }}
-          />
+          <GameCover imageUrl={img} />
           {isInLibrary && 
           <div className="in-lib-label-con">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>

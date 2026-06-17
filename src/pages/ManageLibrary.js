@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
 import { getAuth } from "firebase/auth";
 import {
   collection,
@@ -10,6 +11,7 @@ import {
   deleteDoc,
 } from "../firebase/firestore";
 import { createGroupInFirestore } from "../services/yourLibrary/groupService";
+import { deleteCustomGameStorageFiles } from "../services/gamePage/groupService";
 
 import redDeadCover from "../assets/images/redDeadCover.jpg";
 import noGameBackground from "../assets/images/noGameBackground.svg";
@@ -33,14 +35,30 @@ export default function ManageLibrary() {
       sensitivity: "base",
     }),
   );
-  const [currentPage, setCurrentPage] = useState(() => Number(localStorage.getItem("ml_page") || 1));
+  const [currentPage, setCurrentPage] = useState(() =>
+    Number(localStorage.getItem("ml_page") || 1),
+  );
   const [selectedGroupIds, setSelectedGroupIds] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("ml_groups") || "[]"); } catch { return []; }
+    try {
+      return JSON.parse(localStorage.getItem("ml_groups") || "[]");
+    } catch {
+      return [];
+    }
   });
-  const [statusFilter, setStatusFilter] = useState(() => localStorage.getItem("ml_status") || "all");
-  const [searchTerm, setSearchTerm] = useState(() => localStorage.getItem("ml_search") || "");
+  const [statusFilter, setStatusFilter] = useState(
+    () => localStorage.getItem("ml_status") || "all",
+  );
+  const [searchTerm, setSearchTerm] = useState(
+    () => localStorage.getItem("ml_search") || "",
+  );
   const [selectedGames, setSelectedGames] = useState([]);
   const [pagnOpen, setPagnOpen] = useState(false);
+  const [groupSelectionOpen, setGroupSelectionOpen] = useState(false);
+  const [reorderSelectedGroupId, setReorderSelectedGroupId] = useState("");
+  const [reorderList, setReorderList] = useState([]);
+  const dragIndexRef = useRef(null);
+  const [dragOverInfo, setDragOverInfo] = useState({ index: null, after: false });
+  const groupSelectionRef = useRef(null);
   const [jumpPageInput, setJumpPageInput] = useState("1");
   const [isJumpInputActive, setIsJumpInputActive] = useState(false);
   const [sortBy, setSortBy] = useState("");
@@ -63,6 +81,7 @@ export default function ManageLibrary() {
   const [bulkAction, setBulkAction] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 765);
   const [addToGroupModalOpen, setAddToGroupModalOpen] = useState(false);
+  const [reorderModalOpen, setReorderModalOpen] = useState(false);
   const [addToGroupSelected, setAddToGroupSelected] = useState("");
   const [isApplying, setIsApplying] = useState(false);
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(true);
@@ -79,22 +98,86 @@ export default function ManageLibrary() {
   }, []);
 
   useEffect(() => {
+    if (!groupSelectionOpen) return;
+    function handleOutside(e) {
+      if (
+        groupSelectionRef.current &&
+        !groupSelectionRef.current.contains(e.target)
+      ) {
+        setGroupSelectionOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [groupSelectionOpen]);
+
+  useEffect(() => {
     localStorage.setItem("ml_page", currentPage);
     localStorage.setItem("ml_groups", JSON.stringify(selectedGroupIds));
     localStorage.setItem("ml_status", statusFilter);
     localStorage.setItem("ml_search", searchTerm);
   }, [currentPage, selectedGroupIds, statusFilter, searchTerm]);
 
-  async function handleApply(overrideAction) {
+  useEffect(() => {
+    setReorderList(reorderGames);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reorderSelectedGroupId, libInfo, groups]);
+
+  function reorderDrag(from, to) {
+    setReorderList((prev) => {
+      if (from === null || from === to || from === to - 1) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      if (from < to) to--;
+      next.splice(to, 0, moved);
+      return next;
+    });
+  }
+
+  function moveReorderGame(index, dir) {
+    setReorderList((prev) => {
+      const next = [...prev];
+      const target = index + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  async function handleSaveReorder() {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user || !reorderGroup) return;
+    const newOrderIds = reorderList.map((g) => String(g.id));
+    await setDoc(
+      doc(db, "users", user.uid, "groups", reorderGroup.id),
+      { gameIds: newOrderIds },
+      { merge: true },
+    );
+    setGroups((prev) =>
+      prev.map((g) =>
+        g.id === reorderGroup.id ? { ...g, gameIds: newOrderIds } : g,
+      ),
+    );
+    setReorderModalOpen(false);
+  }
+
+  function handleCancelReorder() {
+    setReorderList(reorderGames);
+    setReorderModalOpen(false);
+  }
+
+  async function handleApply(overrideAction, overrideGames) {
     const action = overrideAction || bulkAction;
-    if (!action || selectedGames.length === 0) return;
+    const gamesToApply = overrideGames || selectedGames;
+    if (!action || gamesToApply.length === 0) return;
     if (action === "add-to-group") {
       setAddToGroupModalOpen(true);
       return;
     }
 
     if (action === "remove-from-group") {
-      if (selectedGames.length === 0) return;
+      if (gamesToApply.length === 0) return;
       setGroupRemovalModalOpen(true);
       return;
     }
@@ -105,7 +188,7 @@ export default function ManageLibrary() {
     try {
       if (action === "complete") {
         await Promise.all(
-          selectedGames.map(async (game) => {
+          gamesToApply.map(async (game) => {
             const docId = String(game.id);
             const completedRef = doc(db, "users", user.uid, "completed", docId);
             const libraryRef = doc(db, "users", user.uid, "library", docId);
@@ -128,15 +211,23 @@ export default function ManageLibrary() {
       }
 
       if (action === "remove") {
-        const removedIds = new Set(selectedGames.map((g) => String(g.id)));
+        const removedIds = new Set(gamesToApply.map((g) => String(g.id)));
 
         await Promise.all(
-          selectedGames.map(async (game) => {
+          gamesToApply.map(async (game) => {
             const docId = String(game.id);
             await Promise.all([
               deleteDoc(doc(db, "users", user.uid, "library", docId)),
               deleteDoc(doc(db, "users", user.uid, "completed", docId)),
             ]);
+            if (game.isCustom) {
+              await deleteCustomGameStorageFiles(
+                user.uid,
+                docId,
+                game.backgroundImage,
+                game.screenshots
+              );
+            }
           }),
         );
 
@@ -170,7 +261,7 @@ export default function ManageLibrary() {
 
       if (action === "unmark") {
         await Promise.all(
-          selectedGames.map(async (game) => {
+          gamesToApply.map(async (game) => {
             const docId = String(game.id);
             const libraryRef = doc(db, "users", user.uid, "library", docId);
             const completedRef = doc(db, "users", user.uid, "completed", docId);
@@ -185,8 +276,10 @@ export default function ManageLibrary() {
         );
       }
 
-      setSelectedGames([]);
-      setBulkAction("");
+      if (!overrideGames) {
+        setSelectedGames([]);
+        setBulkAction("");
+      }
       await loadLibrary();
     } finally {
       setIsApplying(false);
@@ -401,6 +494,23 @@ export default function ManageLibrary() {
             });
           });
 
+  const reorderGroup = groups.find((g) => g.id === reorderSelectedGroupId);
+  const reorderGames = reorderGroup
+    ? (reorderGroup.gameIds || [])
+        .map((gid) =>
+          libInfo.find((game) => String(game.id) === String(gid))
+        )
+        .filter(Boolean)
+    : [];
+
+  const reorderHasChanges = (() => {
+    if (!reorderGroup) return false;
+    const savedIds = (reorderGroup.gameIds || []).map(String);
+    const currentIds = reorderList.map((g) => String(g.id));
+    if (savedIds.length !== currentIds.length) return false;
+    return currentIds.some((id, i) => id !== savedIds[i]);
+  })();
+
   const filteredGames = groupFilteredGames
     .filter((game) => {
       if (statusFilter === "all") return true;
@@ -532,7 +642,10 @@ export default function ManageLibrary() {
       setGroups(groupsSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
 
       setCurrentPage((prev) => {
-        const newTotal = Math.max(1, Math.ceil(allDocs.length / GAMES_PER_PAGE));
+        const newTotal = Math.max(
+          1,
+          Math.ceil(allDocs.length / GAMES_PER_PAGE),
+        );
         return prev > newTotal ? newTotal : prev;
       });
     } finally {
@@ -557,21 +670,21 @@ export default function ManageLibrary() {
             <button>← Back to Library</button>
           </Link>
         </section>
-        <section className="library-stats">
+        <section className="library-stats skeleton-stats">
           <div>
-            <p>{stats.total}</p>
+            {isLoadingLibrary ? <p className="ml-skeleton ml-skeleton-stat" /> : <p>{stats.total}</p>}
             <span>Total Games</span>
           </div>
           <div>
-            <p>{stats.backlog}</p>
+            {isLoadingLibrary ? <span className="ml-skeleton ml-skeleton-stat" /> : <p>{stats.backlog}</p>}
             <span>Backlog</span>
           </div>
           <div>
-            <p>{stats.completed}</p>
+            {isLoadingLibrary ? <span className="ml-skeleton ml-skeleton-stat" /> : <p>{stats.completed}</p>}
             <span>Completed</span>
           </div>
           <div>
-            <p>{stats.custom}</p>
+            {isLoadingLibrary ? <span className="ml-skeleton ml-skeleton-stat" /> : <p>{stats.custom}</p>}
             <span>Custom</span>
           </div>
         </section>
@@ -889,23 +1002,33 @@ export default function ManageLibrary() {
             </div>
           </div>
           <div className="library-games">
-            <div
-              className="loading-library-state"
-              style={{
-                opacity: isLoadingLibrary ? 1 : 0,
-                pointerEvents: isLoadingLibrary ? "all" : "none",
-                display: isLoadingLibrary ? "flex" : "none"
-              }}
-            >
-                <img src={loadingGif}></img>
-                <p>Loading Library</p>
-            </div>
-            {filteredGames
-              .slice(
-                (currentPage - 1) * GAMES_PER_PAGE,
-                currentPage * GAMES_PER_PAGE,
-              )
-              .map((game) => (
+            {isLoadingLibrary
+              ? Array.from({ length: GAMES_PER_PAGE }).map((_, i) => (
+                  <div className="library-table-game ml-skeleton-row" key={`ml-skeleton-${i}`}>
+                    <div className="checkbox-con">
+                      <div className="ml-skeleton ml-skeleton-check" />
+                    </div>
+                    <div className="game-details-con">
+                      <div className="ml-skeleton ml-skeleton-thumb" />
+                      <div className="ml-skeleton-lines">
+                        <span className="ml-skeleton ml-skeleton-line ml-skeleton-line-title" />
+                        <span className="ml-skeleton ml-skeleton-line ml-skeleton-line-sub" />
+                      </div>
+                    </div>
+                    <div className="genre-con"><span className="ml-skeleton ml-skeleton-line" /></div>
+                    <div className="status-con"><span className="ml-skeleton ml-skeleton-pill" /></div>
+                    <div className="platform-con"><span className="ml-skeleton ml-skeleton-line" /></div>
+                    <div className="score"><span className="ml-skeleton ml-skeleton-line ml-skeleton-line-short" /></div>
+                    <div className="added-con"><span className="ml-skeleton ml-skeleton-line" /></div>
+                    <div className="groups-con"><span className="ml-skeleton ml-skeleton-pill" /></div>
+                  </div>
+                ))
+              : filteredGames
+                  .slice(
+                    (currentPage - 1) * GAMES_PER_PAGE,
+                    currentPage * GAMES_PER_PAGE,
+                  )
+                  .map((game) => (
                 <div
                   className="library-table-game"
                   key={game.id}
@@ -935,7 +1058,7 @@ export default function ManageLibrary() {
                       }
                     ></img>
                     <Link
-                      to={`/game#${game.rawgId || game.id}`}
+                      to={gamePath(game.rawgId || game.id, game.title || game.name)}
                       className="game-details"
                     >
                       <p>{game.title}</p>
@@ -1162,8 +1285,18 @@ export default function ManageLibrary() {
                           </button>
                           <button
                             onClick={() => handleDeleteGroupRow(group.id)}
+                            className="delete-button"
                           >
                             Delete
+                          </button>
+                          <button
+                            className="reorder-button"
+                            onClick={() => {
+                              setReorderSelectedGroupId(group.id);
+                              setReorderModalOpen(true);
+                            }}
+                          >
+                            Reorder
                           </button>
                         </div>
                       </div>
@@ -1293,7 +1426,7 @@ export default function ManageLibrary() {
           </p>
           <div className="library-table-pagination">
             <button
-              disabled={currentPage === 1}
+              disabled={isLoadingLibrary || currentPage === 1}
               style={{ opacity: currentPage === 1 ? 0.5 : 1 }}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             >
@@ -1302,6 +1435,7 @@ export default function ManageLibrary() {
             <div className="pagn-con">
               <button
                 className={`pagn-trigger${pagnOpen ? " active" : ""}`}
+                disabled={isLoadingLibrary}
                 onClick={() => setPagnOpen((v) => !v)}
               >
                 Page <span>{currentPage}</span> of <span>{totalPages}</span>
@@ -1334,7 +1468,7 @@ export default function ManageLibrary() {
               </div>
             </div>
             <button
-              disabled={currentPage === totalPages}
+              disabled={isLoadingLibrary || currentPage === totalPages}
               style={{ opacity: currentPage === totalPages ? 0.5 : 1 }}
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             >
@@ -1380,7 +1514,6 @@ export default function ManageLibrary() {
           </button>
         </div>
       </div>
-      <div className="delete-group-modal"></div>
       <div
         className="loading-action-modal-con"
         style={{
@@ -1428,6 +1561,155 @@ export default function ManageLibrary() {
           >
             Remove From Group
           </button>
+        </div>
+      </div>
+      <div
+        className={`group-lib-reorder-con${reorderModalOpen ? " open" : ""}`}
+      >
+        <div className="group-lib-reorder">
+          <div className="title">
+            <h3>Reorder Games</h3>
+            <p>Drag games to set the order they appear within this group.</p>
+          </div>
+          <div
+            ref={groupSelectionRef}
+            className={`group-selection-con${groupSelectionOpen ? " open" : ""}`}
+          >
+            <div
+              className="group-selection-trigger"
+              onClick={() => setGroupSelectionOpen((v) => !v)}
+            >
+              <p>
+                {reorderSelectedGroupId
+                  ? groups.find((g) => g.id === reorderSelectedGroupId)?.name ||
+                    "Select Group"
+                  : "Select Group"}
+              </p>
+            </div>
+            <div className="group-options">
+              {groups.length === 0 && <p className="empty">No groups</p>}
+              {groups.map((g) => (
+                <p
+                  key={g.id}
+                  onClick={() => {
+                    setReorderSelectedGroupId(g.id);
+                    setGroupSelectionOpen(false);
+                  }}
+                >
+                  {g.name}
+                </p>
+              ))}
+            </div>
+          </div>
+          <div className="reorder-games-con">
+            {!reorderSelectedGroupId ? (
+              <p className="reorder-empty">Select a group to reorder its games.</p>
+            ) : reorderList.length === 0 ? (
+              <p className="reorder-empty">This group has no games yet.</p>
+            ) : (
+              reorderList.map((game, index) => (
+                <div
+                  className={
+                    "reorder-game" +
+                    (dragOverInfo.index === index
+                      ? dragOverInfo.after
+                        ? " drag-over-bottom"
+                        : " drag-over-top"
+                      : "")
+                  }
+                  key={game.id}
+                  draggable
+                  onDragStart={(e) => {
+                    dragIndexRef.current = index;
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const after = e.clientY - rect.top > rect.height / 2;
+                    setDragOverInfo({ index, after });
+                  }}
+                  onDragLeave={() => {
+                    setDragOverInfo((prev) =>
+                      prev.index === index ? { index: null, after: false } : prev
+                    );
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const after = e.clientY - rect.top > rect.height / 2;
+                    const target = index + (after ? 1 : 0);
+                    reorderDrag(dragIndexRef.current, target);
+                    dragIndexRef.current = null;
+                    setDragOverInfo({ index: null, after: false });
+                  }}
+                  onDragEnd={() => {
+                    dragIndexRef.current = null;
+                    setDragOverInfo({ index: null, after: false });
+                  }}
+                >
+                  <div>
+                    <p className="count">{index + 1}</p>
+                  </div>
+                  <div className="grip-con">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="9" cy="6" r="1.6"></circle>
+                      <circle cx="15" cy="6" r="1.6"></circle>
+                      <circle cx="9" cy="12" r="1.6"></circle>
+                      <circle cx="15" cy="12" r="1.6"></circle>
+                      <circle cx="9" cy="18" r="1.6"></circle>
+                      <circle cx="15" cy="18" r="1.6"></circle>
+                    </svg>
+                  </div>
+                  <img
+                    src={
+                      game.backgroundImage ||
+                      game.background_image ||
+                      game.coverImage ||
+                      noGameBackground
+                    }
+                    alt={game.title}
+                  />
+                  <div className="game-details">
+                    <p>{game.title}</p>
+                    {game.released && <p>{new Date(game.released).getFullYear()}</p>}
+                  </div>
+                  <div className="reorder-buttons">
+                    <button onClick={() => moveReorderGame(index, -1)}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                      </svg>
+                    </button>
+                    <button onClick={() => moveReorderGame(index, 1)}>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <button
+            className="close-button"
+            onClick={() => setReorderModalOpen(false)}
+          >
+            ✕
+          </button>
+          <div className="reorder-save-buttons-con">
+            <span className={reorderHasChanges ? "unsaved" : ""}>
+              {reorderHasChanges ? "Unsaved changes" : "No changes"}
+            </span>
+            <div>
+              <button onClick={handleCancelReorder}>Cancel</button>
+              <button
+                onClick={handleSaveReorder}
+                disabled={!reorderHasChanges}
+              >
+                Save Order
+              </button>
+            </div>
+          </div>
         </div>
       </div>
       <div
@@ -1787,8 +2069,8 @@ export default function ManageLibrary() {
                   <div
                     className="change-status-action"
                     onClick={async () => {
-                      setSelectedGames([activeSheetGame]);
-                      await handleApply("complete");
+                      if (!activeSheetGame) return;
+                      await handleApply("complete", [activeSheetGame]);
                       setActiveSheetGame((prev) => ({
                         ...prev,
                         status: "completed",
@@ -1813,8 +2095,8 @@ export default function ManageLibrary() {
                   <div
                     className="change-status-action"
                     onClick={async () => {
-                      setSelectedGames([activeSheetGame]);
-                      await handleApply("unmark");
+                      if (!activeSheetGame) return;
+                      await handleApply("unmark", [activeSheetGame]);
                       setActiveSheetGame((prev) => ({
                         ...prev,
                         status: "backlog",
@@ -1857,7 +2139,7 @@ export default function ManageLibrary() {
                       href={
                         activeSheetGame.isCustom
                           ? `/custom-game#${activeSheetGame.id}`
-                          : `/game#${activeSheetGame.id}`
+                          : gamePath(activeSheetGame.id, activeSheetGame.title || activeSheetGame.name)
                       }
                     >
                       <div
@@ -1889,8 +2171,8 @@ export default function ManageLibrary() {
                   <div className="action">
                     <div
                       onClick={async () => {
-                        setSelectedGames([activeSheetGame]);
-                        await handleApply("remove");
+                        if (!activeSheetGame) return;
+                        await handleApply("remove", [activeSheetGame]);
                         closeSheet();
                       }}
                     >
@@ -1902,7 +2184,8 @@ export default function ManageLibrary() {
                         //   color: "rgb(156, 163, 175)",
                         // }}
                       >
-                        <svg style={{color:"#ef4444"}}
+                        <svg
+                          style={{ color: "#ef4444" }}
                           width="14"
                           height="14"
                           viewBox="0 0 24 24"
@@ -1917,7 +2200,7 @@ export default function ManageLibrary() {
                           <path d="M10 11v6M14 11v6"></path>
                         </svg>
                       </div>
-                      <p style={{color:"#ef4444"}}>Remove From Library</p>
+                      <p style={{ color: "#ef4444" }}>Remove From Library</p>
                     </div>
                   </div>
                 </div>

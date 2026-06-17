@@ -1,6 +1,8 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { NavLink, useNavigate, Link } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
+import { useEffect, useRef, useState } from "react";
 import { auth, onAuthStateChanged, signOut } from "../firebase/fireAuth";
+import { autocompleteRawgGames } from "../services/searchPage/rawgService";
 import { doc, getDoc, db } from "../firebase/firestore";
 import userDefaultProfileImage from "../assets/images/defaultUser.png";
 
@@ -8,12 +10,45 @@ import headerLogo from "../assets/images/gameDatabase-nav-logo.png";
 import mobileNavIcon from "../assets/images/ham-menu-icon.png";
 import plusIcon from "../assets/images/plus-icon.png";
 
+function SuggestionThumb({ src, alt }) {
+  const [loaded, setLoaded] = useState(false);
+  if (!src) return <div className="autocomplete-thumb" />;
+  return (
+    <div className={`autocomplete-thumb${loaded ? " is-loaded" : " is-loading"}`}>
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
+
+function highlightMatch(name, query) {
+  const q = (query || "").trim();
+  if (!q) return name;
+  const idx = name.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return name;
+  return (
+    <>
+      {name.slice(0, idx)}
+      <mark className="ac-highlight">{name.slice(idx, idx + q.length)}</mark>
+      {name.slice(idx + q.length)}
+    </>
+  );
+}
+
 export default function Header() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [avatarUrl, setAvatarUrl] = useState(null);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [headerSearch, setHeaderSearch] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const userTypingRef = useRef(false);
+  const quickSearchRef = useRef(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -27,6 +62,31 @@ export default function Header() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (headerSearch.trim().length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    if (!userTypingRef.current) return;
+    const timer = setTimeout(async () => {
+      const results = await autocompleteRawgGames(headerSearch);
+      setSuggestions(results);
+      setShowSuggestions(true);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [headerSearch]);
+
+  useEffect(() => {
+    if (!showSuggestions) return;
+    function handleOutside(e) {
+      if (quickSearchRef.current && !quickSearchRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [showSuggestions]);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -55,31 +115,66 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="header-nav">
+          <div ref={quickSearchRef} className="quick-search-wrapper">
           <form className="mobile-search-con" onSubmit={handleHeaderSearch}>
             <input
               type="text"
               placeholder="Search"
               value={headerSearch}
-              onChange={(e) => setHeaderSearch(e.target.value)}
+              onChange={(e) => {
+                userTypingRef.current = true;
+                setHeaderSearch(e.target.value);
+              }}
             />
             <button type="submit">
-              <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+              <svg className="search-icon" viewBox="0 0 20 20" fill="none">
                 <circle
                   cx="8.5"
                   cy="8.5"
                   r="5.5"
                   stroke="currentColor"
-                  stroke-width="1.5"
+                  strokeWidth="1.5"
                 ></circle>
                 <path
                   d="M13 13l3.5 3.5"
                   stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
                 ></path>
               </svg>
             </button>
           </form>
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="quick-search-suggestion-con">
+              <div className="quick-search-suggestion">
+                {suggestions.map((s) => (
+                  <Link
+                    key={s.id}
+                    to={gamePath(s.id, s.name)}
+                    className="autocomplete-item"
+                    onClick={() => {
+                      userTypingRef.current = false;
+                      setHeaderSearch(s.name);
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <SuggestionThumb src={s.background_image} alt={s.name} />
+                    <div>
+                      <p>{highlightMatch(s.name, headerSearch)}</p>
+                      <p>
+                        {s.genres.length > 0
+                          ? <span>{s.genres[0].name}</span>
+                          : <span>Unknown</span>}
+                        {s.released && <span> · {new Date(s.released).getFullYear()}</span>}
+                      </p>
+                    </div>
+                    <p className="rating">{s.metacritic ?? "N/A"}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+          </div>
           <div className="desk-nav">
             <NavLink to="/" className={navClass}>
               Home
@@ -154,9 +249,8 @@ export default function Header() {
           </div>
         </nav>
       </div>
-
       {/* Mobile Nav */}
-      <div
+      {/* <div
         className="mobile-nav-wrapper"
         id={isMobileNavOpen ? "revealed-mobile-nav" : undefined}
       >
@@ -230,7 +324,7 @@ export default function Header() {
             </>
           )}
         </nav>
-      </div>
+      </div> */}
     </header>
   );
 }

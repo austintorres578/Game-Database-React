@@ -1,8 +1,30 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
-import loadingIcon from "../../assets/images/loading.gif";
+import { gamePath } from "../../utils/slugify";
 import plusIcon from "../../assets/images/plus-icon.png";
 import { safeText } from "../../utils/yourLibrary/sortHelpers";
 import { getPrimaryGenreFromGame } from "../../utils/yourLibrary/gameDataHelpers";
+
+function GameCover({ imageUrl }) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (!imageUrl) {
+    return <div className="game-img" />;
+  }
+
+  return (
+    <div className={`game-img${loaded ? " is-loaded" : " is-loading"}`}>
+      <img
+        className="game-img-el"
+        src={imageUrl}
+        alt=""
+        loading="lazy"
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
 
 export default function GameGrid({
   loadingStats,
@@ -13,10 +35,17 @@ export default function GameGrid({
   return (
     <div className="game-grid">
       {loadingStats ? (
-        <div className="loading-con">
-          <img src={loadingIcon} alt="Loading" />
-          <p>Loading your library…</p>
-        </div>
+        Array.from({ length: 12 }).map((_, i) => (
+          <div className="game-wrapper game-skeleton" key={`lib-skeleton-${i}`}>
+            <div className="game-card">
+              <div className="game-img skeleton-shimmer" />
+              <div className="game-info">
+                <div className="skeleton-line skeleton-shimmer skeleton-title" />
+                <div className="skeleton-line skeleton-shimmer skeleton-sub" />
+              </div>
+            </div>
+          </div>
+        ))
       ) : pageGames.length === 0 ? (
         <p>No games match this filter yet.</p>
       ) : (
@@ -56,16 +85,9 @@ export default function GameGrid({
 
           return (
             <div className="game-wrapper" key={String(game.id)}>
-              <Link className="game-link" to={`/game#${gameHash}`}>
+              <Link className="game-link" to={gamePath(gameHash, game.title || game.name)}>
                 <div className={`game-card${game.isCustom ? " game-card--custom" : ""}`}>
-                  <div
-                    className="game-img"
-                    style={
-                      imageUrl
-                        ? { backgroundImage: `url("${imageUrl}")` }
-                        : {}
-                    }
-                  />
+                  <GameCover imageUrl={imageUrl} />
 
                   <div className="game-info">
                     <p className="game-title">

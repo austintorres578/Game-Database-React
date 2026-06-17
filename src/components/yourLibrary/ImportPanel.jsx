@@ -543,9 +543,14 @@ export default function ImportPanel({
                           )}
                           <button
                             disabled={isImporting}
-                            onClick={() =>
-                              setRemovedGames((prev) => new Set([...prev, i]))
-                            }
+                            onClick={() => {
+                              setRemovedGames((prev) => new Set([...prev, i]));
+                              setSelectedGames((prev) => {
+                                const next = new Set(prev);
+                                next.delete(i);
+                                return next;
+                              });
+                            }}
                           >
                             <svg
                               width="11"

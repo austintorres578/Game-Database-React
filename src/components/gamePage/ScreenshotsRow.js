@@ -1,5 +1,6 @@
 export default function ScreenshotsRow({
   gameScreenshots,
+  screenshotsLoading,
   isDragging,
   containerRef,
   onMouseDown,
@@ -29,7 +30,13 @@ export default function ScreenshotsRow({
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {gameScreenshots.length > 0 ? (
+        {screenshotsLoading ? (
+          Array.from({ length: 4 }).map((_, i) => (
+            <div className="screenshot-card" key={`shot-skeleton-${i}`}>
+              <div className="screenshot-img cover-shimmer" />
+            </div>
+          ))
+        ) : gameScreenshots.length > 0 ? (
           gameScreenshots.map((shot, index) => (
             <button
               type="button"

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
 
 import { loadProfileUserData } from "../services/profile/loadUserData";
 import { getPrimaryGenre } from "../utils/userProfile/gameHelpers";
@@ -18,6 +19,25 @@ import LibraryStatsPanel from "../components/userProfile/LibraryStatsPanel";
 import CompletedGamesSection from "../components/userProfile/CompletedGamesSection";
 import placeholderImage from "../assets/images/greenPlaceholder.png";
 import { RevealWrapper } from "../components/RevealWrapper";
+
+function ProfileCover({ src, alt, className }) {
+  const [loaded, setLoaded] = useState(false);
+
+  if (!src) {
+    return <div className={`profile-cover ${className}`} />;
+  }
+
+  return (
+    <div className={`profile-cover ${className}${loaded ? " is-loaded" : " is-loading"}`}>
+      <img
+        src={src}
+        alt={alt}
+        onLoad={() => setLoaded(true)}
+        onError={() => setLoaded(true)}
+      />
+    </div>
+  );
+}
 
 export default function UserProfile() {
   const [profile, setProfile] = useState(null);
@@ -135,10 +155,79 @@ export default function UserProfile() {
 
   if (loading) {
     return (
-      <div className="profile-shell">
-        <div className="profile profile-loading">
-          <p>Loading profile...</p>
-        </div>
+      <div className="profile-shell profile-skeleton">
+        <section className="profile-hero">
+          <div className="profile-banner sk-shimmer" />
+          <div className="profile-details">
+            <div className="profile-image-con">
+              <div className="sk-avatar sk-shimmer" />
+            </div>
+            <div className="profile-content-con">
+              <div className="sk-line sk-shimmer" style={{ width: "180px", height: "22px" }} />
+              <div className="sk-line sk-shimmer" style={{ width: "110px" }} />
+              <div className="sk-line sk-shimmer" style={{ width: "70%" }} />
+              <div className="sk-pill-row">
+                <span className="sk-pill sk-shimmer" />
+                <span className="sk-pill sk-shimmer" />
+                <span className="sk-pill sk-shimmer" />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="about-con">
+          <div className="left-col">
+            <div className="favorites">
+              <div className="title"><h2>Top 5 Games</h2></div>
+              <div className="games">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div className="game-con sk-card" key={`sk-fav-${i}`}>
+                    <div className="favorite-cover sk-shimmer" />
+                    <div className="game-content">
+                      <div className="sk-line sk-shimmer" style={{ width: "80%" }} />
+                      <div className="sk-line sk-shimmer" style={{ width: "50%" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="completed-con">
+              <div className="title"><h2>Completed</h2></div>
+              <div className="completed-games">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div className="completed sk-card" key={`sk-comp-${i}`}>
+                    <div className="completed-cover sk-shimmer" />
+                    <div className="completed-content">
+                      <div className="sk-line sk-shimmer" style={{ width: "80%" }} />
+                      <div className="sk-line sk-shimmer" style={{ width: "50%" }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="right-col">
+            <div className="about">
+              <div className="title"><h2>About</h2></div>
+              <div className="sk-line sk-shimmer" style={{ width: "100%" }} />
+              <div className="sk-line sk-shimmer" style={{ width: "92%" }} />
+              <div className="sk-line sk-shimmer" style={{ width: "60%" }} />
+            </div>
+            <div className="library-stats-con">
+              <div><h2>Library Stats</h2></div>
+              <div className="library-stats">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={`sk-stat-${i}`}>
+                    <div className="sk-line sk-shimmer" style={{ width: "40px", height: "26px", margin: "0 auto 6px" }} />
+                    <div className="sk-line sk-shimmer" style={{ width: "60px", margin: "0 auto" }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     );
   }
@@ -202,16 +291,13 @@ export default function UserProfile() {
                   favoriteGames.slice(0, 5).map((game) => (
                     <Link
                       key={game.id}
-                      to={`/game#${game.id}`}
+                      to={gamePath(game.id, game.title || game.name)}
                       className="game-con"
                     >
-                      <img
-                        src={
-                          game.background_image ||
-                          game.backgroundImage ||
-                          placeholderImage
-                        }
+                      <ProfileCover
+                        src={game.background_image || game.backgroundImage || placeholderImage}
                         alt={game.title || game.name}
+                        className="favorite-cover"
                       />
                       <span className="rating">
                         {game.metacritic ?? "N/A"}
@@ -243,12 +329,13 @@ export default function UserProfile() {
                   paginatedCompletedGames.map((game) => (
                     <Link
                       key={game.id}
-                      to={`/game#${game.id}`}
+                      to={gamePath(game.id, game.title || game.name)}
                       className="completed"
                     >
-                      <img
+                      <ProfileCover
                         src={game.background_image || game.backgroundImage || ""}
                         alt={game.title || game.name}
+                        className="completed-cover"
                       />
                       <p className="rating">{game.metacritic ?? "N/A"}</p>
                       <div className="completed-content">
