@@ -16,7 +16,7 @@ const RAWG_HEADERS = {
  * @returns {string}
  */
 export function buildRawgFetchBase(pageSize) {
-  return `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search_exact=true&page_size=${pageSize}&`;
+  return `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search_precise=true&page_size=${pageSize}&`;
 }
 
 /**
@@ -27,6 +27,13 @@ export function buildRawgFetchBase(pageSize) {
  */
 export async function fetchRawgGames(link) {
   const res = await fetch(link, { method: "GET", headers: RAWG_HEADERS });
+  if (!res.ok) {
+    // Surface the HTTP status so rate limits (429) / server errors (5xx)
+    // don't silently masquerade as "no results".
+    const err = new Error(`RAWG request failed: HTTP ${res.status} ${res.statusText}`);
+    err.status = res.status;
+    throw err;
+  }
   const data = await res.json();
   return {
     count: data.count || 0,
@@ -42,14 +49,47 @@ export async function fetchRawgGames(link) {
  * [{ id: string, label: string, platformId: number }, ...]
  */
 export async function fetchRawgPlatforms() {
-  const res = await fetch(
-    `${RAWG_ORIGIN}platforms?key=${RAWG_QUERY_KEY}&page_size=50`,
-    { method: "GET", headers: RAWG_HEADERS },
+  const all = [];
+  let page = 1;
+  let totalCount = null;
+
+  // Paginate against our own proxy origin instead of following RAWG's
+  // `next` URL (which points at api.rawg.io directly and fails CORS/auth).
+  while (true) {
+    const res = await fetch(
+      `${RAWG_ORIGIN}platforms?key=${RAWG_QUERY_KEY}&page_size=100&page=${page}`,
+      { method: "GET", headers: RAWG_HEADERS },
+    );
+    const data = await res.json();
+
+    if (totalCount === null) totalCount = data.count ?? null;
+    const results = Array.isArray(data.results) ? data.results : [];
+    all.push(...results);
+
+    console.log(
+      `[fetchRawgPlatforms] page ${page}: ${results.length} results | running total ${all.length}` +
+        (totalCount !== null ? ` of ${totalCount}` : "")
+    );
+
+    // Stop when this page returned nothing, or we've collected the full count.
+    if (results.length === 0 || (totalCount !== null && all.length >= totalCount)) {
+      break;
+    }
+    page += 1;
+
+    // Safety cap so a malformed response can't loop forever.
+    if (page > 10) {
+      console.warn("[fetchRawgPlatforms] hit 10-page safety cap, stopping");
+      break;
+    }
+  }
+
+  console.log(
+    "[fetchRawgPlatforms] FINAL names:",
+    all.map((p) => p.name).sort((a, b) => a.localeCompare(b))
   );
-  const data = await res.json();
-  const sorted = (data.results || []).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
+
+  const sorted = all.sort((a, b) => a.name.localeCompare(b.name));
   return sorted.map((p) => ({
     id: String(p.id),
     label: p.name,
@@ -108,6 +148,25 @@ export async function searchRawgTags(query) {
     label: t.name,
     slug: t.slug,
     kind: "tag",
+  }));
+}
+
+export async function autocompleteRawgGames(query) {
+  if (!query.trim() || query.trim().length < 2) return [];
+  const res = await fetch(
+    `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search=${encodeURIComponent(query)}&page_size=6`,
+    { method: "GET", headers: RAWG_HEADERS }
+  );
+  const data = await res.json();
+  if (!data.results) return [];
+  return data.results.map((g) => ({
+    id: g.id,
+    name: g.name,
+    released: g.released,
+    background_image: g.background_image,
+    genres: g.genres || [],
+    metacritic: g.metacritic ?? null,
+    rating: g.rating ?? null,
   }));
 }
 

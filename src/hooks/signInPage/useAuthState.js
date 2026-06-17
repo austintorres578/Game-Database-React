@@ -13,7 +13,6 @@ export function useAuthState() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
-      console.log("[SIGNIN AUTH STATE]", u ? u.uid : null);
       setUser(u || null);
       setCheckingAuth(false);
     });

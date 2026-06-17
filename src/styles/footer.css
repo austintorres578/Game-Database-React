@@ -116,6 +116,7 @@
   bottom: 20px;
   /* display: flex; */
   display: none;
+  box-sizing: border-box;
 }
 
 .footer .mobile-install-banner span {

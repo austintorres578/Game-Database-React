@@ -3,20 +3,17 @@ import { auth, onAuthStateChanged } from "../firebase/fireAuth";
 
 function hasStoredFirebaseUser() {
   try {
-    return Object.keys(localStorage).some((k) =>
+    const inLocalStorage = Object.keys(localStorage).some((k) =>
       k.startsWith("firebase:authUser:"),
     );
+    if (inLocalStorage) return true;
+    if (typeof indexedDB !== "undefined") return true;
+    return false;
   } catch {
     return false;
   }
 }
 
-/**
- * Wraps onAuthStateChanged with a grace-timer that prevents a false
- * "not logged in" flash when Firebase is still restoring a persisted session.
- *
- * @returns {{ user: object|null, authLoading: boolean }}
- */
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -24,39 +21,25 @@ export function useAuth() {
   const storedUserLikely = useMemo(() => hasStoredFirebaseUser(), []);
 
   useEffect(() => {
-    let graceTimer = null;
+    let safetyTimer = null;
 
     if (storedUserLikely) {
-      graceTimer = setTimeout(() => {
+      safetyTimer = setTimeout(() => {
         setAuthLoading(false);
-      }, 2000);
+      }, 10000);
     }
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      console.log("[AUTH STATE]", firebaseUser ? firebaseUser.uid : null);
-
       setUser(firebaseUser || null);
-
-      if (firebaseUser) {
-        if (graceTimer) {
-          clearTimeout(graceTimer);
-          graceTimer = null;
-        }
-        setAuthLoading(false);
-        return;
+      if (safetyTimer) {
+        clearTimeout(safetyTimer);
+        safetyTimer = null;
       }
-
-      if (!storedUserLikely) {
-        if (graceTimer) {
-          clearTimeout(graceTimer);
-          graceTimer = null;
-        }
-        setAuthLoading(false);
-      }
+      setAuthLoading(false);
     });
 
     return () => {
-      if (graceTimer) clearTimeout(graceTimer);
+      if (safetyTimer) clearTimeout(safetyTimer);
       unsubscribe();
     };
   }, [storedUserLikely]);

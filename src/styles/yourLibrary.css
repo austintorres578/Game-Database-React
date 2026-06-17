@@ -249,7 +249,7 @@
     max-width: 330px;
   }
 
-  body .library-page .group-select-con{
+  body .library-page .group-select-con {
     width: 90%;
   }
 }
@@ -431,13 +431,14 @@
   position: absolute;
   z-index: 1;
   top: 42px;
-  right: 0px;
-  width: 165px;
+  right: -2px;
+  width: 100%;
   background: rgba(15, 23, 42);
   border: 1px solid rgba(51, 65, 85, 0.7);
   padding-top: 3px;
   padding-bottom: 3px;
   border-radius: 5px;
+  box-sizing: border-box;
 }
 
 .library-page .sorting > button {
@@ -1165,10 +1166,104 @@
   height: 30%;
 }
 
+.library-page .game-skeleton .game-card {
+  cursor: default;
+  pointer-events: none;
+}
+
+.library-page .game-skeleton .skeleton-line {
+  border-radius: 6px;
+  height: 12px;
+  margin-bottom: 8px;
+}
+
+.library-page .game-skeleton .skeleton-title {
+  width: 80%;
+}
+.library-page .game-skeleton .skeleton-sub {
+  width: 50%;
+}
+
+.library-page .skeleton-shimmer {
+  background-color: #1a2238;
+  background-image: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0) 0%,
+    rgba(148, 163, 184, 0.18) 50%,
+    rgba(148, 163, 184, 0) 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: library-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes library-skeleton-shimmer {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-page .skeleton-shimmer {
+    animation: none;
+  }
+}
+
 .library-page .game-img {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+.library-page .game-img .game-img-el {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.library-page .game-img.is-loaded .game-img-el {
+  opacity: 1;
+}
+
+.library-page .game-img.is-loading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: #1a2238;
+  background-image: linear-gradient(
+    90deg,
+    rgba(148, 163, 184, 0) 0%,
+    rgba(148, 163, 184, 0.18) 50%,
+    rgba(148, 163, 184, 0) 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: cover-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes cover-shimmer {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .library-page .game-img.is-loading::before {
+    animation: none;
+  }
 }
 
 .library-page .game-link {
@@ -1281,6 +1376,10 @@
   body .library-page .import-settings{
     padding: 15px;
   } */
+
+  .library-page .game-skeleton .skeleton-line {
+    margin-bottom: 6px;
+  }
 
   body .library-page .custom-filter-settings {
     justify-content: center;
@@ -1975,7 +2074,7 @@
   padding: 10px 15px;
   text-align: center;
   transition: 0.25s;
-  cursor:pointer;
+  cursor: pointer;
   border-bottom: solid 1px #94a3b81f;
 }
 

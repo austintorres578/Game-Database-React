@@ -40,16 +40,28 @@ export async function deleteCustomGameStorageFiles(userId, docId, backgroundImag
   const storage = getStorage(app);
   const deletions = [];
 
-  if (typeof backgroundImage === "string" && backgroundImage.includes("firebasestorage.googleapis.com")) {
+  if (docId) {
     const coverRef = ref(storage, `users/${userId}/customGameCovers/${docId}`);
-    deletions.push(deleteObject(coverRef).catch(() => {}));
+    deletions.push(
+      deleteObject(coverRef).catch((err) => {
+        if (err.code !== "storage/object-not-found") {
+          console.error("Cover delete failed:", err.code, coverRef.fullPath);
+        }
+      })
+    );
   }
 
   if (Array.isArray(screenshots)) {
     for (const screenshot of screenshots) {
       if (screenshot?.storagePath) {
         const screenshotRef = ref(storage, screenshot.storagePath);
-        deletions.push(deleteObject(screenshotRef).catch(() => {}));
+        deletions.push(
+          deleteObject(screenshotRef).catch((err) => {
+            if (err.code !== "storage/object-not-found") {
+              console.error("Screenshot delete failed:", err.code, screenshotRef.fullPath);
+            }
+          })
+        );
       }
     }
   }
