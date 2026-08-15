@@ -30,7 +30,7 @@ export function useSteamSync({ authUser, onCandidatesReady, onError }) {
   async function refreshSteamLinkedState() {
     try {
       setSteamCheckLoading(true);
-      const { linked } = await checkSteamSession();
+      const { linked } = await checkSteamSession(authUser?.uid);
       setSteamLinked(linked);
       return linked;
     } catch (e) {
@@ -66,7 +66,7 @@ export function useSteamSync({ authUser, onCandidatesReady, onError }) {
         return;
       }
 
-      const { linked: loggedIn, errorMsg: meError } = await checkSteamSession();
+      const { linked: loggedIn, errorMsg: meError } = await checkSteamSession(authUser?.uid);
       console.log("✅ Steam /api/me:", { loggedIn });
       setSteamLinked(loggedIn);
 

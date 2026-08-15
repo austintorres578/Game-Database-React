@@ -116,17 +116,77 @@ export function getStoreLabel(item) {
 }
 
 /**
+ * Pulls a numeric price out of a store item, handling both flat numbers
+ * (RAWG-ish / already-normalized) and ITAD's nested { amount, currency } shape.
+ * Falls back to the regular (non-sale) price when there's no deal price.
+ */
+export function getStorePrice(item) {
+  const toNumber = (v) => {
+    if (v == null) return NaN;
+    if (typeof v === "number") return v;
+    if (typeof v === "string") return Number(v);
+    // ITAD nested shape: { amount, currency } (also tolerate amountInt)
+    if (typeof v === "object") {
+      if (Number.isFinite(Number(v.amount))) return Number(v.amount);
+      if (Number.isFinite(Number(v.amountInt))) return Number(v.amountInt) / 100;
+    }
+    return NaN;
+  };
+
+  // Prefer the current/deal price, then fall back to the regular price.
+  const candidates = [
+    item?.price,
+    item?.deal?.price,
+    item?.current,
+    item?.regular,
+    item?.deal?.regular,
+    item?.regularPrice,
+  ];
+
+  for (const c of candidates) {
+    const n = toNumber(c);
+    if (Number.isFinite(n)) return n;
+  }
+  return NaN;
+}
+
+/** True when the item has an active discount. */
+export function getStoreCut(item) {
+  const cut = Number(item?.cut ?? item?.deal?.cut);
+  return Number.isFinite(cut) ? cut : 0;
+}
+
+/**
  * Returns a formatted price element when the store item has a valid price,
  * or null if no price is available.
  */
 export function renderStorePrice(item) {
-  const price = Number(item?.price);
+  const price = getStorePrice(item);
 
-  if (Number.isFinite(price)) {
-    return <span className="store-pill-price">${price.toFixed(2)}</span>;
-  }
+  if (!Number.isFinite(price)) return null;
 
-  return null;
+  const cut = getStoreCut(item);
+
+  const regularRaw =
+    item?.regular ?? item?.deal?.regular ?? item?.regularPrice ?? null;
+  const regular = (() => {
+    if (regularRaw == null) return NaN;
+    if (typeof regularRaw === "number") return regularRaw;
+    if (typeof regularRaw === "object" && Number.isFinite(Number(regularRaw.amount)))
+      return Number(regularRaw.amount);
+    return Number(regularRaw);
+  })();
+
+  const showRegular = cut > 0 && Number.isFinite(regular) && regular > price;
+
+  return (
+    <span className="store-pill-price">
+      {showRegular && (
+        <span className="store-pill-price--was">${regular.toFixed(2)}</span>
+      )}
+      <span className="store-pill-price--now">${price.toFixed(2)}</span>
+    </span>
+  );
 }
 
 /**
@@ -135,8 +195,8 @@ export function renderStorePrice(item) {
  */
 export function sortStoresByPrice(list) {
   return [...(Array.isArray(list) ? list : [])].sort((a, b) => {
-    const aPrice = Number(a?.price);
-    const bPrice = Number(b?.price);
+    const aPrice = getStorePrice(a);
+    const bPrice = getStorePrice(b);
 
     const aHasPrice = Number.isFinite(aPrice);
     const bHasPrice = Number.isFinite(bPrice);

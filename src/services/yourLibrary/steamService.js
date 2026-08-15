@@ -3,19 +3,27 @@
 import { BACKEND_BASE } from "../../constants/apiConfig";
 
 /**
- * Checks whether the current browser session is linked to a Steam account.
- * Returns { linked: boolean, errorMsg: string | null }.
+ * Checks whether this Firebase account has a Steam account linked.
+ * Reads from Firestore via the backend, so it survives session expiry
+ * and works across devices.
+ * Returns { linked: boolean, steamId: string | null, errorMsg: string | null }.
  */
-export async function checkSteamSession() {
-  const res = await fetch(`${BACKEND_BASE}/api/me`, {
+export async function checkSteamSession(uid) {
+  if (!uid) return { linked: false, steamId: null, errorMsg: null };
+
+  const res = await fetch(`${BACKEND_BASE}/api/steam/status`, {
     method: "GET",
     credentials: "include",
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      "x-firebase-uid": uid,
+    },
   });
 
   const data = await res.json().catch(() => ({}));
   return {
-    linked: !!data?.loggedIn,
+    linked: !!data?.linked,
+    steamId: data?.steamId || null,
     errorMsg: data?.error || null,
   };
 }
@@ -51,12 +59,17 @@ export async function fetchSteamOwnedGameTitles(uid) {
 }
 
 /**
- * Logs the current session out of Steam by calling the backend logout endpoint.
- * Errors are silently ignored — the caller is responsible for updating UI state.
+ * Unlinks the Steam account from this Firebase user. Deletes the stored
+ * steamId in Firestore and tears down any Steam session.
+ * Errors are silently ignored — the caller updates UI state.
  */
-export async function logoutSteamSession() {
-  await fetch(`${BACKEND_BASE}/api/logout`, {
+export async function logoutSteamSession(uid) {
+  await fetch(`${BACKEND_BASE}/api/steam/unlink`, {
     method: "POST",
     credentials: "include",
+    headers: {
+      Accept: "application/json",
+      "x-firebase-uid": uid,
+    },
   });
 }

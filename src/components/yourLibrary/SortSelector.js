@@ -2,6 +2,7 @@ import { getSortLabel } from "../../utils/yourLibrary/sortHelpers";
 
 export default function SortSelector({
   sortBy,
+  canUseCustomOrder,
   onRevealDrop,
   onSortOptionClick,
 }) {
@@ -15,6 +16,21 @@ export default function SortSelector({
           </button>
 
           <div className="invisible">
+            <button
+              type="button"
+              className={sortBy === "custom_order" ? "active" : ""}
+              disabled={!canUseCustomOrder}
+              style={{ opacity: canUseCustomOrder ? 1 : 0.45 }}
+              onClick={() => canUseCustomOrder && onSortOptionClick("custom_order")}
+              title={
+                canUseCustomOrder
+                  ? "Order by your saved group arrangement"
+                  : "Select a single group to use custom order"
+              }
+            >
+              Custom Order
+            </button>
+
             <button
               type="button"
               className={sortBy === "name_asc" ? "active" : ""}

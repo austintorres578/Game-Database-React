@@ -1,165 +1,84 @@
-// RAWG API service for the search page.
-// Handles all outbound requests to the RAWG video-games database.
+// Search-page data service. Talks to the IGDB backend proxy; function names
+// kept as `*Rawg*` since callers (SearchPage.js, CustomGame.js) still use
+// them and the backend returns RAWG-shaped objects.
 
-const RAWG_ORIGIN = "https://rawg-video-games-database.p.rapidapi.com/";
-const RAWG_QUERY_KEY = "99cd09f6c33b42b5a24a9b447ee04a81";
-const RAWG_HEADERS = {
-  "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
-  "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
-};
+import { BACKEND_BASE } from "../../constants/apiConfig";
 
 /**
- * Builds the base RAWG games URL (without page number or filters appended).
- * The caller passes this to buildLink() from utils/searchPage/buildLink.js.
- *
- * @param {number} pageSize - Number of results to request per page
- * @returns {string}
+ * Searches games via the IGDB backend proxy.
+ * Returns { count, results, next, previous } to match the old RAWG shape
+ * so existing callers keep working.
  */
-export function buildRawgFetchBase(pageSize) {
-  return `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search_precise=true&page_size=${pageSize}&`;
-}
-
-/**
- * Fetches a page of game results from RAWG.
- * Returns the raw response data ({ count, results, next, previous }).
- *
- * @param {string} link - The fully built RAWG request URL
- */
-export async function fetchRawgGames(link) {
-  const res = await fetch(link, { method: "GET", headers: RAWG_HEADERS });
+export async function fetchIgdbGames(query, limit = 12) {
+  const url =
+    `${BACKEND_BASE}/api/igdb/search?q=${encodeURIComponent(query || "")}` +
+    `&limit=${limit}`;
+  const res = await fetch(url);
   if (!res.ok) {
-    // Surface the HTTP status so rate limits (429) / server errors (5xx)
-    // don't silently masquerade as "no results".
-    const err = new Error(`RAWG request failed: HTTP ${res.status} ${res.statusText}`);
+    const err = new Error(`IGDB search failed: HTTP ${res.status} ${res.statusText}`);
     err.status = res.status;
     throw err;
   }
   const data = await res.json();
+  const results = Array.isArray(data.results) ? data.results : [];
   return {
-    count: data.count || 0,
-    results: data.results || [],
-    next: data.next || "",
-    previous: data.previous || "",
+    count: results.length,
+    results,
+    next: "",       // IGDB pagination handled differently; no next/prev URLs
+    previous: "",
   };
 }
 
 /**
- * Fetches available platform filters from RAWG.
+ * Fetches available platform filters from the IGDB backend.
  * Returns an array of filter objects sorted alphabetically by name:
  * [{ id: string, label: string, platformId: number }, ...]
  */
 export async function fetchRawgPlatforms() {
-  const all = [];
-  let page = 1;
-  let totalCount = null;
-
-  // Paginate against our own proxy origin instead of following RAWG's
-  // `next` URL (which points at api.rawg.io directly and fails CORS/auth).
-  while (true) {
-    const res = await fetch(
-      `${RAWG_ORIGIN}platforms?key=${RAWG_QUERY_KEY}&page_size=100&page=${page}`,
-      { method: "GET", headers: RAWG_HEADERS },
-    );
-    const data = await res.json();
-
-    if (totalCount === null) totalCount = data.count ?? null;
-    const results = Array.isArray(data.results) ? data.results : [];
-    all.push(...results);
-
-    console.log(
-      `[fetchRawgPlatforms] page ${page}: ${results.length} results | running total ${all.length}` +
-        (totalCount !== null ? ` of ${totalCount}` : "")
-    );
-
-    // Stop when this page returned nothing, or we've collected the full count.
-    if (results.length === 0 || (totalCount !== null && all.length >= totalCount)) {
-      break;
-    }
-    page += 1;
-
-    // Safety cap so a malformed response can't loop forever.
-    if (page > 10) {
-      console.warn("[fetchRawgPlatforms] hit 10-page safety cap, stopping");
-      break;
-    }
-  }
-
-  console.log(
-    "[fetchRawgPlatforms] FINAL names:",
-    all.map((p) => p.name).sort((a, b) => a.localeCompare(b))
-  );
-
-  const sorted = all.sort((a, b) => a.name.localeCompare(b.name));
-  return sorted.map((p) => ({
-    id: String(p.id),
-    label: p.name,
-    platformId: p.id,
-  }));
+  const res = await fetch(`${BACKEND_BASE}/api/igdb/platforms`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data.results) ? data.results : [];
 }
 
 /**
- * Fetches available genre filters from RAWG.
+ * Fetches available genre filters from the IGDB backend.
  * Returns an array of filter objects sorted alphabetically by name:
  * [{ id: string, label: string, slug: string, kind: "genre" }, ...]
  */
 export async function fetchRawgGenres() {
-  const res = await fetch(
-    `${RAWG_ORIGIN}genres?key=${RAWG_QUERY_KEY}&page_size=40`,
-    { method: "GET", headers: RAWG_HEADERS },
-  );
+  const res = await fetch(`${BACKEND_BASE}/api/igdb/genres`);
+  if (!res.ok) return [];
   const data = await res.json();
-  const sorted = (data.results || []).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-  return sorted.map((g) => ({
-    id: String(g.id),
-    label: g.name,
-    slug: g.slug,
-    kind: "genre",
-  }));
+  return Array.isArray(data.results) ? data.results : [];
 }
 
+// IGDB's genre list is small (~100) and cached long-term on the backend, so
+// "search" is just a client-side substring filter over the full list rather
+// than a separate server-side search endpoint.
 export async function searchRawgGenres(query) {
   if (!query.trim()) return [];
-  const res = await fetch(
-    `${RAWG_ORIGIN}genres?key=${RAWG_QUERY_KEY}&page_size=20&search=${encodeURIComponent(query)}`,
-    { method: "GET", headers: RAWG_HEADERS }
-  );
-  const data = await res.json();
-  if (!data.results) return [];
-  return data.results.map((g) => ({
-    id: String(g.id),
-    label: g.name,
-    slug: g.slug,
-    kind: "genre",
-  }));
+  const all = await fetchRawgGenres();
+  const q = query.trim().toLowerCase();
+  return all.filter((g) => g.label.toLowerCase().includes(q));
 }
 
 export async function searchRawgTags(query) {
   if (!query.trim()) return [];
-  const res = await fetch(
-    `${RAWG_ORIGIN}tags?key=${RAWG_QUERY_KEY}&page_size=20&search=${encodeURIComponent(query)}`,
-    { method: "GET", headers: RAWG_HEADERS },
-  );
-  const data = await res.json();
-  if (!data.results) return [];
-  return data.results.map((t) => ({
-    id: String(t.id),
-    label: t.name,
-    slug: t.slug,
-    kind: "tag",
-  }));
+  const all = await fetchRawgTags();
+  const q = query.trim().toLowerCase();
+  return all.filter((t) => t.label.toLowerCase().includes(q));
 }
 
 export async function autocompleteRawgGames(query) {
   if (!query.trim() || query.trim().length < 2) return [];
-  const res = await fetch(
-    `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search=${encodeURIComponent(query)}&page_size=6`,
-    { method: "GET", headers: RAWG_HEADERS }
-  );
+  const url =
+    `${BACKEND_BASE}/api/igdb/autocomplete?q=${encodeURIComponent(query)}&limit=6`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
   const data = await res.json();
-  if (!data.results) return [];
-  return data.results.map((g) => ({
+  const results = Array.isArray(data.results) ? data.results : [];
+  return results.map((g) => ({
     id: g.id,
     name: g.name,
     released: g.released,
@@ -171,22 +90,13 @@ export async function autocompleteRawgGames(query) {
 }
 
 /**
- * Fetches available tag filters from RAWG.
+ * Fetches available tag filters from the IGDB backend.
  * Returns an array of filter objects sorted alphabetically by name:
  * [{ id: string, label: string, slug: string, kind: "tag" }, ...]
  */
 export async function fetchRawgTags() {
-  const res = await fetch(
-    `${RAWG_ORIGIN}tags?key=${RAWG_QUERY_KEY}&page_size=40`,
-    { method: "GET", headers: RAWG_HEADERS },
-  );
+  const res = await fetch(`${BACKEND_BASE}/api/igdb/tags`);
+  if (!res.ok) return [];
   const data = await res.json();
-  if (!data.results) return [];
-  const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
-  return sorted.map((t) => ({
-    id: String(t.id),
-    label: t.name,
-    slug: t.slug,
-    kind: "tag",
-  }));
+  return Array.isArray(data.results) ? data.results : [];
 }

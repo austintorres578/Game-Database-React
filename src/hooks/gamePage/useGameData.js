@@ -1,15 +1,13 @@
-// Fetches game details, screenshots, and videos from RAWG on mount.
+// Fetches game details and screenshots from the IGDB backend on mount.
 // Reads the game ID from the route param (e.g. /game/12345).
 // For custom games (id starts with "custom_"), loads from Firestore instead.
 
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-import { RAWG_KEY } from "../../constants/apiConfig";
+import { BACKEND_BASE } from "../../constants/apiConfig";
 import { auth } from "../../firebase/fireAuth";
 import { doc, getDoc, db } from "../../firebase/firestore";
-
-const RAWG_BASE = "https://api.rawg.io/api/games/";
 
 /**
  * @returns {{ loading: boolean, gameData: object|null, gameScreenshots: object[], gameVideos: object[], isCustomGame: boolean }}
@@ -86,34 +84,30 @@ export function useGameData() {
       return;
     }
 
-    // --- RAWG game: fetch from API ---
-    const gameUrl = RAWG_BASE + rawId + RAWG_KEY;
-    const screenshotsUrl = RAWG_BASE + rawId + "/screenshots" + RAWG_KEY;
-    const videosUrl = RAWG_BASE + rawId + "/movies" + RAWG_KEY;
-
+    // --- IGDB game: fetch from backend ---
     setLoading(true);
     setScreenshotsLoading(true);
 
-    fetch(gameUrl)
-      .then((r) => r.json())
-      .then((data) => { console.log("Game data:", data); setGameData(data); setLoading(false); })
-      .catch((err) => { console.error("Game data error:", err); setLoading(false); });
-
-    fetch(screenshotsUrl)
-      .then((r) => r.json())
-      .then((data) => { console.log("Screenshots response:", data); setGameScreenshots(data.results || []); setScreenshotsLoading(false); })
-      .catch((err) => { console.error("Screenshots error:", err); setScreenshotsLoading(false); });
-
-    fetch(videosUrl)
-      .then((r) => r.json())
-      .then((data) => {
-        console.log("🎥 RAWG video data:", data);
-        const results = data.results || [];
-        setGameVideos(results);
-        if (results.length > 0) console.log("🎥 First video clip info:", results[0]);
-        else console.log("No videos found for this game.");
+    fetch(`${BACKEND_BASE}/api/igdb/game/${rawId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Game fetch failed: ${res.status}`);
+        return res.json();
       })
-      .catch((err) => console.error("Videos error:", err));
+      .then((data) => {
+        const game = data.game;
+        if (!game) throw new Error("Game not found");
+        setGameData(game);
+        setGameScreenshots(game.short_screenshots || []);
+        setScreenshotsLoading(false);
+        // IGDB has no separate videos endpoint wired yet — set empty for now.
+        setGameVideos([]);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Game fetch error:", err);
+        setLoading(false);
+        setScreenshotsLoading(false);
+      });
   }, [gameId]);
 
   return { loading, gameData, gameScreenshots, gameVideos, isCustomGame, screenshotsLoading };

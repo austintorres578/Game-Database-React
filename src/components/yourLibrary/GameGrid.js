@@ -27,13 +27,14 @@ function GameCover({ imageUrl }) {
 }
 
 export default function GameGrid({
+  isListView,
   loadingStats,
   pageGames,
   customFilters,
   onAddToGroup,
 }) {
   return (
-    <div className="game-grid">
+    <div className="game-grid" id={isListView ? "list-view" : undefined}>
       {loadingStats ? (
         Array.from({ length: 12 }).map((_, i) => (
           <div className="game-wrapper game-skeleton" key={`lib-skeleton-${i}`}>

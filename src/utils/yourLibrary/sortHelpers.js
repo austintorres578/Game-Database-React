@@ -136,6 +136,8 @@ export function getSortLabel(sortValue) {
       return "Added (Newest)";
     case "added_asc":
       return "Added (Oldest)";
+    case "custom_order":
+      return "Custom Order";
     case "name_asc":
     default:
       return "Name (A-Z)";

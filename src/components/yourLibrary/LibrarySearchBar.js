@@ -5,6 +5,7 @@ export default function LibrarySearchBar({
   onSearchChange,
   onClear,
   sortBy,
+  canUseCustomOrder,
   sortedGamesCount,
   onRevealDrop,
   onSortOptionClick,
@@ -32,6 +33,7 @@ export default function LibrarySearchBar({
             </div>
             <SortSelector
               sortBy={sortBy}
+              canUseCustomOrder={canUseCustomOrder}
               onRevealDrop={onRevealDrop}
               onSortOptionClick={onSortOptionClick}
             />

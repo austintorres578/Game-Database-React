@@ -146,6 +146,15 @@ export default function Header() {
           </form>
           {showSuggestions && suggestions.length > 0 && (
             <div className="quick-search-suggestion-con">
+              <button
+                className="close-button"
+                onClick={() => {
+                  userTypingRef.current = false;
+                  setShowSuggestions(false);
+                }}
+              >
+                <p>✕</p>
+              </button>
               <div className="quick-search-suggestion">
                 {suggestions.map((s) => (
                   <Link
