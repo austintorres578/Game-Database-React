@@ -1015,7 +1015,10 @@
 
   body .cg-shell .tag-options {
     margin-right: 25px;
-    max-width: stretch;
+    max-width: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    margin-right: 0px;
   }
 }
 
@@ -1162,7 +1165,8 @@
   padding: 5px;
   background: rgb(11 17 32);
   border: 1px solid #94a3b838;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
   position: absolute;
   z-index: 2;
@@ -1199,7 +1203,8 @@
   padding: 5px;
   background: rgb(11 17 32);
   border: 1px solid #94a3b838;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
   position: absolute;
   z-index: 2;
@@ -1384,7 +1389,8 @@
 }
 
 .cg-shell .custom-hero .image-link-con input {
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
   padding: 10px;
@@ -1457,7 +1463,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
   color: white;
@@ -1483,7 +1490,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: stretch;
+  width: 100%;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
   color: white;
@@ -1593,7 +1600,8 @@
   grid-template-columns: repeat(auto-fill, minmax(245px, 1fr));
   min-height: 100px;
   align-items: center;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   position: relative;
 }
 
@@ -1775,7 +1783,8 @@
   padding: 5px;
   border: none;
   color: white;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .cg-shell .detail-con .detail input::placeholder {
@@ -1813,8 +1822,10 @@
 }
 
 .cg-shell .game-details-con .right-col .tags {
-  padding: 25px;
+  margin: 25px;
   position: relative;
+  width: auto;
+  box-sizing: border-box;
 }
 
 .cg-shell .game-details-con .right-col .tag-toggle {
@@ -1825,7 +1836,8 @@
   border: 1px solid #94a3b81a;
   padding: 15px;
   border-radius: 10px;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   color: white;
 }
 
@@ -1838,7 +1850,7 @@
   border-radius: 10px;
   position: absolute;
   z-index: 2;
-  top: 85px;
+  top: 55px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;

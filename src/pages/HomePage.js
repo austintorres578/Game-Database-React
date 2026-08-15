@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import { gamePath } from "../utils/slugify";
 
 import baldurCover from '../assets/images/baldurCover.jpg'
 import redDeadCover from '../assets/images/redDeadCover.jpg'
@@ -7,8 +8,9 @@ import animalCrossingCover from '../assets/images/animalCrossingCover.jpg'
 
 import gamePreviewImage from '../assets/images/redDeadPreview.jpeg'
 
+import { ReactComponent as Arrow } from '../assets/images/arrow.svg'
+
 import "../styles/home.css";
-import { RevealWrapper } from "../components/RevealWrapper";
 
 export default function HomePage({ user }) {
   const statGridRef = useRef(null);
@@ -16,6 +18,9 @@ export default function HomePage({ user }) {
   const headersRef = useRef(null);
   const headerConRef = useRef(null);
   const carouselIndexRef = useRef(0);
+  const scrollRelRef = useRef(null);
+  const featureIndexRef = useRef(0);
+  const featureStepRef = useRef(null);
   useEffect(() => {
     const animateCounter = (el) => {
       const target = +el.dataset.target;
@@ -115,6 +120,88 @@ export default function HomePage({ user }) {
     };
   }, []);
 
+  useEffect(() => {
+    const el = scrollRelRef.current;
+    if (!el) return;
+
+    const INTERVAL_MS = 5000;
+    const MOBILE_QUERY = "(max-width: 765px)";
+
+    let interval = null;
+
+    const mql = window.matchMedia(MOBILE_QUERY);
+
+    const reset = () => {
+      featureIndexRef.current = 0;
+      el.style.left = "0px";
+    };
+
+    const move = (direction) => {
+      const cards = el.querySelectorAll(".feature-card");
+      if (cards.length === 0) return;
+
+      // Read the actual rendered gap so JS and CSS can't drift apart.
+      const gap = parseFloat(getComputedStyle(el).columnGap || "0") || 0;
+      const step = cards[0].getBoundingClientRect().width + gap;
+      const count = cards.length;
+      const nextIndex = (featureIndexRef.current + direction + count) % count;
+
+      el.style.left = nextIndex === 0 ? "0px" : `${-nextIndex * step}px`;
+      featureIndexRef.current = nextIndex;
+    };
+
+    const advance = () => move(1);
+
+    const restart = () => {
+      if (interval) clearInterval(interval);
+      interval = setInterval(advance, INTERVAL_MS);
+    };
+
+    featureStepRef.current = (direction) => {
+      if (!mql.matches) return;
+      move(direction);
+      restart();
+    };
+
+    const start = () => {
+      if (interval) return;
+      interval = setInterval(advance, INTERVAL_MS);
+    };
+
+    const stop = () => {
+      if (!interval) return;
+      clearInterval(interval);
+      interval = null;
+      reset();
+    };
+
+    const sync = () => {
+      if (mql.matches) {
+        reset();   // realign to card 0 at the new size
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    const handleResize = () => {
+      reset();
+      if (!mql.matches) return;
+      restart();
+    };
+
+    sync();
+    mql.addEventListener("change", sync);
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      mql.removeEventListener("change", sync);
+      window.removeEventListener("resize", handleResize);
+      featureStepRef.current = null;
+      if (interval) clearInterval(interval);
+    };
+  }, []);
+
   return (
     <div className="home-page">
       <section className="home-hero">
@@ -122,95 +209,90 @@ export default function HomePage({ user }) {
         <div className="hero-glow hero-glow-2"></div>
         <div className="hero-noise"></div>
         <div className="home-hero-wrapper">
-          <RevealWrapper direction="up">
-            <div className="home-hero-inner">
-              <p className="home-kicker">Video Game Backlog Tracker</p>
-              <div className="header-con" ref={headerConRef}>
-                <div className="headers" ref={headersRef}>
-                  <h1>Find your next<br></br> game to play.</h1>
-                  <h1>Import your <br></br>library in minutes.</h1>
-                  <h1>Group games <br></br>your way.</h1>
-                </div>
+          <div className="home-hero-inner">
+            <p className="home-kicker">Video Game Backlog Tracker</p>
+            <div className="header-con" ref={headerConRef}>
+              <div className="headers" ref={headersRef}>
+                <h1>Find your next<br></br> game to play.</h1>
+                <h1>Import your <br></br>library in minutes.</h1>
+                <h1>Group games <br></br>your way.</h1>
               </div>
-              <p className="home-subtitle">
-                Search 500,000+ titles across every platform. Track your
-                backlog, rate what you've finished, and never lose your place in
-                a series again.
-              </p>
+            </div>
+            <p className="home-subtitle">
+              Search 500,000+ titles across every platform. Track your backlog,
+              rate what you've finished, and never lose your place in a series
+              again.
+            </p>
 
-              <div className="home-hero-actions">
-                <Link to="/search" className="btn btn-primary">
-                  Start Searching
+            <div className="home-hero-actions">
+              <Link to="/search" className="btn btn-primary">
+                Start Searching
+              </Link>
+
+              {user ? (
+                <Link to="/profile" className="btn btn-ghost">
+                  View Profile
                 </Link>
-
-                {user ? (
-                  <Link to="/profile" className="btn btn-ghost">
-                    View Profile
-                  </Link>
-                ) : (
-                  <Link to="/signup" className="btn btn-ghost">
-                    Create an account
-                  </Link>
-                )}
+              ) : (
+                <Link to="/signup" className="btn btn-ghost">
+                  Create an account
+                </Link>
+              )}
+            </div>
+            <div className="stat-counter-con" ref={statCounterRef}>
+              <div>
+                <h3 data-target="500" data-suffix="k+">0</h3>
+                <p>Games</p>
               </div>
-              <div className="stat-counter-con" ref={statCounterRef}>
-                <div>
-                  <h3 data-target="500" data-suffix="k+">0</h3>
-                  <p>Games</p>
-                </div>
-                <div>
-                  <h3>All</h3>
-                  <p>Platforms</p>
-                </div>
-                <div>
-                  <h3 data-target="30" data-suffix="+">0</h3>
-                  <p>Genres</p>
-                </div>
+              <div>
+                <h3>All</h3>
+                <p>Platforms</p>
+              </div>
+              <div>
+                <h3 data-target="30" data-suffix="+">0</h3>
+                <p>Genres</p>
               </div>
             </div>
-          </RevealWrapper>
-          <RevealWrapper direction="right" delay={150}>
-            <div className="home-hero-games">
-              <div>
-                <img src={baldurCover}></img>
-                <div className="home-hero-game-content">
-                  <p className="game-title">
-                    <strong>Baldur's Gate 3</strong>
-                  </p>
-                  <div className="game-info">
-                    <p className="genre">Action</p>
-                    <p className="rating">97</p>
-                  </div>
+          </div>
+          <div className="home-hero-games">
+            <Link to={gamePath(324997, "Baldur's Gate 3")}>
+              <img src={baldurCover}></img>
+              <div className="home-hero-game-content">
+                <p className="game-title">
+                  <strong>Baldur's Gate 3</strong>
+                </p>
+                <div className="game-info">
+                  <p className="genre">Action</p>
+                  <p className="rating">97</p>
                 </div>
               </div>
+            </Link>
 
-              <div className="second-game">
-                <img src={redDeadCover}></img>
-                <div className="home-hero-game-content">
-                  <p className="game-title">
-                    <strong>Red Dead Redemption 2</strong>
-                  </p>
-                  <div className="game-info">
-                    <p className="genre">Action</p>
-                    <p className="rating">96</p>
-                  </div>
+            <Link to={gamePath(28, "Red Dead Redemption 2")} className="second-game">
+              <img src={redDeadCover}></img>
+              <div className="home-hero-game-content">
+                <p className="game-title">
+                  <strong>Red Dead Redemption 2</strong>
+                </p>
+                <div className="game-info">
+                  <p className="genre">Action</p>
+                  <p className="rating">96</p>
                 </div>
               </div>
-
-              <div>
-                <img src={animalCrossingCover}></img>
-                <div className="home-hero-game-content">
-                  <p className="game-title">
-                    <strong>Animal Crossing: New Horizons</strong>
-                  </p>
-                  <div className="game-info">
-                    <p className="genre">Simulation</p>
-                    <p className="rating">90</p>
-                  </div>
+            </Link>
+            <Link to={gamePath(421698, "Animal Crossing: New Horizons")}>
+              <img src={animalCrossingCover}></img>
+              <div className="home-hero-game-content">
+                <p className="game-title">
+                  <strong>Animal Crossing: New Horizons</strong>
+                </p>
+                <div className="game-info">
+                  <p className="genre">Simulation</p>
+                  <p className="rating">90</p>
                 </div>
               </div>
-            </div>
-          </RevealWrapper>
+            </Link>
+          </div>
         </div>
       </section>
       <div className="ticker-section">
@@ -268,13 +350,11 @@ export default function HomePage({ user }) {
 
       <section className="home-section home-features">
         <div className="home-section-inner">
-          <RevealWrapper direction="up">
-            <span className="pre-header">What you get</span>
-            <h2>Everything you need in one place</h2>
-          </RevealWrapper>
+          <span className="pre-header">What you get</span>
+          <h2>Everything you need in one place</h2>
 
           <div className="feature-grid scroll-container">
-            <RevealWrapper direction="up" delay={0}>
+            <div className="scroll-rel" ref={scrollRelRef}>
               <div className="feature-card">
                 <p className="icon">⌕</p>
                 <h3>Powerful search</h3>
@@ -283,8 +363,6 @@ export default function HomePage({ user }) {
                   custom tags.
                 </p>
               </div>
-            </RevealWrapper>
-            <RevealWrapper direction="up" delay={100}>
               <div className="feature-card">
                 <p className="icon">⌕</p>
                 <h3>Personal Library</h3>
@@ -293,8 +371,6 @@ export default function HomePage({ user }) {
                   custom groups.
                 </p>
               </div>
-            </RevealWrapper>
-            <RevealWrapper direction="up" delay={200}>
               <div className="feature-card">
                 <p className="icon">⌕</p>
                 <h3>Rich Game Pages</h3>
@@ -303,8 +379,6 @@ export default function HomePage({ user }) {
                   details.
                 </p>
               </div>
-            </RevealWrapper>
-            <RevealWrapper direction="up" delay={300}>
               <div className="feature-card">
                 <p className="icon">⌕</p>
                 <h3>User Profiles</h3>
@@ -313,108 +387,103 @@ export default function HomePage({ user }) {
                   accomplishments.
                 </p>
               </div>
-            </RevealWrapper>
+            </div>
+
+          </div>
+          <div className="carousel-arrows">
+            <button onClick={() => featureStepRef.current?.(-1)}><Arrow /></button>
+            <button onClick={() => featureStepRef.current?.(1)}><Arrow /></button>
           </div>
         </div>
+
       </section>
 
       <section className="home-section">
         <div className="home-section-inner">
-          <RevealWrapper direction="up">
-            <span className="pre-header">By the numbers</span>
-            <h2>Built for serious gamers</h2>
-          </RevealWrapper>
-          <RevealWrapper direction="scale" delay={100}>
-            <div className="stat-grid" ref={statGridRef}>
-              <div>
-                <h3 data-target="500000" data-suffix="+">0</h3>
-                <span>Games in database</span>
-              </div>
-              <div className="center">
-                <h3 data-target="50" data-suffix="+">0</h3>
-                <span>Platforms supported</span>
-              </div>
-              <div>
-                <h3 data-target="30" data-suffix="+">0</h3>
-                <span>Genres covered</span>
-              </div>
+          <span className="pre-header">By the numbers</span>
+          <h2>Built for serious gamers</h2>
+          <div className="stat-grid" ref={statGridRef}>
+            <div>
+              <h3 data-target="500000" data-suffix="+">0</h3>
+              <span>Games in database</span>
             </div>
-          </RevealWrapper>
+            <div className="center">
+              <h3 data-target="50" data-suffix="+">0</h3>
+              <span>Platforms supported</span>
+            </div>
+            <div>
+              <h3 data-target="30" data-suffix="+">0</h3>
+              <span>Genres covered</span>
+            </div>
+          </div>
         </div>
       </section>
 
       <section className="home-section home-preview">
         <div className="home-section-inner home-preview-grid">
-          <RevealWrapper direction="left">
-            <div className="home-preview-text">
-              <span className="pre-header">Game Pages</span>
-              <h2>See your games the way they deserve</h2>
-              <p>
-                Every game has a dedicated page with cover art, screenshots,
-                community scores, developer info, and every available store
-                link.
-              </p>
-              <ul className="home-list">
-                <li>Metacritic & community ratings</li>
-                <li>Full screenshot gallery</li>
-                <li>Store price comparison links</li>
-                <li>Genre & tag browsing</li>
-              </ul>
-              <Link to="/search" className="btn btn-ghost">
-                Search for a game →
-              </Link>
-            </div>
-          </RevealWrapper>
+          <div className="home-preview-text">
+            <span className="pre-header">Game Pages</span>
+            <h2>See your games the way they deserve</h2>
+            <p>
+              Every game has a dedicated page with cover art, screenshots,
+              community scores, developer info, and every available store link.
+            </p>
+            <ul className="home-list">
+              <li>Metacritic & community ratings</li>
+              <li>Full screenshot gallery</li>
+              <li>Store price comparison links</li>
+              <li>Genre & tag browsing</li>
+            </ul>
+            <Link to="/search" className="btn btn-ghost">
+              Search for a game →
+            </Link>
+          </div>
 
-          <RevealWrapper direction="right" delay={100}>
-            {/* <div className="home-preview-card">
-              <div className="home-preview-image">
-              </div>
-              <div className="home-preview-meta">
-                <p className="home-preview-label">Red Dead Redemption 2</p>
-                <p className="game-meta">Action • 87 Metascore</p>
-              </div>
-            </div> */}
-            <div className="game-page-preview">
-              <div className="game-preview">
-                <img className="screenshot" src={gamePreviewImage}></img>
-                <div className="game-preview-content">
-                  <p><strong>Red Dead Redemption 2</strong></p>
-                  <div>
-                    <p>Action</p>
-                    <p>Rockstar Games</p>
-                    <p>2018</p>
-                  </div>
+          {/* <div className="home-preview-card">
+            <div className="home-preview-image">
+            </div>
+            <div className="home-preview-meta">
+              <p className="home-preview-label">Red Dead Redemption 2</p>
+              <p className="game-meta">Action • 87 Metascore</p>
+            </div>
+          </div> */}
+          <div className="game-page-preview">
+            <div className="game-preview">
+              <img className="screenshot" src={gamePreviewImage}></img>
+              <div className="game-preview-content">
+                <p><strong>Red Dead Redemption 2</strong></p>
+                <div>
+                  <p>Action</p>
+                  <p>Rockstar Games</p>
+                  <p>2018</p>
                 </div>
               </div>
             </div>
-          </RevealWrapper>
+          </div>
         </div>
       </section>
 
       <section className="home-section home-cta">
         <div className="home-section-inner home-cta-inner">
           <div className="cta-glow"></div>
-          <RevealWrapper direction="up">
-            <h2>Ready to clean up your backlog?</h2>
-            <p>Free to use. No credit card required.</p>
+          <h2>Ready to clean up your backlog?</h2>
+          <p>Free to use. No credit card required.</p>
 
-            <div className="home-hero-actions">
-              <Link to="/search" className="btn btn-primary">
-                Search games
+          <div className="home-hero-actions">
+            <Link to="/search" className="btn btn-primary">
+              Search games
+            </Link>
+
+            {user ? (
+              <Link to="/profile" className="btn btn-ghost">
+                View Profile
               </Link>
-
-              {user ? (
-                <Link to="/profile" className="btn btn-ghost">
-                  View Profile
-                </Link>
-              ) : (
-                <Link to="/signup" className="btn btn-ghost">
-                  Create free account
-                </Link>
-              )}
-            </div>
-          </RevealWrapper>
+            ) : (
+              <Link to="/signup" className="btn btn-ghost">
+                Create free account
+              </Link>
+            )}
+          </div>
         </div>
       </section>
     </div>

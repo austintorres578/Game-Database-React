@@ -240,10 +240,32 @@ body:hover .cursor-ring {
   margin-left: auto;
   margin-right: auto;
   position: absolute;
-  padding: 15px;
+  padding: 35px 15px 15px 15px;
   /* display: none; */
   left: 0px;
   top: 61px;
+}
+
+.site-header .quick-search-suggestion-con .close-button {
+  position: absolute;
+  padding: 5px;
+  height: 30px;
+  width: 30px;
+  border-radius: 99px;
+  top: 5px;
+  right: 5px;
+  border: none;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #022c22;
+  font-weight: bold;
+}
+
+.site-header .quick-search-suggestion-con .close-button p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0px;
 }
 
 .site-header .quick-search-suggestion-con .quick-search-suggestion a {

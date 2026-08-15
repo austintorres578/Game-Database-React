@@ -54,11 +54,13 @@ export default function ManageLibrary() {
   const [selectedGames, setSelectedGames] = useState([]);
   const [pagnOpen, setPagnOpen] = useState(false);
   const [groupSelectionOpen, setGroupSelectionOpen] = useState(false);
+  const [groupRemovalOpen, setGroupRemovalOpen] = useState(false);
   const [reorderSelectedGroupId, setReorderSelectedGroupId] = useState("");
   const [reorderList, setReorderList] = useState([]);
   const dragIndexRef = useRef(null);
   const [dragOverInfo, setDragOverInfo] = useState({ index: null, after: false });
   const groupSelectionRef = useRef(null);
+  const groupRemovalRef = useRef(null);
   const [jumpPageInput, setJumpPageInput] = useState("1");
   const [isJumpInputActive, setIsJumpInputActive] = useState(false);
   const [sortBy, setSortBy] = useState("");
@@ -83,6 +85,8 @@ export default function ManageLibrary() {
   const [addToGroupModalOpen, setAddToGroupModalOpen] = useState(false);
   const [reorderModalOpen, setReorderModalOpen] = useState(false);
   const [addToGroupSelected, setAddToGroupSelected] = useState("");
+  const [addToGroupOpen, setAddToGroupOpen] = useState(false);
+  const addToGroupRef = useRef(null);
   const [isApplying, setIsApplying] = useState(false);
   const [isLoadingLibrary, setIsLoadingLibrary] = useState(true);
   const [groupRemovalModalOpen, setGroupRemovalModalOpen] = useState(false);
@@ -110,6 +114,28 @@ export default function ManageLibrary() {
     document.addEventListener("mousedown", handleOutside);
     return () => document.removeEventListener("mousedown", handleOutside);
   }, [groupSelectionOpen]);
+
+  useEffect(() => {
+    if (!groupRemovalOpen) return;
+    function handleOutside(e) {
+      if (groupRemovalRef.current && !groupRemovalRef.current.contains(e.target)) {
+        setGroupRemovalOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [groupRemovalOpen]);
+
+  useEffect(() => {
+    if (!addToGroupOpen) return;
+    function handleOutside(e) {
+      if (addToGroupRef.current && !addToGroupRef.current.contains(e.target)) {
+        setAddToGroupOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [addToGroupOpen]);
 
   useEffect(() => {
     localStorage.setItem("ml_page", currentPage);
@@ -178,6 +204,17 @@ export default function ManageLibrary() {
 
     if (action === "remove-from-group") {
       if (gamesToApply.length === 0) return;
+
+      // If exactly one real group is filtered, pre-select it in the modal.
+      const realGroupIds = selectedGroupIds.filter(
+        (id) => id !== "__ungrouped__",
+      );
+      if (realGroupIds.length === 1) {
+        setGroupRemovalSelected(realGroupIds[0]);
+      } else {
+        setGroupRemovalSelected("");
+      }
+
       setGroupRemovalModalOpen(true);
       return;
     }
@@ -494,6 +531,24 @@ export default function ManageLibrary() {
             });
           });
 
+  // A group's saved gameIds order, usable only when exactly one real group
+  // is selected (custom order is meaningless across multiple groups).
+  const singleSelectedGroup =
+    selectedGroupIds.length === 1 && selectedGroupIds[0] !== "__ungrouped__"
+      ? groups.find((g) => g.id === selectedGroupIds[0])
+      : null;
+
+  const customOrderIndex = (() => {
+    if (!singleSelectedGroup) return null;
+    const map = new Map();
+    (singleSelectedGroup.gameIds || []).forEach((gid, i) => {
+      map.set(String(gid), i);
+    });
+    return map;
+  })();
+
+  const canUseCustomOrder = !!customOrderIndex;
+
   const reorderGroup = groups.find((g) => g.id === reorderSelectedGroupId);
   const reorderGames = reorderGroup
     ? (reorderGroup.gameIds || [])
@@ -535,6 +590,17 @@ export default function ManageLibrary() {
           return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
         case "added-old":
           return new Date(a.addedAt || 0) - new Date(b.addedAt || 0);
+        case "custom-order": {
+          // No single group selected → nothing to order by; leave as-is.
+          if (!customOrderIndex) return 0;
+          const ai = customOrderIndex.has(String(a.id))
+            ? customOrderIndex.get(String(a.id))
+            : Number.MAX_SAFE_INTEGER;
+          const bi = customOrderIndex.has(String(b.id))
+            ? customOrderIndex.get(String(b.id))
+            : Number.MAX_SAFE_INTEGER;
+          return ai - bi;
+        }
         default:
           return 0;
       }
@@ -579,6 +645,12 @@ export default function ManageLibrary() {
   );
 
   console.log(libInfo);
+  useEffect(() => {
+    if (sortBy === "custom-order" && !canUseCustomOrder) {
+      setSortBy("");
+    }
+  }, [sortBy, canUseCustomOrder]);
+
   useEffect(() => {
     console.log(
       "games on page:",
@@ -890,6 +962,9 @@ export default function ManageLibrary() {
                 }}
               >
                 <option value="">Sort By</option>
+                <option value="custom-order" disabled={!canUseCustomOrder}>
+                  Custom Order{!canUseCustomOrder ? " (select one group)" : ""}
+                </option>
                 <option value="name-az">Name (A-Z)</option>
                 <option value="name-za">Name (Z-A)</option>
                 <option value="meta-high">Metacritic (High-Low)</option>
@@ -1489,22 +1564,42 @@ export default function ManageLibrary() {
             onClick={() => {
               setAddToGroupModalOpen(false);
               setAddToGroupSelected("");
+              setAddToGroupOpen(false);
             }}
           >
             ✕
           </button>
           <h3>Which group would you like to add the selected games to?</h3>
-          <select
-            value={addToGroupSelected}
-            onChange={(e) => setAddToGroupSelected(e.target.value)}
+          <div
+            ref={addToGroupRef}
+            className={`add-to-group-con${addToGroupOpen ? " open" : ""}`}
           >
-            <option value="">Select A Group</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
+            <div
+              className={`add-to-group-trigger${addToGroupOpen ? " active" : ""}`}
+              onClick={() => setAddToGroupOpen((v) => !v)}
+            >
+              <p>
+                {addToGroupSelected
+                  ? groups.find((g) => g.id === addToGroupSelected)?.name || "Select A Group"
+                  : "Select A Group"}
+              </p>
+            </div>
+            <div className="add-to-group-options">
+              {groups.length === 0 && <p className="empty">No groups</p>}
+              {groups.map((g) => (
+                <p
+                  key={g.id}
+                  className={g.id === addToGroupSelected ? "active" : ""}
+                  onClick={() => {
+                    setAddToGroupSelected(g.id);
+                    setAddToGroupOpen(false);
+                  }}
+                >
+                  {g.name}
+                </p>
+              ))}
+            </div>
+          </div>
           <button
             className={!addToGroupSelected ? "disabled" : ""}
             onClick={handleAddToGroup}
@@ -1543,17 +1638,36 @@ export default function ManageLibrary() {
             ✕
           </button>
           <h3>Which group would you like to remove the selected games from?</h3>
-          <select
-            value={groupRemovalSelected}
-            onChange={(e) => setGroupRemovalSelected(e.target.value)}
+          <div
+            ref={groupRemovalRef}
+            className={`group-select-con${groupRemovalOpen ? " open" : ""}`}
           >
-            <option value="">Select a group...</option>
-            {groups.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
+            <div
+              className={`group-select-trigger${groupRemovalOpen ? " active" : ""}`}
+              onClick={() => setGroupRemovalOpen((v) => !v)}
+            >
+              <p>
+                {groupRemovalSelected
+                  ? groups.find((g) => g.id === groupRemovalSelected)?.name || "Select a group..."
+                  : "Select a group..."}
+              </p>
+            </div>
+            <div className="group-select-options">
+              {groups.length === 0 && <p className="empty">No groups</p>}
+              {groups.map((g) => (
+                <p
+                  key={g.id}
+                  className={g.id === groupRemovalSelected ? "active" : ""}
+                  onClick={() => {
+                    setGroupRemovalSelected(g.id);
+                    setGroupRemovalOpen(false);
+                  }}
+                >
+                  {g.name}
+                </p>
+              ))}
+            </div>
+          </div>
           <button
             className={!groupRemovalSelected ? "disabled" : ""}
             onClick={handleRemoveFromGroup}
@@ -1741,6 +1855,48 @@ export default function ManageLibrary() {
               <div className="option-group">
                 <span>Sort By</span>
                 <div className="options-wrapper">
+                  <button
+                    className={sortBy === "custom-order" ? "active" : ""}
+                    disabled={!canUseCustomOrder}
+                    style={{ opacity: canUseCustomOrder ? 1 : 0.45 }}
+                    onClick={() => {
+                      if (!canUseCustomOrder) return;
+                      setSortBy("custom-order");
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <div>
+                      <div className="icon">
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <line x1="8" y1="6" x2="21" y2="6"></line>
+                          <line x1="8" y1="12" x2="21" y2="12"></line>
+                          <line x1="8" y1="18" x2="21" y2="18"></line>
+                          <circle cx="4" cy="6" r="1"></circle>
+                          <circle cx="4" cy="12" r="1"></circle>
+                          <circle cx="4" cy="18" r="1"></circle>
+                        </svg>
+                      </div>
+                      <p>Custom Order</p>
+                    </div>
+                    <div
+                      className="enabled-sym"
+                      style={{
+                        visibility:
+                          sortBy === "custom-order" ? "visible" : "hidden",
+                      }}
+                    >
+                      <span>✓</span>
+                    </div>
+                  </button>
                   <button
                     className={sortBy === "name-az" ? "active" : ""}
                     onClick={() => {

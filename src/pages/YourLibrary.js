@@ -89,6 +89,7 @@ export default function YourLibrary() {
   ----------------------------------------------------------------------- */
   const [jumpPageInput, setJumpPageInput] = useState("1");
   const [isJumpInputActive, setIsJumpInputActive] = useState(false);
+  const [isListView, setIsListView] = useState(false);
 
   const [panelMode, setPanelMode] = useState("group");
   const [textImportGenerating, setTextImportGenerating] = useState(false);
@@ -258,6 +259,23 @@ export default function YourLibrary() {
 
   }
 
+  // Custom order is only meaningful when exactly one real group is selected.
+  const singleSelectedGroup =
+    realSelectedGroupIds.length === 1 && !ungroupedSelected
+      ? customFilters.find((g) => g.id === realSelectedGroupIds[0])
+      : null;
+
+  const customOrderIndex = (() => {
+    if (!singleSelectedGroup || !Array.isArray(singleSelectedGroup.gameIds)) return null;
+    const map = new Map();
+    singleSelectedGroup.gameIds.forEach((gid, i) => {
+      map.set(String(gid), i);
+    });
+    return map;
+  })();
+
+  const canUseCustomOrder = !!customOrderIndex;
+
   const groupStats = groupFilteredGames.reduce(
     (acc, game) => {
       acc.total += 1;
@@ -306,6 +324,16 @@ export default function YourLibrary() {
         return compareByAddedAt(a, b, "desc");
       case "added_asc":
         return compareByAddedAt(a, b, "asc");
+      case "custom_order": {
+        if (!customOrderIndex) return compareByTitle(a, b, "asc");
+        const ai = customOrderIndex.has(String(a.id))
+          ? customOrderIndex.get(String(a.id))
+          : Number.MAX_SAFE_INTEGER;
+        const bi = customOrderIndex.has(String(b.id))
+          ? customOrderIndex.get(String(b.id))
+          : Number.MAX_SAFE_INTEGER;
+        return ai - bi;
+      }
       case "name_asc":
       default:
         return compareByTitle(a, b, "asc");
@@ -346,6 +374,12 @@ export default function YourLibrary() {
       setJumpPageInput(String(safeCurrentPage));
     }
   }, [safeCurrentPage, isJumpInputActive]);
+
+  useEffect(() => {
+    if (sortBy === "custom_order" && !canUseCustomOrder) {
+      setSortBy("name_asc");
+    }
+  }, [sortBy, canUseCustomOrder, setSortBy]);
 
   const scanImportedCount = Object.values(
     importFlow.candidateImportStatus || {},
@@ -598,7 +632,7 @@ export default function YourLibrary() {
   async function handleSteamUnlink() {
     steamSync.setSteamUnlinking(true);
     try {
-      await logoutSteamSession();
+      await logoutSteamSession(authUser?.uid);
     } catch {
       // ignore
     } finally {
@@ -663,14 +697,33 @@ export default function YourLibrary() {
           setIsPageDropdownOpen(false);
         }}
         sortBy={sortBy}
+        canUseCustomOrder={canUseCustomOrder}
         sortedGamesCount={sortedGames.length}
         onRevealDrop={revealSortingDrop}
         onSortOptionClick={handleSortingOptionClick}
       />
 
       <section className="library-grid">
-
+        <div className="grid-buttons">
+          <button
+            className={!isListView ? "active" : ""}
+            onClick={() => setIsListView(false)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+            </svg>
+          </button>
+          <button
+            className={isListView ? "active" : ""}
+            onClick={() => setIsListView(true)}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z" />
+            </svg>
+          </button>
+        </div>
         <GameGrid
+          isListView={isListView}
           loadingStats={loadingStats}
           pageGames={pageGames}
           customFilters={customFilters}

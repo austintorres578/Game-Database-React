@@ -8,7 +8,7 @@ import SearchPagination from "../components/searchPage/SearchPagination";
 import { buildLink } from "../utils/searchPage/buildLink";
 import { scrollToTop } from "../utils/searchPage/scrollHelpers";
 import { isPlatformActive, isGenreActive, isTagActive, getPageOptions } from "../utils/searchPage/filterHelpers";
-import { buildRawgFetchBase, fetchRawgGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags, searchRawgGenres, autocompleteRawgGames } from "../services/searchPage/rawgService";
+import { fetchIgdbGames, fetchRawgPlatforms, fetchRawgGenres, fetchRawgTags, searchRawgTags, searchRawgGenres, autocompleteRawgGames } from "../services/searchPage/rawgService";
 import { useClickOutside } from "../hooks/searchPage/useClickOutside";
 import { RevealWrapper } from "../components/RevealWrapper";
 
@@ -153,7 +153,10 @@ export default function SearchPage({ user }) {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const fetchLink = buildRawgFetchBase(pageSize);
+  // Placeholder base used only to build a localStorage-persisted "link" key
+  // for restoring the last search's term/filters/page on reload. The IGDB
+  // backend itself is queried directly via fetchIgdbGames(searchTerm, pageSize).
+  const fetchLink = "";
 
   const totalPages = Math.max(1, Math.ceil((totalResults || 0) / pageSize));
 
@@ -161,7 +164,9 @@ export default function SearchPage({ user }) {
   function runSearch(link, metaState) {
     setLoading(true);
 
-    fetchRawgGames(link)
+    const term = metaState?.term ?? searchTerm;
+
+    fetchIgdbGames(term, pageSize)
       .then((res) => {
         setLoading(false);
         setTotalResults(res.count);
@@ -691,6 +696,15 @@ export default function SearchPage({ user }) {
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="autocomplete-dropdown">
+                  <button
+                    className="close-button"
+                    onClick={() => {
+                      userTypingRef.current = false;
+                      setShowSuggestions(false);
+                    }}
+                  >
+                    <p>✕</p>
+                  </button>
                   {suggestions.map((s) => (
                     <Link
                       key={s.id}

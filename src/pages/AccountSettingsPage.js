@@ -128,14 +128,14 @@ export default function AccountSettingsPage() {
       return;
     }
 
-    checkSteamSession()
+    checkSteamSession(authUser?.uid)
       .then(({ linked }) => setSteamLinked(linked))
       .catch(() => setSteamLinked(false));
   }, [authUser?.uid]);
 
   async function handleSteamUnlink() {
     setSteamUnlinking(true);
-    await logoutSteamSession();
+    await logoutSteamSession(authUser?.uid);
     setTimeout(() => {
       setSteamLinked(false);
       setSteamUnlinking(false);

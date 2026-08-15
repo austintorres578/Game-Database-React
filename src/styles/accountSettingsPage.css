@@ -6,7 +6,8 @@
   body .account-setting-page .fixed-nav{
     position: relative;
     top: 0px;
-    width: stretch;
+    width: 100%;
+    box-sizing: border-box;
     margin-bottom: 20px;
     margin-right: 0px;
   }

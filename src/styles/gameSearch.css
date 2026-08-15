@@ -807,7 +807,7 @@
     height: auto;
     justify-content: center;
     padding-left: 15px;
-    padding-right: 15px;
+    padding-right: 40px;
   }
 
   .search-container .metacritic-rating {
@@ -1555,7 +1555,33 @@
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
-  padding: 15px;
+  padding: 30px 15px 15px 15px;
+}
+
+.search-container .search-page-container .search-box-wrapper .close-button{
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  height: 25px;
+  width: 25px;
+  text-align: center;
+  font-weight: bold;
+  padding: 10px;
+  line-height: 0;
+  /* color: red;
+  background: transparent;
+  border: solid 2px red; */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.search-container .search-page-container .search-box-wrapper .close-button p{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  margin: 0px;
 }
 
 .search-container .autocomplete-item {

@@ -329,10 +329,10 @@ body {
 }
 
 .game-page-shell .game-main-layout .left-col .game-screenshots-section {
-  width: stretch;
+  width: 100%;
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 20px;
-  height: stretch;
+  height: 100%;
   background: #0c1222;
 }
 
@@ -1549,6 +1549,13 @@ body {
   line-height: 10px;
   display: flex;
   align-items: center;
+}
+
+.game-page-shell .store-pill-price--was {
+  text-decoration: line-through;
+  opacity: 0.55;
+  margin-right: 6px;
+  font-size: 0.85em;
 }
 
 .game-page-shell .store-pill-skeleton {

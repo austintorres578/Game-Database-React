@@ -240,7 +240,8 @@
 }
 
 .profile-settings-shell .name-con > div input {
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
   color: rgb(229 231 235);
@@ -292,7 +293,8 @@
   border-radius: 10px;
   min-height: 80px;
   display: block;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-settings-shell .short-bio-con .char-count {
@@ -304,7 +306,8 @@
 }
 
 .profile-settings-shell .short-bio-con input {
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .profile-settings-shell .about-me-con > div {
@@ -331,7 +334,8 @@
 }
 
 .profile-settings-shell .about-me-con textarea {
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   background: rgb(15 23 42);
   border: 1px solid #94a3b81a;
   color: rgb(229 231 235);
@@ -408,7 +412,8 @@
   border: 1px solid #94a3b81a;
   color: rgb(229 231 235);
   padding: 8px 12px;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
 }
 
@@ -496,7 +501,8 @@
   border: 1px solid #94a3b81a;
   color: rgb(229 231 235);
   padding: 8px 12px;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
 }
 
@@ -585,7 +591,8 @@
   border: 1px solid #94a3b81a;
   color: rgb(229 231 235);
   padding: 8px 12px;
-  width: stretch;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
 }
 
