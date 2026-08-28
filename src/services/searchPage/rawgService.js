@@ -1,35 +1,16 @@
 // RAWG API service for the search page.
-// Handles all outbound requests to the RAWG video-games database.
+// Proxies all requests through our own backend instead of calling
+// RapidAPI directly, so no API key is ever exposed client-side.
 
-const RAWG_ORIGIN = "https://rawg-video-games-database.p.rapidapi.com/";
-const RAWG_QUERY_KEY = "99cd09f6c33b42b5a24a9b447ee04a81";
-const RAWG_HEADERS = {
-  "X-RapidAPI-key": "c9d7675297msh7c0392e178bd12cp1541a1jsn774cfdd0879c",
-  "X-RapidAPI-Host": "rawg-video-games-database.p.rapidapi.com",
-};
+import { BACKEND_BASE } from "../../constants/apiConfig";
 
-/**
- * Builds the base RAWG games URL (without page number or filters appended).
- * The caller passes this to buildLink() from utils/searchPage/buildLink.js.
- *
- * @param {number} pageSize - Number of results to request per page
- * @returns {string}
- */
 export function buildRawgFetchBase(pageSize) {
-  return `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search_precise=true&page_size=${pageSize}&`;
+  return `${BACKEND_BASE}/api/rawg/games?search_precise=true&page_size=${pageSize}&`;
 }
 
-/**
- * Fetches a page of game results from RAWG.
- * Returns the raw response data ({ count, results, next, previous }).
- *
- * @param {string} link - The fully built RAWG request URL
- */
 export async function fetchRawgGames(link) {
-  const res = await fetch(link, { method: "GET", headers: RAWG_HEADERS });
+  const res = await fetch(link, { method: "GET" });
   if (!res.ok) {
-    // Surface the HTTP status so rate limits (429) / server errors (5xx)
-    // don't silently masquerade as "no results".
     const err = new Error(`RAWG request failed: HTTP ${res.status} ${res.statusText}`);
     err.status = res.status;
     throw err;
@@ -43,150 +24,62 @@ export async function fetchRawgGames(link) {
   };
 }
 
-/**
- * Fetches available platform filters from RAWG.
- * Returns an array of filter objects sorted alphabetically by name:
- * [{ id: string, label: string, platformId: number }, ...]
- */
 export async function fetchRawgPlatforms() {
-  const all = [];
-  let page = 1;
-  let totalCount = null;
-
-  // Paginate against our own proxy origin instead of following RAWG's
-  // `next` URL (which points at api.rawg.io directly and fails CORS/auth).
-  while (true) {
-    const res = await fetch(
-      `${RAWG_ORIGIN}platforms?key=${RAWG_QUERY_KEY}&page_size=100&page=${page}`,
-      { method: "GET", headers: RAWG_HEADERS },
-    );
-    const data = await res.json();
-
-    if (totalCount === null) totalCount = data.count ?? null;
-    const results = Array.isArray(data.results) ? data.results : [];
-    all.push(...results);
-
-    console.log(
-      `[fetchRawgPlatforms] page ${page}: ${results.length} results | running total ${all.length}` +
-        (totalCount !== null ? ` of ${totalCount}` : "")
-    );
-
-    // Stop when this page returned nothing, or we've collected the full count.
-    if (results.length === 0 || (totalCount !== null && all.length >= totalCount)) {
-      break;
-    }
-    page += 1;
-
-    // Safety cap so a malformed response can't loop forever.
-    if (page > 10) {
-      console.warn("[fetchRawgPlatforms] hit 10-page safety cap, stopping");
-      break;
-    }
+  const res = await fetch(`${BACKEND_BASE}/api/rawg/platforms`, { method: "GET" });
+  if (!res.ok) {
+    const err = new Error(`RAWG platforms request failed: HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
   }
-
-  console.log(
-    "[fetchRawgPlatforms] FINAL names:",
-    all.map((p) => p.name).sort((a, b) => a.localeCompare(b))
-  );
-
-  const sorted = all.sort((a, b) => a.name.localeCompare(b.name));
-  return sorted.map((p) => ({
-    id: String(p.id),
-    label: p.name,
-    platformId: p.id,
-  }));
+  return res.json();
 }
 
-/**
- * Fetches available genre filters from RAWG.
- * Returns an array of filter objects sorted alphabetically by name:
- * [{ id: string, label: string, slug: string, kind: "genre" }, ...]
- */
 export async function fetchRawgGenres() {
-  const res = await fetch(
-    `${RAWG_ORIGIN}genres?key=${RAWG_QUERY_KEY}&page_size=40`,
-    { method: "GET", headers: RAWG_HEADERS },
-  );
-  const data = await res.json();
-  const sorted = (data.results || []).sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-  return sorted.map((g) => ({
-    id: String(g.id),
-    label: g.name,
-    slug: g.slug,
-    kind: "genre",
-  }));
+  const res = await fetch(`${BACKEND_BASE}/api/rawg/genres`, { method: "GET" });
+  if (!res.ok) {
+    const err = new Error(`RAWG genres request failed: HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
 }
 
 export async function searchRawgGenres(query) {
   if (!query.trim()) return [];
   const res = await fetch(
-    `${RAWG_ORIGIN}genres?key=${RAWG_QUERY_KEY}&page_size=20&search=${encodeURIComponent(query)}`,
-    { method: "GET", headers: RAWG_HEADERS }
+    `${BACKEND_BASE}/api/rawg/genres/search?q=${encodeURIComponent(query)}`,
+    { method: "GET" }
   );
-  const data = await res.json();
-  if (!data.results) return [];
-  return data.results.map((g) => ({
-    id: String(g.id),
-    label: g.name,
-    slug: g.slug,
-    kind: "genre",
-  }));
+  if (!res.ok) return [];
+  return res.json();
 }
 
 export async function searchRawgTags(query) {
   if (!query.trim()) return [];
   const res = await fetch(
-    `${RAWG_ORIGIN}tags?key=${RAWG_QUERY_KEY}&page_size=20&search=${encodeURIComponent(query)}`,
-    { method: "GET", headers: RAWG_HEADERS },
+    `${BACKEND_BASE}/api/rawg/tags/search?q=${encodeURIComponent(query)}`,
+    { method: "GET" }
   );
-  const data = await res.json();
-  if (!data.results) return [];
-  return data.results.map((t) => ({
-    id: String(t.id),
-    label: t.name,
-    slug: t.slug,
-    kind: "tag",
-  }));
+  if (!res.ok) return [];
+  return res.json();
 }
 
 export async function autocompleteRawgGames(query) {
   if (!query.trim() || query.trim().length < 2) return [];
   const res = await fetch(
-    `${RAWG_ORIGIN}games?key=${RAWG_QUERY_KEY}&search=${encodeURIComponent(query)}&page_size=6`,
-    { method: "GET", headers: RAWG_HEADERS }
+    `${BACKEND_BASE}/api/rawg/autocomplete?q=${encodeURIComponent(query)}`,
+    { method: "GET" }
   );
-  const data = await res.json();
-  if (!data.results) return [];
-  return data.results.map((g) => ({
-    id: g.id,
-    name: g.name,
-    released: g.released,
-    background_image: g.background_image,
-    genres: g.genres || [],
-    metacritic: g.metacritic ?? null,
-    rating: g.rating ?? null,
-  }));
+  if (!res.ok) return [];
+  return res.json();
 }
 
-/**
- * Fetches available tag filters from RAWG.
- * Returns an array of filter objects sorted alphabetically by name:
- * [{ id: string, label: string, slug: string, kind: "tag" }, ...]
- */
 export async function fetchRawgTags() {
-  const res = await fetch(
-    `${RAWG_ORIGIN}tags?key=${RAWG_QUERY_KEY}&page_size=40`,
-    { method: "GET", headers: RAWG_HEADERS },
-  );
-  const data = await res.json();
-  if (!data.results) return [];
-  const sorted = data.results.sort((a, b) => a.name.localeCompare(b.name));
-  return sorted.map((t) => ({
-    id: String(t.id),
-    label: t.name,
-    slug: t.slug,
-    kind: "tag",
-  }));
+  const res = await fetch(`${BACKEND_BASE}/api/rawg/tags`, { method: "GET" });
+  if (!res.ok) {
+    const err = new Error(`RAWG tags request failed: HTTP ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return res.json();
 }

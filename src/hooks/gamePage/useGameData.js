@@ -5,11 +5,9 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 
-import { RAWG_KEY } from "../../constants/apiConfig";
+import { BACKEND_BASE } from "../../constants/apiConfig";
 import { auth } from "../../firebase/fireAuth";
 import { doc, getDoc, db } from "../../firebase/firestore";
-
-const RAWG_BASE = "https://api.rawg.io/api/games/";
 
 /**
  * @returns {{ loading: boolean, gameData: object|null, gameScreenshots: object[], gameVideos: object[], isCustomGame: boolean }}
@@ -87,9 +85,9 @@ export function useGameData() {
     }
 
     // --- RAWG game: fetch from API ---
-    const gameUrl = RAWG_BASE + rawId + RAWG_KEY;
-    const screenshotsUrl = RAWG_BASE + rawId + "/screenshots" + RAWG_KEY;
-    const videosUrl = RAWG_BASE + rawId + "/movies" + RAWG_KEY;
+    const gameUrl = `${BACKEND_BASE}/api/rawg/game/${rawId}`;
+    const screenshotsUrl = `${BACKEND_BASE}/api/rawg/game/${rawId}/screenshots`;
+    const videosUrl = `${BACKEND_BASE}/api/rawg/game/${rawId}/videos`;
 
     setLoading(true);
     setScreenshotsLoading(true);

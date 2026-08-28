@@ -1,4 +1,4 @@
-// Fetches the store links for a game directly from the RAWG API.
+// Fetches the store links for a game through our backend RAWG proxy.
 // Re-runs whenever the game ID changes.
 
 import { useState, useEffect } from "react";
@@ -7,7 +7,7 @@ import {
   normalizeAndSortStores,
 } from "../../utils/gamePage/storeUtils";
 
-import { RAWG_KEY } from "../../constants/apiConfig";
+import { BACKEND_BASE } from "../../constants/apiConfig";
 
 /**
  * @param {object|null} gameData - The RAWG game object
@@ -26,8 +26,7 @@ export function useRawgStores(gameData) {
         setRawgStoresChecked(false);
         setRawgStores([]);
 
-        const storesUrl =
-          `https://api.rawg.io/api/games/${gameData.id}/stores` + RAWG_KEY;
+        const storesUrl = `${BACKEND_BASE}/api/rawg/game/${gameData.id}/stores`;
 
         console.log("🟪 RAWG stores request:", storesUrl);
 
